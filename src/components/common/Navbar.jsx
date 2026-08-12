@@ -12,12 +12,16 @@ import {
   LogOut, 
   Volume2, 
   VolumeX, 
-  Shield, 
-  UserCheck, 
   GraduationCap,
-  Sparkles,
   Home,
-  FileCheck
+  FileCheck,
+  ChevronDown,
+  Layers,
+  Sparkles,
+  Mic,
+  FileText,
+  Headphones,
+  CheckCircle2
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -26,6 +30,9 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(soundFX.isMuted());
 
+  // Dropdown States
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
   const toggleSound = () => {
     const nextState = !isMuted;
     setIsMuted(nextState);
@@ -33,32 +40,79 @@ export const Navbar = () => {
     if (!nextState) soundFX.playClick();
   };
 
-  const navItems = [
-    { path: '/', label: 'Trang chủ', icon: Home },
-    { path: '/materials', label: 'Thư Mục Học Liệu', icon: BookOpen },
-    { path: '/quizzes', label: 'Ngân Hàng Đề Thi', icon: HelpCircle },
-    { path: '/worksheet', label: 'Kiểm Tra & Đánh Giá', icon: FileCheck },
-    { path: '/games', label: 'Kho Trò Chơi', icon: Gamepad2 },
-    { path: '/behavior', label: 'Sổ Nề Nếp', icon: UserCheck },
-    { path: '/leaderboard', label: 'Bảng Xếp Hạng', icon: Star },
-  ];
-
-  if (isTeacher || isAdmin) {
-    navItems.push({ path: '/admin', label: 'Quản Lý Lớp & SV', icon: Users });
-  }
-
   const handleLogout = async () => {
     soundFX.playClick();
     await logout();
     navigate('/auth');
   };
 
+  // Nav Items configuration with Sub-menus
+  const navItems = [
+    { 
+      path: '/', 
+      label: 'Trang chủ', 
+      icon: Home 
+    },
+    { 
+      path: '/materials', 
+      label: 'Thư Mục Học Liệu', 
+      icon: BookOpen,
+      subMenus: [
+        { label: 'Grammar (Ngữ pháp)', path: '/materials?type=grammar' },
+        { label: 'Vocabulary (Từ vựng)', path: '/materials?type=vocabulary' },
+        { label: 'Infographic (Trực quan)', path: '/materials?type=infographic' },
+        { label: 'Ý tưởng dạy học', path: '/materials?type=ideas' }
+      ]
+    },
+    { 
+      path: '/quizzes', 
+      label: 'Ngân Hàng Đề Thi', 
+      icon: HelpCircle,
+      subMenus: [
+        { label: 'Đề Thi Khối 6', path: '/quizzes?grade=6' },
+        { label: 'Đề Thi Khối 7', path: '/quizzes?grade=7' },
+        { label: 'Đề Thi Khối 8', path: '/quizzes?grade=8' },
+        { label: 'Đề Thi Khối 9', path: '/quizzes?grade=9' }
+      ]
+    },
+    { 
+      path: '/worksheet', 
+      label: 'Kiểm Tra & Đánh Giá', 
+      icon: FileCheck,
+      subMenus: [
+        { label: '1. Listening (Nghe hiểu)', path: '/worksheet?sec=listening' },
+        { label: '2. Speaking (Nói & Chấm AI)', path: '/worksheet?sec=speaking' },
+        { label: '3. Reading (Đọc hiểu)', path: '/worksheet?sec=reading' },
+        { label: '4. Writing (Viết & Chấm AI)', path: '/worksheet?sec=writing' }
+      ]
+    },
+    { 
+      path: '/games', 
+      label: 'Kho Trò Chơi', 
+      icon: Gamepad2 
+    },
+    { 
+      path: '/behavior', 
+      label: 'Sổ Nề Nếp', 
+      icon: Users 
+    },
+    { 
+      path: '/leaderboard', 
+      label: 'Bảng Xếp Hạng', 
+      icon: Star 
+    },
+  ];
+
+  if (isTeacher || isAdmin) {
+    navItems.push({ path: '/admin', label: 'Quản Lý Lớp & SV', icon: Users });
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Logo & Brand Left (ETA Logo style matching Screenshot 1 & 4) */}
+          {/* Logo & Brand Left */}
           <Link 
             to="/" 
             onClick={() => soundFX.playClick()}
@@ -80,25 +134,57 @@ export const Navbar = () => {
             </div>
           </Link>
 
-          {/* Navigation Links Center (Top Icon + Bottom Label, WHITESPACE NOWRAP - NEVER WRAPS TO VERTICAL LINES!) */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 overflow-x-auto no-scrollbar py-2">
+          {/* Navigation Links Center (Top Icon + Bottom Label + Dropdown Sub-menus) */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
+              const hasSubMenus = item.subMenus && item.subMenus.length > 0;
+
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => soundFX.playClick()}
-                  className={`flex flex-col items-center justify-center px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all duration-200 whitespace-nowrap shrink-0 ${
-                    isActive
-                      ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 border border-brand-500/50 scale-105'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent'
-                  }`}
+                <div 
+                  key={item.path} 
+                  className="relative group"
+                  onMouseEnter={() => setActiveDropdown(item.path)}
+                  onMouseLeave={() => setActiveDropdown(null)}
                 >
-                  <Icon className={`w-4 h-4 mb-1 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  <span className="whitespace-nowrap leading-none">{item.label}</span>
-                </Link>
+                  <Link
+                    to={item.path}
+                    onClick={() => soundFX.playClick()}
+                    className={`flex flex-col items-center justify-center px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all duration-200 whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 border border-brand-500/50 scale-105'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1">
+                      <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                      {hasSubMenus && <ChevronDown className="w-3 h-3 text-slate-400 group-hover:rotate-180 transition-transform" />}
+                    </div>
+                    <span className="whitespace-nowrap leading-none">{item.label}</span>
+                  </Link>
+
+                  {/* Dropdown Sub-menu Modal */}
+                  {hasSubMenus && activeDropdown === item.path && (
+                    <div className="absolute top-full left-0 mt-1 w-56 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1 animate-fadeIn">
+                      {item.subMenus.map((sub, sIdx) => (
+                        <Link
+                          key={sIdx}
+                          to={sub.path}
+                          onClick={() => {
+                            soundFX.playClick();
+                            setActiveDropdown(null);
+                          }}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+                        >
+                          <span>{sub.label}</span>
+                          <span className="text-[10px] text-indigo-400 font-mono">→</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                </div>
               );
             })}
           </nav>

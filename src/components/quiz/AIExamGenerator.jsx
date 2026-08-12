@@ -398,18 +398,129 @@ export const AIExamGenerator = ({ onExamSaved }) => {
     alert('Đã cập nhật chỉnh sửa đề thi thành công!');
   };
 
+  // Generator Mode State: 'ai' | 'json'
+  const [modeGenerator, setModeGenerator] = useState('ai');
+  const [jsonText, setJsonText] = useState(`[
+  {
+    "question": "What is Phong wearing today?",
+    "options": ["A. Uniform", "B. Jacket", "C. Jeans", "D. Shorts"],
+    "correct": "A. Uniform"
+  }
+]`);
+  const [customAudioUrl, setCustomAudioUrl] = useState('');
+  const [uploadedMp3File, setUploadedMp3File] = useState(null);
+
+  const handleImportJson = () => {
+    try {
+      const parsed = JSON.parse(jsonText);
+      soundFX.playFanfare();
+      alert(`✅ ĐÃ NẠP THÀNH CÔNG ${parsed.length} CÂU HỎI TỪ FILE JSON!`);
+    } catch (err) {
+      alert('Lỗi mã JSON không hợp lệ. Vui lòng kiểm tra lại định dạng!');
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fadeIn">
       
       {/* Top Banner Navigation Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900 border border-slate-800">
         <div className="flex items-center gap-2">
-          <span className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-xs flex items-center gap-2 shadow-md">
-            <BrainCircuit className="w-4 h-4" /> Soạn Đề Thi Chuẩn AI (Khối {gradeLevel} Dynamic Generator)
-          </span>
-          <span className="text-slate-400 text-xs hidden sm:inline">Khối 6 • 7 • 8 • 9 Global Success</span>
+          <button
+            onClick={() => {
+              soundFX.playClick();
+              setModeGenerator('ai');
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+              modeGenerator === 'ai'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-slate-950 text-slate-400 hover:text-white'
+            }`}
+          >
+            <BrainCircuit className="w-4 h-4" /> ⚡ Soạn Đề Thi Chuẩn AI (Khối {gradeLevel})
+          </button>
+
+          <button
+            onClick={() => {
+              soundFX.playClick();
+              setModeGenerator('json');
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+              modeGenerator === 'json'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-slate-950 text-slate-400 hover:text-white'
+            }`}
+          >
+            <FileCode className="w-4 h-4" /> 📄 Soạn Thủ Công Bằng File Mẫu JSON
+          </button>
         </div>
+        <span className="text-slate-400 text-xs hidden sm:inline">Khối 6 • 7 • 8 • 9 Global Success</span>
       </div>
+
+      {/* Mode JSON Manual View */}
+      {modeGenerator === 'json' ? (
+        <div className="glass-panel p-6 space-y-6 border-purple-500/40 bg-slate-900/90 shadow-2xl animate-fadeIn">
+          <h3 className="text-base font-black text-purple-300 flex items-center gap-2">
+            <FileCode className="w-5 h-5 text-purple-400" />
+            SOẠN ĐỀ THỦ CÔNG BẰNG FILE MẪU JSON & NẠP AUDIO MP3 BÀI NGHE
+          </h3>
+
+          {/* Section Upload Audio MP3 / Link Audio for Listening */}
+          <div className="p-4 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 space-y-3">
+            <h4 className="text-xs font-extrabold text-indigo-200 uppercase flex items-center gap-2">
+              <Volume2 className="w-4 h-4 text-indigo-400" />
+              MỤC TẢI LÊN FILE AUDIO MP3 HOẶC DÁN LINK AUDIO BÀI NGHE
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] text-slate-400 font-bold mb-1">TẢI FILE AUDIO MP3 TỪ MÁY TÍNH:</label>
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => setUploadedMp3File(e.target.files?.[0] || null)}
+                  className="glass-input text-xs w-full"
+                />
+                {uploadedMp3File && (
+                  <span className="text-[10px] text-emerald-400 font-bold block mt-1">✓ Đã nạp file: {uploadedMp3File.name}</span>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-400 font-bold mb-1">HOẶC DÁN ĐƯỜNG LINK AUDIO MP3 (URL):</label>
+                <input
+                  type="text"
+                  value={customAudioUrl}
+                  onChange={(e) => setCustomAudioUrl(e.target.value)}
+                  placeholder="https://example.com/audio-unit1.mp3"
+                  className="glass-input text-xs w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* JSON Text Area Code Editor */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-300">DÁN MÃ CÂU HỎI DẠNG JSON VÀO ĐÂY:</label>
+            <textarea
+              rows={8}
+              value={jsonText}
+              onChange={(e) => setJsonText(e.target.value)}
+              className="w-full glass-input text-xs font-mono leading-relaxed"
+            />
+          </div>
+
+          <button
+            onClick={handleImportJson}
+            className="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs shadow-lg flex items-center justify-center gap-2"
+          >
+            <CheckCircle2 className="w-4 h-4" /> NẠP ĐỀ THI TỪ FILE MẪU JSON
+          </button>
+        </div>
+      ) : (
+        /* AI Generator View */
+        null
+      )}
 
       {/* Main Grid: Left Controls + Right Selection */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
