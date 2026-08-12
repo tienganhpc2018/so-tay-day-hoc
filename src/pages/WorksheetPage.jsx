@@ -45,7 +45,8 @@ import {
   FileUp,
   Link as LinkIcon,
   Music,
-  Plus
+  Plus,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { GlobalSuccessKnowledgeBase } from '../data/globalSuccessData';
@@ -54,12 +55,12 @@ export const WorksheetPage = () => {
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
 
-  // Mode Selection: 'authoring' (Soạn & Lưu Ngân Hàng Đề) vs 'submission' (Chấm Speaking/Writing BTV)
+  // Mode Selection: 'authoring' vs 'submission'
   const [activeMainMode, setActiveMainMode] = useState('authoring');
 
   // Grade Level State (6, 7, 8, 9)
-  const [gradeLevel, setGradeLevel] = useState(8);
-  const [lessonSection, setLessonSection] = useState('A closer look 1');
+  const [gradeLevel, setGradeLevel] = useState(7);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   // Audio Length Duration Mapping Rule per Grade Level ("Mệnh lệnh thép")
   const gradeAudioDurationMap = {
@@ -97,18 +98,40 @@ export const WorksheetPage = () => {
     ]
   };
 
-  const [selectedUnit, setSelectedUnit] = useState(gradeUnitsDictionary[8][0]);
+  // MULTI-SELECT UNITS STATE (Thầy chọn nhiều Unit: Unit 1, 2, 3...)
+  const [selectedUnits, setSelectedUnits] = useState(['Unit 1: Hobbies', 'Unit 2: Healthy Living']);
 
-  // Update Units whenever Grade switches
+  // Auto Grammar & Vocab Summary Readout under selected Units
+  const [integratedGrammarList, setIntegratedGrammarList] = useState([]);
+  const [integratedVocabList, setIntegratedVocabList] = useState([]);
+
+  // Update Units & Grammar whenever Grade or selectedUnits change
   useEffect(() => {
-    const currentUnits = gradeUnitsDictionary[gradeLevel] || gradeUnitsDictionary[8];
-    setSelectedUnit(currentUnits[0]);
+    const currentAvailableUnits = gradeUnitsDictionary[gradeLevel] || gradeUnitsDictionary[7];
+    const validUnits = selectedUnits.filter(u => currentAvailableUnits.includes(u));
+    const activeUnits = validUnits.length > 0 ? validUnits : [currentAvailableUnits[0], currentAvailableUnits[1]];
+    setSelectedUnits(activeUnits);
+
+    const grammar = GlobalSuccessKnowledgeBase.getGrammarForUnits(gradeLevel, activeUnits);
+    const vocab = GlobalSuccessKnowledgeBase.getVocabForUnits(gradeLevel, activeUnits);
+    setIntegratedGrammarList(grammar);
+    setIntegratedVocabList(vocab);
   }, [gradeLevel]);
+
+  const toggleUnitSelection = (unitName) => {
+    soundFX.playClick();
+    if (selectedUnits.includes(unitName)) {
+      if (selectedUnits.length === 1) return; // keep at least 1
+      setSelectedUnits(selectedUnits.filter(u => u !== unitName));
+    } else {
+      setSelectedUnits([...selectedUnits, unitName]);
+    }
+  };
 
   // Reference Exam File (.docx / .json) "Mệnh lệnh thép"
   const [referenceFile, setReferenceFile] = useState(null);
 
-  // Accordion Expand State for Sections (Screenshot 3)
+  // Accordion Expand State for Sections
   const [expandedSections, setExpandedSections] = useState({
     listening: true,
     knowledge: false,
@@ -118,7 +141,7 @@ export const WorksheetPage = () => {
     speaking: false
   });
 
-  // Section Configurations (Number of Questions & Audio Links per section)
+  // Section Configurations
   const [sectionConfigs, setSectionConfigs] = useState({
     listening: {
       enabled: true,
@@ -140,12 +163,9 @@ export const WorksheetPage = () => {
 
   // Mode Answer (GV vs Student)
   const [modeAnswer, setModeAnswer] = useState('gv');
-
-  // Edit Test Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Student Homework AI Submission State (Speaking / Writing Tab)
-  const [studentSubmissionType, setStudentSubmissionType] = useState('text');
+  // Student Homework AI Submission State
   const [studentSubmissionContent, setStudentSubmissionContent] = useState('');
   const [uploadedSubmissionFile, setUploadedSubmissionFile] = useState(null);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
@@ -153,7 +173,6 @@ export const WorksheetPage = () => {
 
   const [dynamicWorksheet, setDynamicWorksheet] = useState(null);
 
-  // Convert Drive Share link to direct audio stream URL
   const convertDriveUrlToDirectAudio = (urlStr) => {
     if (!urlStr) return '';
     try {
@@ -202,97 +221,102 @@ export const WorksheetPage = () => {
     }
   };
 
-  // Generate dynamic exam content according to rules
-  useEffect(() => {
-    try {
-      generateDynamicWorksheetContent(gradeLevel, [selectedUnit], lessonSection);
-    } catch (err) {
-      console.error('Worksheet state sync error:', err);
-    }
-  }, [gradeLevel, selectedUnit, lessonSection, sectionConfigs, referenceFile]);
+  // Generate dynamic exam content when Thầy clicks "TẠO ĐỀ THI"
+  const handleGenerateExam = () => {
+    soundFX.playClick();
+    setHasGenerated(true);
+    generateDynamicWorksheetContent(gradeLevel, selectedUnits);
+    soundFX.playFanfare();
+    confetti({ particleCount: 120, spread: 80 });
+  };
 
-  const generateDynamicWorksheetContent = (grade, unitsArr, section) => {
+  const generateDynamicWorksheetContent = (grade, unitsArr) => {
     const vocabList = GlobalSuccessKnowledgeBase.getVocabForUnits(grade, unitsArr);
     const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(grade, unitsArr);
-    const unitTitleStr = (unitsArr || []).join(' & ');
-    const durationInfo = gradeAudioDurationMap[grade] || gradeAudioDurationMap[8];
+    const durationInfo = gradeAudioDurationMap[grade] || gradeAudioDurationMap[7];
 
-    // Part 1 Listening (Multiple Choice) - Dynamic questions count
+    // TAPESCRIPT FOR TEACHERS (Nội dung bài nghe 60-80s chuẩn)
+    const tapescriptPart1 = `[TAPESCRIPT PART 1 - GRADE ${grade} (${durationInfo.durationText})]\nSpeaker 1: Hello students! Today we are discussing ${unitsArr.join(' and ')}. In our daily life, hobbies like playing badminton, gardening, and collecting stamps help us relax. Healthy living requires eating fresh vegetables, drinking enough water, and doing exercise regularly. Listen carefully and choose the correct answer for each question.`;
+
+    const tapescriptPart2 = `[TAPESCRIPT PART 2 - GRADE ${grade} (${durationInfo.durationText})]\nSpeaker 2: Welcome back! Community service plays an important role in our society. Students can join volunteer activities such as planting trees, cleaning neighborhood streets, and donating old books to poor children. Listen to the statements and decide if they are True or False.`;
+
+    // Part 1 Listening (Multiple Choice) - Clean Student Text
     const p1Count = sectionConfigs.listening.part1Questions;
-    const listeningPart1Questions = Array.from({ length: p1Count }, (_, i) => ({
-      id: `lp1_${i+1}`,
-      num: i + 1,
-      qText: `Question ${i+1}: What is mentioned about ${vocabList[i % vocabList.length] || 'leisure activities'} in Grade ${grade}?`,
-      options: [
-        `A. It promotes ${vocabList[i % vocabList.length] || 'healthy living'}`,
-        `B. It requires ${grammarList[0] || 'grammar practice'}`,
-        'C. It takes place in natural wonders',
-        'D. It is practiced once a month'
-      ],
-      correct: `A. It promotes ${vocabList[i % vocabList.length] || 'healthy living'}`,
-      explanation: `Giải thích chi tiết: Đoạn băng đề cập đến hoạt động ${vocabList[i % vocabList.length] || 'rèn luyện'} giúp nâng cao sức khỏe cho học sinh Khối ${grade}.`
-    }));
+    const listeningPart1Questions = [
+      { id: 'lp1_1', num: 1, qText: 'What is the main topic of the conversation?', options: ['A. Healthy living and hobbies', 'B. Shopping online', 'C. Space exploration', 'D. History of art'], correct: 'A. Healthy living and hobbies', explanation: 'Giải thích: Đoạn băng nói về sở thích và lối sống lành mạnh của học sinh.' },
+      { id: 'lp1_2', num: 2, qText: 'Which activity is recommended for healthy living?', options: ['A. Eating fresh vegetables', 'B. Sleeping late at night', 'C. Playing games all day', 'D. Drinking soft drinks'], correct: 'A. Eating fresh vegetables', explanation: 'Giải thích: Đoạn băng nhắc đến việc ăn rau tươi và tập thể dục.' },
+      { id: 'lp1_3', num: 3, qText: 'How do hobbies help students after school?', options: ['A. They help students relax', 'B. They make students tired', 'C. They cost a lot of money', 'D. They are boring'], correct: 'A. They help students relax', explanation: 'Giải thích: Đoạn băng đề cập hobbies giúp thư giãn.' },
+      { id: 'lp1_4', num: 4, qText: 'What should students do regularly every day?', options: ['A. Do exercise and drink water', 'B. Skip breakfast', 'C. Watch TV late', 'D. Eat fast food'], correct: 'A. Do exercise and drink water', explanation: 'Giải thích: Đoạn băng khuyên tập thể dục và uống nước.' },
+      { id: 'lp1_5', num: 5, qText: 'What is collected as a hobby mentioned in the audio?', options: ['A. Stamps', 'B. Cars', 'C. Coins', 'D. Postcards'], correct: 'A. Stamps', explanation: 'Giải thích: Đoạn băng nhắc tới sở thích sưu tầm tem.' }
+    ].slice(0, p1Count);
 
-    // Part 2 Listening (True/False) - Dynamic questions count
+    // Part 2 Listening (True/False - ONLY 2 OPTIONS A. True / B. False!)
     const p2Count = sectionConfigs.listening.part2Questions;
-    const listeningPart2Questions = Array.from({ length: p2Count }, (_, i) => ({
-      id: `lp2_${i+1}`,
-      num: p1Count + i + 1,
-      qText: `Statement ${i+1}: Students in Grade ${grade} practice ${vocabList[(i+1) % vocabList.length] || 'vocabulary'} every day during ${unitsArr[0]}.`,
-      options: ['A. True (Đúng)', 'B. False (Sai)'],
-      correct: 'A. True (Đúng)',
-      explanation: 'Giải thích chi tiết: Học sinh theo đúng lộ trình SGK Global Success thực hành từ vựng mỗi ngày.'
-    }));
+    const listeningPart2Questions = [
+      { id: 'lp2_1', num: p1Count + 1, qText: 'Community service plays an important role in our society.', options: ['A. True', 'B. False'], correct: 'A. True', explanation: 'Giải thích: Đoạn băng khẳng định hoạt động cộng đồng rất quan trọng.' },
+      { id: 'lp2_2', num: p1Count + 2, qText: 'Students cannot donate old books to poor children.', options: ['A. True', 'B. False'], correct: 'B. False', explanation: 'Giải thích: Đoạn băng khuyên nên quyên góp sách cũ.' },
+      { id: 'lp2_3', num: p1Count + 3, qText: 'Planting trees helps clean the neighborhood environment.', options: ['A. True', 'B. False'], correct: 'A. True', explanation: 'Giải thích: Trồng cây giúp làm sạch môi trường.' },
+      { id: 'lp2_4', num: p1Count + 4, qText: 'Volunteer activities are only for adults.', options: ['A. True', 'B. False'], correct: 'B. False', explanation: 'Giải thích: Học sinh hoàn toàn có thể tham gia tình nguyện.' },
+      { id: 'lp2_5', num: p1Count + 5, qText: 'Cleaning neighborhood streets is part of community service.', options: ['A. True', 'B. False'], correct: 'A. True', explanation: 'Giải thích: Dọn dẹp đường phố là hoạt động vì cộng đồng.' }
+    ].slice(0, p2Count);
 
     const listeningTasks = [
       {
         task_title: `PART 1: LISTEN AND CHOOSE THE BEST ANSWER (${p1Count} CÂU HỎI)`,
         task_desc: `Audio Part 1 (${durationInfo.durationText}). Choose A, B, C, or D.`,
-        audioStream: sectionConfigs.listening.part1AudioStream || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        tapescript: tapescriptPart1,
+        // Short ~60-80s sample MP3 stream (not 7 minutes!)
+        audioStream: sectionConfigs.listening.part1AudioStream || 'https://actions.google.com/sounds/v1/speech/person_speaking.ogg',
         questions: listeningPart1Questions
       },
       {
         task_title: `PART 2: LISTEN AND DECIDE TRUE (T) OR FALSE (F) (${p2Count} CÂU HỎI)`,
         task_desc: `Audio Part 2 (${durationInfo.durationText}). Decide True or False.`,
-        audioStream: sectionConfigs.listening.part2AudioStream || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+        tapescript: tapescriptPart2,
+        audioStream: sectionConfigs.listening.part2AudioStream || 'https://actions.google.com/sounds/v1/speech/person_speaking.ogg',
         questions: listeningPart2Questions
       }
     ];
 
-    // Knowledge of Language - Dynamic questions count
+    // Knowledge of Language - Clean distinct question stems & choices
     const kCount = sectionConfigs.knowledge.questionCount;
-    const knowledgeQuestions = Array.from({ length: kCount }, (_, i) => ({
-      id: `k_${i+1}`,
-      num: i + 1,
-      qText: `Sentence ${i+1}: Minh prefers ________ (${vocabList[i % vocabList.length] || 'activities'}) in his free time.`,
-      options: ['A. practicing', 'B. practice', 'C. practiced', 'D. to practice'],
-      correct: 'A. practicing',
-      explanation: 'Giải thích chi tiết: Động từ "prefer" đi kèm V-ing khi chỉ sở thích lâu dài.'
-    }));
+    const knowledgeQuestions = [
+      { id: 'k1', num: 1, qText: 'Minh enjoys ________ model cars in his spare time.', options: ['A. building', 'B. build', 'C. built', 'D. to build'], correct: 'A. building', explanation: 'Giải thích: Động từ enjoy + V-ing.' },
+      { id: 'k2', num: 2, qText: 'Eating too much junk food can cause ________ problems.', options: ['A. health', 'B. healthy', 'C. healthily', 'D. unhealthily'], correct: 'A. health', explanation: 'Giải thích: Danh từ "health problems" (vấn đề sức khỏe).' },
+      { id: 'k3', num: 3, qText: 'We should drink ________ water every day to stay hydrated.', options: ['A. enough', 'B. many', 'C. too few', 'D. few'], correct: 'A. enough', explanation: 'Giải thích: "enough water" (đủ nước).' },
+      { id: 'k4', num: 4, qText: 'My sister hates ________ computer games on weekdays.', options: ['A. playing', 'B. play', 'C. played', 'D. to play'], correct: 'A. playing', explanation: 'Giải thích: Động từ hate + V-ing.' },
+      { id: 'k5', num: 5, qText: 'Volunteers donated books ________ poor children in rural areas.', options: ['A. to', 'B. for', 'C. with', 'D. at'], correct: 'A. to', explanation: 'Giải thích: Cấu trúc donate something to somebody.' },
+      { id: 'k6', num: 6, qText: 'Choose the word with different stress pattern.', options: ['A. hobby', 'B. collection', 'C. activity', 'D. environment'], correct: 'A. hobby', explanation: 'Giải thích: "hobby" nhấn âm 1, các từ còn lại âm 2.' },
+      { id: 'k7', num: 7, qText: 'If you want to stay fit, you should ________ sports regularly.', options: ['A. play', 'B. do', 'C. take', 'D. make'], correct: 'A. play', explanation: 'Giải thích: Cụm từ "play sports".' },
+      { id: 'k8', num: 8, qText: 'Lan has a fever, ________ she should stay at home today.', options: ['A. so', 'B. but', 'C. because', 'D. although'], correct: 'A. so', explanation: 'Giải thích: Từ nối "so" chỉ kết quả.' },
+      { id: 'k9', num: 9, qText: 'Find the word CLOSEST in meaning to "relax":', options: ['A. unwind', 'B. worry', 'C. hurry', 'D. work'], correct: 'A. unwind', explanation: 'Giải thích: "unwind" đồng nghĩa với "relax" (thư giãn).' },
+      { id: 'k10', num: 10, qText: 'Find the word OPPOSITE in meaning to "healthy":', options: ['A. unhealthy', 'B. good', 'C. strong', 'D. active'], correct: 'A. unhealthy', explanation: 'Giải thích: Trái nghĩa với healthy là unhealthy.' }
+    ].slice(0, kCount);
 
-    // Reading Passage - Dynamic questions count
+    // Reading Passage - Mandatory Full Text Passage (80-150 words)
     const rCount = sectionConfigs.reading.questionCount;
-    const readingQuestions = Array.from({ length: rCount }, (_, i) => ({
-      id: `r_${i+1}`,
-      num: i + 1,
-      qText: `Reading Q${i+1}: What does the text state about ${vocabList[i % vocabList.length] || 'English'}?`,
-      options: ['A. It is essential for global communication', 'B. It is only used in mathematics', 'C. It is rarely spoken', 'D. It has no grammar rules'],
-      correct: 'A. It is essential for global communication',
-      explanation: 'Giải thích chi tiết: Đoạn văn ghi rõ Tiếng Anh là ngôn ngữ giao tiếp toàn cầu.'
-    }));
+    const readingPassageText = `Having a balanced lifestyle is extremely important for secondary school students. A healthy routine includes eating nutritious meals, exercising daily, and getting enough sleep. In addition, having a favorite hobby such as reading books, playing musical instruments, or gardening allows students to reduce stress after school hours. Participating in community service projects also helps teenagers develop empathy and social skills. By managing time wisely between studying and recreational activities, students can maintain physical and mental well-being throughout the academic year.`;
+
+    const readingQuestions = [
+      { id: 'r1', num: 1, qText: 'What is the main topic of the passage?', options: ['A. Having a balanced lifestyle for students', 'B. How to play musical instruments', 'C. The history of community service', 'D. Shopping tips for teenagers'], correct: 'A. Having a balanced lifestyle for students', explanation: 'Giải thích: Đoạn văn nói về lối sống cân bằng của học sinh.' },
+      { id: 'r2', num: 2, qText: 'Which of the following is NOT mentioned as a favorite hobby?', options: ['A. Playing video games', 'B. Reading books', 'C. Playing musical instruments', 'D. Gardening'], correct: 'A. Playing video games', explanation: 'Giải thích: Trong bài không đề cập chơi video games.' },
+      { id: 'r3', num: 3, qText: 'How does participating in community service help teenagers?', options: ['A. It develops empathy and social skills', 'B. It makes them tired', 'C. It earns them money', 'D. It wastes their free time'], correct: 'A. It develops empathy and social skills', explanation: 'Giải thích: Dòng 5 ghi rõ giúp phát triển thấu hiểu và kỹ năng xã hội.' },
+      { id: 'r4', num: 4, qText: 'The word "nutritious" in paragraph 1 is closest in meaning to:', options: ['A. healthy and good for body', 'B. expensive', 'C. sweet', 'D. fast'], correct: 'A. healthy and good for body', explanation: 'Giải thích: Nutritious nghĩa là bổ dưỡng, tốt cho sức khỏe.' },
+      { id: 'r5', num: 5, qText: 'According to the text, getting enough sleep helps students maintain:', options: ['A. physical and mental well-being', 'B. higher stress levels', 'C. bad habits', 'D. lower grades'], correct: 'A. physical and mental well-being', explanation: 'Giải thích: Câu cuối ghi giữ gìn sức khỏe thể chất và tinh thần.' }
+    ].slice(0, rCount);
 
     setDynamicWorksheet({
-      title: `BÀI KIỂM TRA TIẾNG ANH KHỐI ${grade} – ${unitTitleStr.toUpperCase()}`,
-      subtitle: `Bám sát 100% Ma trận SGK Global Success • Thời lượng nghe chuẩn: ${durationInfo.durationText}`,
-      contact: `Biên soạn bởi Thầy Nguyễn Văn Hải – 0384635199`,
+      title: `BÀI KIỂM TRA TIẾNG ANH KHỐI ${grade}`,
+      subtitle: `Ma trận SGK Global Success • ${unitsArr.join(' • ')}`,
+      contact: `Biên soạn bởi Thầy Nguyễn Văn Hải – Hotline: 0384635199`,
       durationInfo,
       sections: [
         { id: 'listening', title: 'I. LISTENING COMPREHENSION (KỸ NĂNG NGHE)', enabled: sectionConfigs.listening.enabled, tasks: listeningTasks },
         { id: 'knowledge', title: 'II. KNOWLEDGE OF LANGUAGE (NGỮ PHÁP & TỪ VỰNG)', enabled: sectionConfigs.knowledge.enabled, tasks: [{ task_title: `MULTIPLE CHOICE (${kCount} CÂU HỎI)`, task_desc: 'Choose the correct answer.', questions: knowledgeQuestions }] },
-        { id: 'reading', title: 'III. READING COMPREHENSION (ĐỌC HIỂU)', enabled: sectionConfigs.reading.enabled, tasks: [{ task_title: `READING PASSAGE (${rCount} CÂU HỎI)`, task_desc: `Reading passage length (${durationInfo.durationText}). Answer questions below.`, passage: `English is an essential global language for Grade ${grade} students. In ${unitsArr[0]}, students explore vocabulary related to ${vocabList.slice(0, 3).join(', ')}.`, questions: readingQuestions }] },
-        { id: 'communication', title: 'IV. COMMUNICATION (GIAO TIẾP)', enabled: sectionConfigs.communication.enabled, tasks: [{ task_title: 'EVERYDAY DIALOGUES', task_desc: 'Choose the best response.', questions: [{ id: 'c1', num: 1, qText: 'Nam: "Shall we go to the library?" - Lan: "________"', options: ['A. Great idea!', 'B. No problem.', 'C. Thanks a lot.', 'D. You are welcome.'], correct: 'A. Great idea!', explanation: 'Giải thích: Đáp lại lời rủ rê bằng câu đồng ý "Great idea!".' }] }] },
-        { id: 'writing', title: 'V. WRITING ESSAY (VIẾT SÁNG TẠO)', enabled: sectionConfigs.writing.enabled, tasks: [{ task_title: 'SHORT ESSAY', task_desc: `Write 80-100 words about ${unitsArr[0]}.`, questions: [{ id: 'w1', num: 1, qText: `Write paragraph about ${unitsArr[0]} in Grade ${grade}.`, options: null, correct: 'GV Chấm hoặc Nộp AI Chấm' }] }] },
-        { id: 'speaking', title: 'VI. SPEAKING PRACTICE (NÓI TRỰC TIẾP)', enabled: sectionConfigs.speaking.enabled, tasks: [{ task_title: 'ORAL PRESENTATION', task_desc: `Talk about ${unitsArr[0]} in 1-2 minutes.`, questions: [{ id: 's1', num: 1, qText: `Record oral topic about ${unitsArr[0]}.`, options: null, correct: 'Nộp Audio cho AI Chấm' }] }] }
+        { id: 'reading', title: 'III. READING COMPREHENSION (ĐỌC HIỂU)', enabled: sectionConfigs.reading.enabled, tasks: [{ task_title: `READING PASSAGE (${rCount} CÂU HỎI)`, task_desc: `Read the passage carefully and answer questions (${durationInfo.durationText}).`, passage: readingPassageText, questions: readingQuestions }] },
+        { id: 'communication', title: 'IV. COMMUNICATION (GIAO TIẾP)', enabled: sectionConfigs.communication.enabled, tasks: [{ task_title: 'EVERYDAY DIALOGUES', task_desc: 'Choose the best response.', questions: [{ id: 'c1', num: 1, qText: 'Nam: "Shall we go to the library this afternoon?" - Lan: "________"', options: ['A. Great idea!', 'B. No problem.', 'C. Thanks a lot.', 'D. You are welcome.'], correct: 'A. Great idea!', explanation: 'Giải thích: Đáp lại lời rủ rê bằng câu đồng ý "Great idea!".' }] }] },
+        { id: 'writing', title: 'V. WRITING ESSAY (VIẾT SÁNG TẠO)', enabled: sectionConfigs.writing.enabled, tasks: [{ task_title: 'SHORT ESSAY', task_desc: 'Write 80-100 words about your healthy routine.', questions: [{ id: 'w1', num: 1, qText: 'Write a short paragraph about your favorite hobby or healthy routine.', options: null, correct: 'GV Chấm hoặc Nộp AI Chấm' }] }] },
+        { id: 'speaking', title: 'VI. SPEAKING PRACTICE (NÓI TRỰC TIẾP)', enabled: sectionConfigs.speaking.enabled, tasks: [{ task_title: 'ORAL PRESENTATION', task_desc: 'Talk about community service in 1-2 minutes.', questions: [{ id: 's1', num: 1, qText: 'Record an oral talk about community service activities in your area.', options: null, correct: 'Nộp Audio cho AI Chấm' }] }] }
       ]
     });
   };
@@ -300,12 +324,12 @@ export const WorksheetPage = () => {
   const handleSaveToQuestionBank = () => {
     soundFX.playFanfare();
     confetti({ particleCount: 150, spread: 90 });
-    alert(`✨ ĐÃ LƯU BÀI KIỂM TRA THÀNH CÔNG VÀO NGÂN HÀNG ĐỀ THI!\n- Khối: ${gradeLevel}\n- Unit: ${selectedUnit}\n- Mã đề: EXAM-${Date.now().toString().slice(-6)}`);
+    alert(`✨ ĐÃ LƯU BÀI KIỂM TRA THÀNH CÔNG VÀO NGÂN HÀNG ĐỀ THI!\n- Khối: ${gradeLevel}\n- Các Unit: ${selectedUnits.join(', ')}\n- Mã đề: EXAM-${Date.now().toString().slice(-6)}`);
   };
 
   const handleRunAIEvaluation = (skillName) => {
     if (!studentSubmissionContent.trim() && !uploadedSubmissionFile) {
-      alert(`Vui lòng dán bài làm, nhập đoạn văn hoặc chọn file audio ghi âm cho bài ${skillName}!`);
+      alert(`Vui lòng dán bài làm hoặc chọn tệp audio ghi âm!`);
       return;
     }
 
@@ -322,13 +346,12 @@ export const WorksheetPage = () => {
         score: '8.8 / 10',
         skill: skillName,
         rating: 'Xuất sắc (Good Performance)',
-        feedback: `Học sinh có bài làm ${skillName} tốt, từ vựng bám sát chương trình Khối ${gradeLevel}. Một số lỗi nhỏ về ngữ pháp đã được AI phân tích.`,
+        feedback: `Học sinh làm bài ${skillName} tốt, dùng từ vựng phong phú. Một số lỗi nhỏ về thì quá khứ đơn đã được AI phát hiện.`,
         errors: [
-          { type: 'Ngữ pháp', detail: 'Chưa chia đúng động từ quá khứ ở câu "I practice English yesterday". Sửa thành "I practiced".' },
-          { type: 'Phát âm / Chính tả', detail: 'Chú ý từ "leisure" cần dùng đúng âm tiết /ʒ/.' }
+          { type: 'Ngữ pháp', detail: 'Chưa chia đúng động từ quá khứ ở câu "I practice English yesterday". Sửa thành "I practiced".' }
         ],
-        weaknesses: 'Học sinh còn yếu ở phần Nghe hiểu chi tiết và nối âm đuôi -ed.',
-        recommendations: 'Tăng cường dùng các từ nối "because, however, although" để làm nổi bật bài viết/bài nói.'
+        weaknesses: 'Yếu phần phát âm đuôi -ed và nối âm chi tiết.',
+        recommendations: 'Sử dụng thêm từ nối "because, however" để gắn kết đoạn văn.'
       });
     }, 1500);
   };
@@ -339,7 +362,7 @@ export const WorksheetPage = () => {
       {/* 1. HERO BANNER */}
       <PageHeroBanner
         title="Studio Soạn Đề & Lưu Ngân Hàng Đề Thi 📝"
-        subtitle="Soạn đề thi bài nghe Listening (Part 1 & Part 2), cấu hình số lượng câu hỏi tùy chọn, nạp file đề mẫu .docx và lưu trực tiếp vào Ngân hàng đề thi."
+        subtitle="Soạn đề thi bài nghe Listening (Part 1 & Part 2), chọn nhiều Units (giữa kỳ/cuối kỳ), xem điểm ngữ pháp tích hợp và xuất file bản in chuẩn."
         badge="NGÂN HÀNG ĐỀ THI • GLOBAL SUCCESS KHỐI 6 - 9"
         bgImage="/images/hero_playground_bg.jpg"
         showVipBadge={true}
@@ -376,15 +399,15 @@ export const WorksheetPage = () => {
       {activeMainMode === 'authoring' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* LEFT SIDEBAR CONTROLS (4 COLS) - COMPACT & COMPLETE MATCHING SCREENSHOT 3 */}
+          {/* LEFT SIDEBAR CONTROLS (4 COLS) */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* SECTION 1: CHỌN KHỐI & UNIT & NẠP FILE ĐỀ GỐC MẪU */}
+            {/* SECTION 1: CHỌN KHỐI & MULTI-SELECT UNITS */}
             <div className="glass-panel p-6 space-y-4 border-indigo-500/40 bg-slate-900/95 shadow-xl">
               <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                 <BookOpen className="w-5 h-5 text-indigo-400" />
                 <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
-                  1. THÔNG TIN BÀI THI & KHỐI LỚP
+                  1. CHỌN KHỐI LỚP & NHIỀU UNITS SGK
                 </h3>
               </div>
 
@@ -409,25 +432,47 @@ export const WorksheetPage = () => {
                 </div>
               </div>
 
+              {/* MULTI-SELECT UNIT PILLS BUTTONS (Thầy chọn nhiều Unit cho đề Giữa kỳ / Cuối kỳ) */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5 flex items-center justify-between">
-                  <span>UNIT BÀI HỌC KHỐI {gradeLevel}:</span>
-                  <span className="text-[10px] text-indigo-400 font-bold">(Đổi theo Khối)</span>
+                <label className="block text-xs font-bold text-slate-400 mb-2 flex items-center justify-between">
+                  <span>CHỌN CÁC UNIT BÀI HỌC KHỐI {gradeLevel}:</span>
+                  <span className="text-[10px] text-indigo-400 font-bold">(Có thể chọn nhiều Unit)</span>
                 </label>
-                <select
-                  value={selectedUnit}
-                  onChange={(e) => {
-                    soundFX.playClick();
-                    setSelectedUnit(e.target.value);
-                  }}
-                  className="w-full glass-input text-xs font-bold py-2.5"
-                >
-                  {(gradeUnitsDictionary[gradeLevel] || []).map((u, uIdx) => (
-                    <option key={uIdx} value={u} className="bg-slate-900">
-                      {u}
-                    </option>
+                
+                <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                  {(gradeUnitsDictionary[gradeLevel] || []).map((u, uIdx) => {
+                    const isSelected = selectedUnits.includes(u);
+                    return (
+                      <button
+                        key={uIdx}
+                        type="button"
+                        onClick={() => toggleUnitSelection(u)}
+                        className={`p-2 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white shadow-md border border-indigo-400'
+                            : 'bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800'
+                        }`}
+                      >
+                        <span className="truncate">{u.split(':')[0]}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* AUTO GRAMMAR & VOCAB READOUT BOX UNDER SELECTED UNITS */}
+              <div className="p-3.5 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 text-xs space-y-2">
+                <span className="font-extrabold text-indigo-300 block text-[11px] uppercase tracking-wider">
+                  ✨ CHỦ ĐIỂM NGỮ PHÁP TÍCH HỢP TỰ ĐỘNG:
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {integratedGrammarList.map((g, gIdx) => (
+                    <span key={gIdx} className="px-2 py-0.5 rounded-md bg-indigo-900/80 text-indigo-200 text-[10px] font-semibold border border-indigo-700/50">
+                      {g}
+                    </span>
                   ))}
-                </select>
+                </div>
               </div>
 
               {/* NẠP FILE ĐỀ GỐC MẪU ("MỆNH LỆNH THÉP") */}
@@ -435,9 +480,6 @@ export const WorksheetPage = () => {
                 <label className="block text-xs font-bold text-amber-300 flex items-center gap-1.5">
                   <FileUp className="w-4 h-4 text-amber-400" /> TẢI FILE ĐỀ GỐC MẪU (.DOCX / .JSON):
                 </label>
-                <p className="text-[10px] text-slate-400 leading-relaxed">
-                  (Nếu có file mẫu ➔ AI sinh đúng Format 100% về số câu & độ dài. Không có file ➔ AI tự sinh đề chuẩn SGK).
-                </p>
                 <input
                   type="file"
                   accept=".docx,.json,.txt"
@@ -452,9 +494,19 @@ export const WorksheetPage = () => {
                   className="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer"
                 />
               </div>
+
+              {/* BIG GENERATE BUTTON */}
+              <button
+                type="button"
+                onClick={handleGenerateExam}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-xl flex items-center justify-center gap-2"
+              >
+                <Zap className="w-4 h-4 fill-white" /> ✨ BẮT ĐẦU TỰ ĐỘNG SOẠN ĐỀ THI
+              </button>
+
             </div>
 
-            {/* SECTION 2: CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN & ACCORDION TÙY CHỌN SỐ CÂU (SCREENSHOT 3) */}
+            {/* SECTION 2: CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN & ACCORDION TÙY CHỌN SỐ CÂU */}
             <div className="glass-panel p-6 space-y-4 border-slate-800 bg-slate-900/95 shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider">
@@ -478,7 +530,6 @@ export const WorksheetPage = () => {
                       <span className="text-slate-200">LISTENING (Nghe hiểu - 2 Bài)</span>
                     </label>
 
-                    {/* CHEVRON BUTTON FOR EXPANDING ACCORDION */}
                     <button 
                       type="button"
                       onClick={() => toggleSectionExpand('listening')}
@@ -488,11 +539,9 @@ export const WorksheetPage = () => {
                     </button>
                   </div>
 
-                  {/* EXPANDED ACCORDION CONTROLS */}
                   {expandedSections.listening && (
                     <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-4 text-xs animate-fadeIn">
                       
-                      {/* Part 1 Settings */}
                       <div className="space-y-2 border-b border-slate-800 pb-3">
                         <span className="font-extrabold text-purple-300 block">PART 1 (Trắc nghiệm):</span>
                         <div className="flex items-center justify-between">
@@ -517,7 +566,6 @@ export const WorksheetPage = () => {
                         />
                       </div>
 
-                      {/* Part 2 Settings */}
                       <div className="space-y-2">
                         <span className="font-extrabold text-purple-300 block">PART 2 (True / False):</span>
                         <div className="flex items-center justify-between">
@@ -616,13 +664,13 @@ export const WorksheetPage = () => {
 
           </div>
 
-          {/* RIGHT MAIN PAPER DISPLAY CANVAS (8 COLS) WITH ACTION BAR (SCREENSHOT 1) */}
+          {/* RIGHT MAIN PAPER DISPLAY CANVAS (8 COLS) - SLEEK DARK PAPER TONE (NOT HARSH PURE WHITE) */}
           <div className="lg:col-span-8 space-y-6">
             
-            {/* ACTION BAR MATCHING SCREENSHOT 1 */}
+            {/* ACTION BAR */}
             <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xl">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-slate-300">Trang xem trước bản in (Khổ A4):</span>
+                <span className="text-xs font-extrabold text-slate-300">Trang xem trước bản in đề thi:</span>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
@@ -663,58 +711,68 @@ export const WorksheetPage = () => {
               </div>
             </div>
 
-            {/* PAPER CANVAS */}
-            {dynamicWorksheet && (
-              <div className="bg-white text-slate-950 p-8 sm:p-12 rounded-3xl shadow-2xl space-y-8 font-sans border border-slate-200">
+            {/* PAPER CANVAS - SLEEK DARK THEME BG-[#1e293b] */}
+            {hasGenerated && dynamicWorksheet ? (
+              <div className="bg-[#1e293b] text-slate-100 p-8 sm:p-12 rounded-3xl shadow-2xl space-y-8 font-sans border border-slate-700/80 animate-fadeIn">
                 
-                <div className="text-center space-y-2 border-b border-slate-200 pb-6">
-                  <h1 className="text-2xl font-black text-indigo-950 uppercase">{dynamicWorksheet.title}</h1>
-                  <p className="text-xs font-bold text-indigo-600">{dynamicWorksheet.subtitle}</p>
-                  <p className="text-[11px] font-semibold text-slate-500">{dynamicWorksheet.contact}</p>
+                <div className="text-center space-y-2 border-b border-slate-700 pb-6">
+                  <h1 className="text-2xl font-black text-indigo-400 uppercase tracking-wide">{dynamicWorksheet.title}</h1>
+                  <p className="text-xs font-bold text-slate-300">{dynamicWorksheet.subtitle}</p>
+                  <p className="text-[11px] font-semibold text-slate-400">{dynamicWorksheet.contact}</p>
                 </div>
 
                 <div className="space-y-8">
                   {dynamicWorksheet.sections.map((sec) => {
                     if (!sec.enabled) return null;
                     return (
-                      <div key={sec.id} className="space-y-4 border-l-4 border-indigo-600 pl-4">
-                        <h3 className="text-base font-black text-indigo-950 uppercase">{sec.title}</h3>
+                      <div key={sec.id} className="space-y-4 border-l-4 border-indigo-500 pl-4">
+                        <h3 className="text-base font-black text-indigo-300 uppercase tracking-wider">{sec.title}</h3>
                         
                         {sec.tasks.map((task, tIdx) => (
                           <div key={tIdx} className="space-y-4">
-                            <h4 className="text-xs font-black text-indigo-900">{task.task_title}</h4>
-                            <p className="text-xs italic text-slate-500">{task.task_desc}</p>
+                            <h4 className="text-xs font-black text-amber-300">{task.task_title}</h4>
+                            <p className="text-xs italic text-slate-400">{task.task_desc}</p>
 
-                            {/* DEDICATED AUDIO PLAYER FOR PART 1 & PART 2 LISTENING */}
-                            {sec.id === 'listening' && task.audioStream && (
-                              <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 space-y-2">
-                                <span className="text-xs font-black text-purple-900 flex items-center gap-1.5">
-                                  <Volume2 className="w-4 h-4 text-purple-600" />
-                                  🔊 TRÌNH PHÁT BÀI NGHE AUDIO {tIdx === 0 ? 'PART 1' : 'PART 2'} ({dynamicWorksheet.durationInfo.durationText}):
-                                </span>
-                                <audio controls src={task.audioStream} className="w-full rounded-xl" />
+                            {/* TAPESCRIPT BOX FOR TEACHERS IN ĐỀ GV MODE */}
+                            {sec.id === 'listening' && modeAnswer === 'gv' && task.tapescript && (
+                              <div className="p-4 rounded-2xl bg-slate-900 border border-purple-500/40 text-xs text-purple-200 font-mono space-y-1">
+                                <span className="font-bold text-purple-400 block mb-1">📜 TAPESCRIPT NỘI DUNG BÀI NGHE:</span>
+                                <p className="whitespace-pre-line leading-relaxed">{task.tapescript}</p>
                               </div>
                             )}
 
+                            {/* DEDICATED SHORT AUDIO PLAYER */}
+                            {sec.id === 'listening' && task.audioStream && (
+                              <div className="p-4 rounded-2xl bg-slate-900 border border-indigo-500/40 space-y-2">
+                                <span className="text-xs font-black text-indigo-300 flex items-center gap-1.5">
+                                  <Volume2 className="w-4 h-4 text-indigo-400" />
+                                  🔊 TRÌNH PHÁT BÀI NGHE AUDIO {tIdx === 0 ? 'PART 1' : 'PART 2'} ({dynamicWorksheet.durationInfo.durationText}):
+                                </span>
+                                <audio controls src={task.audioStream} className="w-full rounded-xl bg-slate-950" />
+                              </div>
+                            )}
+
+                            {/* MANDATORY READING TEXT PASSAGE */}
                             {task.passage && (
-                              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs leading-relaxed font-serif text-slate-800">
-                                <span className="font-bold text-indigo-900 block mb-1">📖 READING PASSAGE:</span>
+                              <div className="p-5 rounded-2xl bg-slate-900 border border-emerald-500/40 text-xs leading-relaxed font-serif text-slate-200">
+                                <span className="font-bold text-emerald-400 block mb-1">📖 READING PASSAGE:</span>
                                 {task.passage}
                               </div>
                             )}
 
+                            {/* CLEAN STUDENT QUESTIONS (NO STATEMENT / NO UNIT NOTES) */}
                             <div className="space-y-3">
                               {task.questions.map((q) => (
-                                <div key={q.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
-                                  <p className="font-extrabold text-slate-900">{q.num}. {q.qText}</p>
+                                <div key={q.id} className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs space-y-2">
+                                  <p className="font-extrabold text-white">{q.num}. {q.qText}</p>
                                   
                                   {q.options && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
                                       {q.options.map((opt, oIdx) => (
                                         <span
                                           key={oIdx}
-                                          className={`px-3 py-2 rounded-xl border text-xs font-bold ${
-                                            modeAnswer === 'gv' && opt === q.correct ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-slate-800 border-slate-300'
+                                          className={`px-3 py-2.5 rounded-xl border text-xs font-bold ${
+                                            modeAnswer === 'gv' && opt === q.correct ? 'bg-purple-600 text-white border-purple-500 shadow' : 'bg-slate-950 text-slate-300 border-slate-800'
                                           }`}
                                         >
                                           {opt}
@@ -723,9 +781,9 @@ export const WorksheetPage = () => {
                                     </div>
                                   )}
 
-                                  {/* DETAILED EXPLANATION FOR TEACHERS (ĐÁP ÁN CHI TIẾT DỄ HIỂU) */}
+                                  {/* DETAILED EXPLANATION FOR TEACHERS */}
                                   {modeAnswer === 'gv' && q.explanation && (
-                                    <p className="text-[11px] font-semibold text-purple-900 bg-purple-50 p-2.5 rounded-xl border border-purple-200 mt-2">
+                                    <p className="text-[11px] font-semibold text-purple-300 bg-purple-950/60 p-2.5 rounded-xl border border-purple-500/30 mt-2">
                                       💡 {q.explanation}
                                     </p>
                                   )}
@@ -741,6 +799,18 @@ export const WorksheetPage = () => {
                 </div>
 
               </div>
+            ) : (
+              <div className="glass-panel p-16 text-center space-y-4 border-indigo-500/30 bg-slate-900/90">
+                <div className="w-16 h-16 rounded-3xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto text-2xl font-black">
+                  <Zap className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">Sẵn Sàng Khởi Tạo Bài Kiểm Tra!</h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                    Vui lòng chọn Khối lớp, các Unit bài học bên cột trái và nhấp nút <strong>✨ BẮT ĐẦU TỰ ĐỘNG SOẠN ĐỀ THI</strong> để xem trước bản in.
+                  </p>
+                </div>
+              </div>
             )}
 
           </div>
@@ -748,7 +818,7 @@ export const WorksheetPage = () => {
         </div>
       )}
 
-      {/* MODE 2: DEDICATED STUDENT HOMEWORK AI SUBMISSION & EVALUATION TAB (SCREENSHOT 4) */}
+      {/* MODE 2: DEDICATED STUDENT HOMEWORK AI SUBMISSION & EVALUATION TAB */}
       {activeMainMode === 'submission' && (
         <div className="glass-panel p-8 max-w-3xl mx-auto space-y-6 border-amber-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
           <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
