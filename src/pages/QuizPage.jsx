@@ -3,12 +3,14 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { QuizCard } from '../components/quiz/QuizCard';
 import { QuizTakeModal } from '../components/quiz/QuizTakeModal';
+import { AIExamGenerator } from '../components/quiz/AIExamGenerator';
 import { CardSkeleton } from '../components/common/Skeleton';
 import { soundFX } from '../utils/soundEffects';
-import { HelpCircle, Sparkles, Trophy } from 'lucide-react';
+import { HelpCircle, Sparkles, BrainCircuit, BookOpen, Plus, Zap } from 'lucide-react';
 
 export const QuizPage = () => {
-  const { profile } = useAuth();
+  const { profile, isTeacher } = useAuth();
+  const [activeTab, setActiveTab] = useState('bank'); // 'bank' | 'generator'
   const [selectedGrade, setSelectedGrade] = useState(8);
   const [quizzes, setQuizzes] = useState([]);
   const [resultsMap, setResultsMap] = useState({});
@@ -59,57 +61,98 @@ export const QuizPage = () => {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-brand-500/30">
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
-            <HelpCircle className="w-7 h-7 text-brand-400" />
-            Ngân Hàng Đề Thi & Bài Kiểm Tra Tiếng Anh
+            <HelpCircle className="w-7 h-7 text-indigo-400" />
+            Ngân Hàng Đề Thi & Công Cụ Soạn Đề AI
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Rèn luyện kỹ năng Trắc nghiệm, Điền từ, Sắp xếp câu và Đọc hiểu tích điểm Sao.
+            Soạn đề thi chuẩn ma trận CV7991 Global Success bằng AI và làm bài kiểm tra tích điểm Sao.
           </p>
         </div>
 
-        {/* Grade Selector */}
-        <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
-          {[6, 7, 8, 9].map((g) => (
+        {/* Header Actions */}
+        <div className="flex items-center gap-3">
+          {isTeacher && (
             <button
-              key={g}
               onClick={() => {
                 soundFX.playClick();
-                setSelectedGrade(g);
+                setActiveTab(activeTab === 'generator' ? 'bank' : 'generator');
               }}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                selectedGrade === g
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              className="glass-button-accent text-xs px-4 py-2.5"
             >
-              Khối {g}
+              <Zap className="w-4 h-4" />
+              {activeTab === 'generator' ? 'Xem Ngân Hàng Đề' : 'Soạn Đề Thi Chuẩn AI ⚡'}
             </button>
-          ))}
+          )}
+
+          {/* Grade Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+            {[6, 7, 8, 9].map((g) => (
+              <button
+                key={g}
+                onClick={() => {
+                  soundFX.playClick();
+                  setSelectedGrade(g);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                  selectedGrade === g
+                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Khối {g}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Quiz List */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-      ) : quizzes.length === 0 ? (
-        <div className="glass-panel p-12 text-center text-slate-400 space-y-2">
-          <HelpCircle className="w-12 h-12 text-slate-600 mx-auto" />
-          <p className="font-semibold">Chưa có bài kiểm tra nào trong Khối {selectedGrade}.</p>
-        </div>
+      {/* Main Content Area */}
+      {activeTab === 'generator' && isTeacher ? (
+        <AIExamGenerator onExamSaved={() => {
+          fetchQuizzesAndResults();
+          setActiveTab('bank');
+        }} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {quizzes.map((q) => (
-            <QuizCard
-              key={q.id}
-              quiz={q}
-              userResult={resultsMap[q.id]}
-              onTakeQuiz={(quizToTake) => setActiveQuiz(quizToTake)}
-            />
-          ))}
+        /* Quiz List View */
+        <div className="space-y-6">
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+          ) : quizzes.length === 0 ? (
+            <div className="glass-panel p-12 text-center text-slate-400 space-y-4">
+              <HelpCircle className="w-12 h-12 text-slate-600 mx-auto" />
+              <div>
+                <p className="font-semibold text-white">Chưa có bài kiểm tra nào trong Khối {selectedGrade}.</p>
+                <p className="text-xs text-slate-400 mt-1">Giáo viên có thể nhấp nút "Soạn Đề Thi Chuẩn AI ⚡" để tự động tạo đề ngay!</p>
+              </div>
+
+              {isTeacher && (
+                <button
+                  onClick={() => {
+                    soundFX.playClick();
+                    setActiveTab('generator');
+                  }}
+                  className="glass-button-primary text-xs px-5 py-2.5 mx-auto"
+                >
+                  <BrainCircuit className="w-4 h-4" /> Soạn Đề Thi Khối {selectedGrade} Bằng AI
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {quizzes.map((q) => (
+                <QuizCard
+                  key={q.id}
+                  quiz={q}
+                  userResult={resultsMap[q.id]}
+                  onTakeQuiz={(quizToTake) => setActiveQuiz(quizToTake)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
