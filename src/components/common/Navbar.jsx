@@ -34,9 +34,10 @@ export const Navbar = () => {
   const navItems = [
     { path: '/materials', label: 'Thư Mục Học Liệu', icon: BookOpen },
     { path: '/quizzes', label: 'Ngân Hàng Đề Thi', icon: HelpCircle },
+    { path: '/worksheet', label: 'Kiểm Tra & Đánh Giá', icon: Award },
     { path: '/games', label: 'Kho Trò Chơi', icon: Gamepad2 },
     { path: '/behavior', label: 'Sổ Nề Nếp', icon: UserCheck, teacherOnly: false },
-    { path: '/leaderboard', label: 'Bảng Xếp Hạng', icon: Award },
+    { path: '/leaderboard', label: 'Bảng Xếp Hạng', icon: Star },
   ];
 
   if (isTeacher || isAdmin) {

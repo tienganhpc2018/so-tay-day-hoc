@@ -8,6 +8,7 @@ import { QuizPage } from './pages/QuizPage';
 import { GameHubPage } from './pages/GameHubPage';
 import { BehaviorPage } from './pages/BehaviorPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
+import { WorksheetPage } from './pages/WorksheetPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { TeacherDashboard } from './pages/TeacherDashboard';
@@ -118,6 +119,15 @@ export const AppContent = () => {
             element={
               <ProtectedRoute>
                 <LeaderboardPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/worksheet"
+            element={
+              <ProtectedRoute>
+                <WorksheetPage />
               </ProtectedRoute>
             }
           />
