@@ -17,7 +17,11 @@ import {
   Gift,
   Flame,
   Gamepad2,
-  Tv
+  Tv,
+  Edit3,
+  Image,
+  Upload,
+  Wand2
 } from 'lucide-react';
 import { soundFX } from '../../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -27,13 +31,26 @@ export const TeachingUtilitiesMarket = () => {
   const [activeCategory, setActiveCategory] = useState('Tất cả');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // Edit Modal State
+  const [editingItem, setEditingItem] = useState(null);
+
   // Active Selected Item for Product Detail Modal (Screenshot 1)
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Active Game Item for Playing Directly on Web (Screenshot 2)
+  // Active Game Item for Playing Directly on Web
   const [activePlayGame, setActivePlayGame] = useState(null);
 
-  // 1. FREE INTERACTIVE GAMES MATCHING SCREENSHOT 2
+  // Preset Cute 3D AI Pixar Cover Images Collection
+  const presetAiThumbnails = [
+    { title: '3D Pixar Học Sinh Trắc Nghiệm', url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop' },
+    { title: 'Vòng Quay May Mắn 3D', url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=600&auto=format&fit=crop' },
+    { title: 'Kéo Co Đấu Trí 3D', url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop' },
+    { title: 'Chém Hoa Quả AI 3D', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop' },
+    { title: 'Mặt Cắt Kỹ Thuật 3D', url: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=600&auto=format&fit=crop' },
+    { title: 'Hình Học Tương Tác 3D', url: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=600&auto=format&fit=crop' }
+  ];
+
+  // 1. FREE INTERACTIVE GAMES
   const [freeGames, setFreeGames] = useState([
     {
       id: 'fg1',
@@ -48,7 +65,7 @@ export const TeachingUtilitiesMarket = () => {
     },
     {
       id: 'fg2',
-      title: 'Kéo Co Kiến Thức',
+      title: 'Kéo Co Tri Thức (Kiến Thức)',
       tag: 'INTERACTIVE GAME',
       plays: 180,
       priceTag: 'MIỄN PHÍ',
@@ -61,7 +78,7 @@ export const TeachingUtilitiesMarket = () => {
       id: 'fg3',
       title: 'Vẹo Cổ - Nghiêng Đầu Trả Lời',
       tag: 'INTERACTIVE GAME',
-      plays: 34,
+      plays: 35,
       priceTag: 'MIỄN PHÍ',
       badgeColor: 'bg-emerald-500',
       description: 'Trò chơi trắc nghiệm camera độc đáo. Nghiêng đầu trái/phải để lựa chọn đáp án đúng.',
@@ -81,7 +98,7 @@ export const TeachingUtilitiesMarket = () => {
     }
   ]);
 
-  // 2. TEACHING UTILITIES & APPS MATCHING SCREENSHOT 1
+  // 2. TEACHING UTILITIES & APPS
   const [utilities, setUtilities] = useState([
     {
       id: 'ut1',
@@ -97,15 +114,14 @@ export const TeachingUtilitiesMarket = () => {
       phone: '0384635199',
       images: [
         'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?q=80&w=600&auto=format&fit=crop'
+        'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop'
       ],
       description: 'Ứng dụng tự động chuyển văn bản thành sơ đồ tư duy Infographic rực rỡ sắc nét được tạo trực tiếp từ Gemini Canvas.',
       url: 'https://aistudio.google.com/'
     },
     {
       id: 'ut2',
-      title: 'App hình học - Hình thang tương tác',
+      title: 'Kéo co tri thức (App Gemini Canvas)',
       categoryTag: 'TIỆN ÍCH GIẢNG DẠY',
       author: 'Nguyễn Văn Hải',
       email: 'onlineteaching.vh@gmail.com',
@@ -116,9 +132,9 @@ export const TeachingUtilitiesMarket = () => {
       price: 'Miễn phí',
       phone: '0384635199',
       images: [
-        'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=600&auto=format&fit=crop'
+        'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop'
       ],
-      description: 'Mô phỏng hình học tương tác giúp giáo viên trình chiếu bài giảng môn Công nghệ & Toán học.',
+      description: 'Trò chơi đối kháng trắc nghiệm kéo co sinh động.',
       url: 'https://aistudio.google.com/'
     },
     {
@@ -141,11 +157,13 @@ export const TeachingUtilitiesMarket = () => {
     }
   ]);
 
-  // Form State for Adding New Gemini Canvas App
-  const [newTitle, setNewTitle] = useState('');
-  const [newUrl, setNewUrl] = useState('');
-  const [newCategory, setNewCategory] = useState('Tiện ích giảng dạy');
-  const [newPrice, setNewPrice] = useState('Miễn phí');
+  // Form State for Adding / Editing App
+  const [formTitle, setFormTitle] = useState('');
+  const [formUrl, setFormUrl] = useState('');
+  const [formCategory, setFormCategory] = useState('Tiện ích giảng dạy');
+  const [formPrice, setFormPrice] = useState('Miễn phí');
+  const [formThumbnail, setFormThumbnail] = useState(presetAiThumbnails[0].url);
+  const [formDescription, setFormDescription] = useState('');
 
   const categoriesList = ['Tất cả', 'Game tương tác', 'Web/App quản lý', 'Tiện ích giảng dạy', 'Khác'];
 
@@ -156,40 +174,92 @@ export const TeachingUtilitiesMarket = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleAddUtilitySubmit = (e) => {
+  const openAddModal = () => {
+    setFormTitle('');
+    setFormUrl('');
+    setFormCategory('Tiện ích giảng dạy');
+    setFormPrice('Miễn phí');
+    setFormThumbnail(presetAiThumbnails[0].url);
+    setFormDescription('');
+    setEditingItem(null);
+    setIsAddModalOpen(true);
+  };
+
+  const openEditModal = (item) => {
+    soundFX.playClick();
+    setEditingItem(item);
+    setFormTitle(item.title);
+    setFormUrl(item.url || item.gameUrl);
+    setFormCategory(item.categoryTag || 'Tiện ích giảng dạy');
+    setFormPrice(item.price || 'Miễn phí');
+    setFormThumbnail(item.images ? item.images[0] : item.thumbnail);
+    setFormDescription(item.description || '');
+    setIsAddModalOpen(true);
+  };
+
+  const handleSaveAppSubmit = (e) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newUrl.trim()) {
-      alert('Vui lòng nhập Tiêu đề và Link nhúng Gemini Canvas / Web App!');
+    if (!formTitle.trim() || !formUrl.trim()) {
+      alert('Vui lòng nhập Tiêu đề và Link nhúng Gemini Canvas!');
       return;
     }
 
     soundFX.playClick();
-    const item = {
-      id: `custom-${Date.now()}`,
-      title: newTitle,
-      categoryTag: newCategory,
-      author: 'Nguyễn Văn Hải',
-      email: 'onlineteaching.vh@gmail.com',
-      verified: true,
-      rating: '5.0 / 5.0',
-      reviews: 0,
-      downloads: 1,
-      price: newPrice,
-      phone: '0384635199',
-      images: [
-        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop'
-      ],
-      description: 'Web App tương tác được nhúng trực tiếp từ Gemini Canvas / Google AI Studio.',
-      url: newUrl
-    };
 
-    setUtilities([item, ...utilities]);
-    soundFX.playFanfare();
-    confetti({ particleCount: 120, spread: 80 });
-    alert('✨ ĐÃ ĐĂNG APP GEMINI CANVAS THÀNH CÔNG LÊN HỆ THỐNG!');
-    setNewTitle('');
-    setNewUrl('');
+    if (editingItem) {
+      // Update existing item
+      setUtilities(prev => prev.map(u => u.id === editingItem.id ? {
+        ...u,
+        title: formTitle,
+        url: formUrl,
+        categoryTag: formCategory,
+        price: formPrice,
+        images: [formThumbnail],
+        description: formDescription || u.description
+      } : u));
+
+      setFreeGames(prev => prev.map(g => g.id === editingItem.id ? {
+        ...g,
+        title: formTitle,
+        gameUrl: formUrl,
+        thumbnail: formThumbnail,
+        description: formDescription || g.description
+      } : g));
+
+      alert('✨ ĐÃ CẬP NHẬT THÔNG TIN VÀ ẢNH AI BÌA GAME THÀNH CÔNG!');
+    } else {
+      // Add new item
+      const newItem = {
+        id: `custom-${Date.now()}`,
+        title: formTitle,
+        categoryTag: formCategory,
+        author: 'Nguyễn Văn Hải',
+        email: 'onlineteaching.vh@gmail.com',
+        verified: true,
+        rating: '5.0 / 5.0',
+        reviews: 0,
+        downloads: 1,
+        price: formPrice,
+        phone: '0384635199',
+        images: [formThumbnail],
+        description: formDescription || 'Web App tương tác được sinh từ Gemini Canvas.',
+        url: formUrl
+      };
+
+      setUtilities([newItem, ...utilities]);
+      soundFX.playFanfare();
+      confetti({ particleCount: 120, spread: 80 });
+      alert('✨ ĐÃ ĐĂNG APP VÀ KHỞI TẠO ẢNH AI THÀNH CÔNG!');
+    }
+
     setIsAddModalOpen(false);
+  };
+
+  const handleAutoGenerateAiThumbnail = () => {
+    soundFX.playClick();
+    const randomImg = presetAiThumbnails[Math.floor(Math.random() * presetAiThumbnails.length)].url;
+    setFormThumbnail(randomImg);
+    alert('✨ AI đã sinh xong 1 ảnh bìa 3D Pixar cute cho trò chơi của Thầy!');
   };
 
   const handleShareLink = (title) => {
@@ -201,7 +271,7 @@ export const TeachingUtilitiesMarket = () => {
   return (
     <div className="space-y-10 font-sans animate-fadeIn">
       
-      {/* SECTION 1: TRÒ CHƠI MIỄN PHÍ MATCHING SCREENSHOT 2 */}
+      {/* SECTION 1: TRÒ CHƠI MIỄN PHÍ WITH EDIT BUTTON */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -216,19 +286,28 @@ export const TeachingUtilitiesMarket = () => {
                 </span>
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Nhấp nút "Chơi ngay" màu xanh để mở trò chơi và chạy trực tiếp trên web!
+                Giáo viên có thể nhấp nút "Chơi ngay" hoặc "Sửa" để thay đổi ảnh bìa AI & nội dung game!
               </p>
             </div>
           </div>
         </div>
 
-        {/* GAME CARDS GRID MATCHING SCREENSHOT 2 */}
+        {/* GAME CARDS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {freeGames.map((game) => (
             <div 
               key={game.id}
-              className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl hover:border-indigo-500/50 transition-all duration-300 flex flex-col justify-between group"
+              className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl hover:border-indigo-500/50 transition-all duration-300 flex flex-col justify-between group relative"
             >
+              {/* EDIT BUTTON TOP RIGHT */}
+              <button
+                onClick={() => openEditModal(game)}
+                className="absolute top-3 right-3 z-10 p-2 rounded-xl bg-slate-900/90 text-amber-300 hover:text-white hover:bg-slate-800 border border-amber-400/50 shadow-lg text-xs font-bold flex items-center gap-1 backdrop-blur-md"
+                title="Chỉnh sửa game & Đổi ảnh bìa AI"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Sửa
+              </button>
+
               <div>
                 {/* Thumbnail Image Header */}
                 <div className="relative h-44 overflow-hidden bg-slate-950">
@@ -242,19 +321,16 @@ export const TeachingUtilitiesMarket = () => {
                   <span className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] uppercase shadow">
                     {game.priceTag}
                   </span>
-
-                  {/* Badge Lượt Chơi Right */}
-                  <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-amber-500/30 border border-amber-400/50 text-amber-300 font-extrabold text-[10px] flex items-center gap-1 backdrop-blur-md">
-                    <Flame className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    {game.plays} lượt
-                  </span>
                 </div>
 
                 {/* Body Content */}
                 <div className="p-5 space-y-2">
-                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-wider block">
-                    {game.tag}
-                  </span>
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider">
+                    <span className="text-indigo-400">{game.tag}</span>
+                    <span className="text-amber-400 flex items-center gap-1">
+                      <Flame className="w-3 h-3 fill-amber-400" /> {game.plays} lượt
+                    </span>
+                  </div>
 
                   <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-1">
                     {game.title}
@@ -266,7 +342,7 @@ export const TeachingUtilitiesMarket = () => {
                 </div>
               </div>
 
-              {/* ACTION FOOTER WITH BLUE "CHƠI NGAY" BUTTON MATCHING SCREENSHOT 2 */}
+              {/* ACTION FOOTER */}
               <div className="p-5 pt-0 flex items-center gap-2 mt-2">
                 <button
                   onClick={() => {
@@ -282,7 +358,6 @@ export const TeachingUtilitiesMarket = () => {
                 <button
                   onClick={() => handleShareLink(game.title)}
                   className="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all shrink-0"
-                  title="Chia sẻ link trò chơi"
                 >
                   <Share2 className="w-4 h-4" />
                 </button>
@@ -293,7 +368,7 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       </div>
 
-      {/* SECTION 2: CHỢ TIỆN ÍCH GIẢNG DẠY & APPS GEMINI CANVAS MATCHING SCREENSHOT 1 */}
+      {/* SECTION 2: CHỢ TIỆN ÍCH GIẢNG DẠY & APPS GEMINI CANVAS WITH EDIT BUTTON */}
       <div className="space-y-6 pt-6 border-t border-slate-800">
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -303,12 +378,12 @@ export const TeachingUtilitiesMarket = () => {
               Chợ Công Nghệ & Tiện Ích Giảng Dạy Gemini Canvas
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Đưa các Web App được sinh tự động từ Gemini Canvas / Google AI Studio lên trang web để học sinh & giáo viên dùng trực tiếp.
+              Tạo và chỉnh sửa giao diện ảnh bìa AI cute cho mọi Web App Gemini Canvas.
             </p>
           </div>
 
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={openAddModal}
             className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg flex items-center gap-1.5 shrink-0"
           >
             <Plus className="w-4 h-4" /> Thêm App Gemini Canvas
@@ -364,8 +439,17 @@ export const TeachingUtilitiesMarket = () => {
           {filteredUtilities.map((item) => (
             <div 
               key={item.id}
-              className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl hover:border-indigo-500/50 transition-all duration-300 flex flex-col justify-between group"
+              className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl hover:border-indigo-500/50 transition-all duration-300 flex flex-col justify-between group relative"
             >
+              {/* EDIT BUTTON TOP RIGHT */}
+              <button
+                onClick={() => openEditModal(item)}
+                className="absolute top-3 right-3 z-10 p-2 rounded-xl bg-slate-900/90 text-amber-300 hover:text-white hover:bg-slate-800 border border-amber-400/50 shadow-lg text-xs font-bold flex items-center gap-1 backdrop-blur-md"
+                title="Chỉnh sửa thông tin & Đổi ảnh AI"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Sửa
+              </button>
+
               <div>
                 <div className="relative h-48 bg-slate-950 overflow-hidden">
                   <img 
@@ -423,12 +507,11 @@ export const TeachingUtilitiesMarket = () => {
 
       </div>
 
-      {/* MODAL 1: PRODUCT DETAIL & BUY & PLAY DIRECTLY MATCHING SCREENSHOT 1 */}
+      {/* MODAL 1: PRODUCT DETAIL & BUY & PLAY DIRECTLY */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-4xl w-full text-slate-900 overflow-hidden shadow-2xl space-y-0 relative animate-fadeIn max-h-[90vh] overflow-y-auto">
             
-            {/* Modal Header */}
             <div className="p-6 pb-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div>
                 <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-black text-[10px] uppercase tracking-wider">
@@ -444,10 +527,7 @@ export const TeachingUtilitiesMarket = () => {
               </button>
             </div>
 
-            {/* Modal Body Grid */}
             <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-8">
-              
-              {/* Left Carousel / Preview Screenshot */}
               <div className="md:col-span-7 space-y-4">
                 <div className="rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-100 h-72 shadow-inner">
                   <img 
@@ -457,38 +537,18 @@ export const TeachingUtilitiesMarket = () => {
                   />
                 </div>
 
-                <div className="flex gap-2">
-                  {selectedProduct.images.map((img, iIdx) => (
-                    <div key={iIdx} className="w-16 h-12 rounded-xl overflow-hidden border border-slate-300 bg-slate-100">
-                      <img src={img} alt="thumb" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-
                 <p className="text-xs text-slate-600 leading-relaxed font-semibold">
                   {selectedProduct.description}
                 </p>
               </div>
 
-              {/* Right Product Purchase Sidebar Matching Screenshot 1 */}
               <div className="md:col-span-5 space-y-6">
-                
                 <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 space-y-4">
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">GIÁ SỞ HỮU SẢN PHẨM</span>
                     <span className="text-2xl font-black text-slate-900">{selectedProduct.price}</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs border-t border-slate-200 pt-3">
-                    <span className="flex items-center gap-1 text-amber-500 font-extrabold">
-                      <Star className="w-4 h-4 fill-amber-400" /> {selectedProduct.rating}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px]">
-                      📥 Đã tải: {selectedProduct.downloads}
-                    </span>
-                  </div>
-
-                  {/* Author Box Matching Screenshot 1 */}
                   <div className="flex items-center gap-3 pt-2">
                     <div className="w-10 h-10 rounded-full bg-indigo-600 text-white font-extrabold flex items-center justify-center text-sm shadow">
                       {selectedProduct.author.charAt(0)}
@@ -503,7 +563,6 @@ export const TeachingUtilitiesMarket = () => {
                   </div>
                 </div>
 
-                {/* ACTION BUTTONS MATCHING SCREENSHOT 1 */}
                 <div className="space-y-3">
                   <button
                     onClick={() => {
@@ -516,14 +575,6 @@ export const TeachingUtilitiesMarket = () => {
                   </button>
 
                   <a
-                    href={`tel:${selectedProduct.phone}`}
-                    className="w-full py-3.5 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <PhoneCall className="w-4 h-4 text-indigo-600" /> Liên hệ hỗ trợ: {selectedProduct.phone}
-                  </a>
-
-                  {/* BUTTON TO PLAY / RUN GEMINI CANVAS APP LIVE */}
-                  <a
                     href={selectedProduct.url}
                     target="_blank"
                     rel="noreferrer"
@@ -532,21 +583,6 @@ export const TeachingUtilitiesMarket = () => {
                     <Tv className="w-4 h-4 text-emerald-400" /> 🎮 CHẠY APP GEMINI CANVAS TRỰC TIẾP
                   </a>
                 </div>
-
-              </div>
-
-            </div>
-
-            {/* Modal Footer Bar Matching Screenshot 1 */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <span className="text-slate-500 font-semibold">ETA (Em Tự Học) - Chợ công nghệ & Phần mềm giáo dục số</span>
-              <div className="flex items-center gap-2">
-                <button onClick={() => alert('Đã gửi báo cáo vi phạm.')} className="px-3 py-1.5 rounded-full border border-rose-200 text-rose-600 font-bold hover:bg-rose-50 flex items-center gap-1 text-[11px]">
-                  <AlertTriangle className="w-3.5 h-3.5" /> Báo cáo vi phạm
-                </button>
-                <button onClick={() => handleShareLink(selectedProduct.title)} className="px-3 py-1.5 rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800 flex items-center gap-1 text-[11px]">
-                  <Share2 className="w-3.5 h-3.5" /> Copy link chia sẻ
-                </button>
               </div>
             </div>
 
@@ -554,7 +590,7 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       )}
 
-      {/* MODAL 2: DIRECT LIVE GAME PLAYER WHEN CLICKING "CHƠI NGAY" MATCHING SCREENSHOT 2 */}
+      {/* MODAL 2: DIRECT LIVE GAME PLAYER */}
       {activePlayGame && (
         <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 rounded-3xl max-w-5xl w-full text-white border border-slate-700 overflow-hidden shadow-2xl space-y-4 p-6 relative animate-fadeIn">
@@ -578,7 +614,6 @@ export const TeachingUtilitiesMarket = () => {
               </button>
             </div>
 
-            {/* LIVE IFRAME GAME CONTAINER */}
             <div className="w-full h-[600px] rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner">
               <iframe
                 src={activePlayGame.gameUrl}
@@ -592,39 +627,80 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       )}
 
-      {/* MODAL 3: FORM TO ADD NEW GEMINI CANVAS APP */}
+      {/* MODAL 3: ADD / EDIT APP FORM WITH AI THUMBNAIL SELECTOR */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full text-slate-900 space-y-6 shadow-2xl relative animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full text-slate-900 space-y-6 shadow-2xl relative animate-fadeIn max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <Code className="w-5 h-5 text-indigo-600" />
-                Thêm Tiện Ích Giảng Dạy Từ Gemini Canvas
+                {editingItem ? 'Chỉnh Sửa Thông Tin & Đổi Ảnh Bìa AI' : 'Thêm Tiện Ích Giảng Dạy Từ Gemini Canvas'}
               </h3>
               <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-800">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900 space-y-1">
-              <p className="font-bold flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
-                Cách đưa App từ Gemini Canvas lên trang:
-              </p>
-              <p>1. Mở Gemini Canvas / Google AI Studio ➔ Nhấn <strong>Share / Export Web App</strong>.</p>
-              <p>2. Sao chép link URL Web App hoặc mã <code>iframe</code>.</p>
-              <p>3. Dán link vào ô bên dưới ➔ Bấm Đăng để hiển thị thẻ có nút <strong>"Chơi ngay"</strong>!</p>
+            {/* AI THUMBNAIL SELECTOR SECTION */}
+            <div className="space-y-3 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs">
+              <div className="flex items-center justify-between">
+                <label className="font-extrabold text-indigo-900 flex items-center gap-1.5">
+                  <Image className="w-4 h-4 text-indigo-600" />
+                  CHỌN ẢNH BÌA AI 3D CUTE HOẶC TẢI ẢNH LÊN:
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAutoGenerateAiThumbnail}
+                  className="px-3 py-1 rounded-full bg-indigo-600 text-white font-extrabold text-[10px] flex items-center gap-1 shadow hover:bg-indigo-500"
+                >
+                  <Wand2 className="w-3 h-3" /> ✨ AI Tự Tạo Ảnh
+                </button>
+              </div>
+
+              {/* Preset AI Thumbnails Selector Grid */}
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                {presetAiThumbnails.map((preset, pIdx) => (
+                  <button
+                    type="button"
+                    key={pIdx}
+                    onClick={() => {
+                      soundFX.playClick();
+                      setFormThumbnail(preset.url);
+                    }}
+                    className={`h-16 rounded-xl overflow-hidden border-2 relative transition-all ${
+                      formThumbnail === preset.url ? 'border-indigo-600 scale-105 shadow-md' : 'border-slate-300 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={preset.url} alt={preset.title} className="w-full h-full object-cover" />
+                    {formThumbnail === preset.url && (
+                      <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Image URL Input */}
+              <div className="pt-2">
+                <span className="text-[10px] text-slate-500 font-semibold block mb-1">HOẶC DÁN LINK ẢNH TÙY CHỌN BÊN NGOÀI:</span>
+                <input
+                  type="url"
+                  value={formThumbnail}
+                  onChange={(e) => setFormThumbnail(e.target.value)}
+                  placeholder="https://link-anh-bia-cua-thay.jpg"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white"
+                />
+              </div>
             </div>
 
-            <form onSubmit={handleAddUtilitySubmit} className="space-y-4 text-xs font-bold">
+            <form onSubmit={handleSaveAppSubmit} className="space-y-4 text-xs font-bold">
               <div>
                 <label className="block text-slate-700 mb-1">TÊN ỨNG DỤNG / TIỆN ÍCH GIẢNG DẠY *</label>
                 <input
                   type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Ví dụ: App sơ đồ tư duy Tiếng Anh THCS từ Gemini Canvas..."
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  placeholder="Ví dụ: Kéo co tri thức - Game Gemini Canvas..."
                   className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-600 outline-none"
                   required
                 />
@@ -634,8 +710,8 @@ export const TeachingUtilitiesMarket = () => {
                 <label className="block text-slate-700 mb-1">LINK GEMINI CANVAS / LINK WEB APP *</label>
                 <input
                   type="url"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
+                  value={formUrl}
+                  onChange={(e) => setFormUrl(e.target.value)}
                   placeholder="https://aistudio.google.com/... hoặc link web app của Thầy"
                   className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-600 outline-none"
                   required
@@ -646,8 +722,8 @@ export const TeachingUtilitiesMarket = () => {
                 <div>
                   <label className="block text-slate-700 mb-1">THỂ LOẠI</label>
                   <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
+                    value={formCategory}
+                    onChange={(e) => setFormCategory(e.target.value)}
                     className="w-full p-3 rounded-xl border border-slate-300 text-xs bg-white"
                   >
                     <option value="Tiện ích giảng dạy">Tiện ích giảng dạy</option>
@@ -661,8 +737,8 @@ export const TeachingUtilitiesMarket = () => {
                   <label className="block text-slate-700 mb-1">GIÁ SỞ HỮU</label>
                   <input
                     type="text"
-                    value={newPrice}
-                    onChange={(e) => setNewPrice(e.target.value)}
+                    value={formPrice}
+                    onChange={(e) => setFormPrice(e.target.value)}
                     placeholder="Miễn phí hoặc 15.000 đ..."
                     className="w-full p-3 rounded-xl border border-slate-300 text-xs"
                   />
@@ -673,7 +749,7 @@ export const TeachingUtilitiesMarket = () => {
                 type="submit"
                 className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg"
               >
-                ✨ ĐĂNG TIỆN ÍCH GIẢNG DẠY NÀY LÊN HỆ THỐNG
+                {editingItem ? '✨ LƯU THAY ĐỔI & ĐỔI ẢNH BÌA AI' : '✨ ĐĂNG TIỆN ÍCH GIẢNG DẠY NÀY LÊN HỆ THỐNG'}
               </button>
             </form>
 
