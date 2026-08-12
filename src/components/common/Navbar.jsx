@@ -15,7 +15,8 @@ import {
   GraduationCap,
   Home,
   FileCheck,
-  ChevronDown
+  ChevronDown,
+  Zap
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -75,6 +76,17 @@ export const Navbar = () => {
         { label: 'Đề Thi Khối 7', path: '/quizzes?grade=7' },
         { label: 'Đề Thi Khối 8', path: '/quizzes?grade=8' },
         { label: 'Đề Thi Khối 9', path: '/quizzes?grade=9' }
+      ]
+    },
+    { 
+      path: '/exam-testing', 
+      label: 'Thi Thử', 
+      icon: Zap,
+      subMenus: [
+        { label: 'Thi Thử Khối 6', path: '/exam-testing?grade=6' },
+        { label: 'Thi Thử Khối 7', path: '/exam-testing?grade=7' },
+        { label: 'Thi Thử Khối 8', path: '/exam-testing?grade=8' },
+        { label: 'Thi Thử Khối 9', path: '/exam-testing?grade=9' }
       ]
     },
     { 

@@ -10,6 +10,7 @@ import { GameHubPage } from './pages/GameHubPage';
 import { BehaviorPage } from './pages/BehaviorPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { WorksheetPage } from './pages/WorksheetPage';
+import { ExamTestingPage } from './pages/ExamTestingPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AlertTriangle, GraduationCap, MessageCircle } from 'lucide-react';
 
@@ -85,6 +86,15 @@ export const AppContent = () => {
             element={
               <ProtectedRoute>
                 <QuizPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/exam-testing"
+            element={
+              <ProtectedRoute>
+                <ExamTestingPage />
               </ProtectedRoute>
             }
           />
