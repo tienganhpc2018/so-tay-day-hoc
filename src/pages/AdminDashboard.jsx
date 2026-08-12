@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { TableSkeleton } from '../components/common/Skeleton';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import { ShieldAlert, UserCheck, Lock, Unlock, Search, Users, UserPlus } from 'lucide-react';
 
@@ -10,7 +11,7 @@ export const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'active' | 'locked'
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     fetchUsers();
@@ -38,7 +39,6 @@ export const AdminDashboard = () => {
     soundFX.playClick();
 
     try {
-      // Local update UI immediately
       setUsers(prev => prev.map(u => u.id === userToToggle.id ? { ...u, status: newStatus } : u));
 
       const { error } = await supabase
@@ -51,7 +51,6 @@ export const AdminDashboard = () => {
       else soundFX.playCorrect();
     } catch (err) {
       console.error('Error toggling status:', err);
-      // Rollback
       setUsers(prev => prev.map(u => u.id === userToToggle.id ? { ...u, status: userToToggle.status } : u));
     }
   };
@@ -66,20 +65,16 @@ export const AdminDashboard = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* Banner */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-indigo-500/30">
-        <div>
-          <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
-            <Users className="w-7 h-7 text-brand-400" />
-            Quản Lý Tài Khoản & Phân Quyền Hệ Thống
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Quản lý tài khoản Học sinh & Giáo viên, phân quyền RBAC và thực hiện Tạm khóa / Kích hoạt lại.
-          </p>
-        </div>
-      </div>
+      {/* HERO BANNER WITH VIBRANT AI CLASSROOM BACKGROUND */}
+      <PageHeroBanner
+        title="Quản Lý Tài Khoản & Phân Quyền Hệ Thống 👥"
+        subtitle="Quản lý danh sách tài khoản Học sinh & Giáo viên, phân quyền RBAC và thực hiện Tạm khóa / Kích hoạt lại tài khoản tức thì."
+        badge="QUẢN TRỊ VIÊN VIP • BẢO MẬT HỆ THỐNG"
+        bgImage="/images/hero_school_bg.jpg"
+        showVipBadge={true}
+      />
 
       {/* Filter Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -90,7 +85,7 @@ export const AdminDashboard = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm kiếm tài liệu, họ tên, email hoặc mã HS..."
-            className="w-full glass-input pl-10 text-xs"
+            className="w-full glass-input pl-10 text-xs py-2"
           />
         </div>
 

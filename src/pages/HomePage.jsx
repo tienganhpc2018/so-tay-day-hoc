@@ -21,7 +21,9 @@ import {
   MessageCircle,
   Video,
   FileText,
-  Rocket
+  Rocket,
+  Headphones,
+  FileCheck
 } from 'lucide-react';
 
 export const HomePage = () => {
@@ -41,7 +43,7 @@ export const HomePage = () => {
         .from('learning_materials')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(6);
 
       if (data && data.length > 0) {
         setArticles(data);
@@ -51,55 +53,76 @@ export const HomePage = () => {
     }
   };
 
+  // 6 BOXES WITH 6 DISTINCT CATEGORY BADGES: VOCABULARY, GRAMMAR, AUDIO, INFOGRAPHIC, PROJECT, WORKSHEET
   const defaultArticles = [
     {
       id: 1,
       title: 'Mẹo & Từ Vựng Cốt Lõi Khối 6 • 7 • 8 • 9 Global Success',
       category: 'VOCABULARY',
+      badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
       date: currentDateStr,
       description: 'Tổng hợp trọn bộ Từ vựng Word Bank kèm phát âm audio bám sát sách giáo khoa.',
-      author: authorName
+      author: authorName,
+      link: '/materials?type=vocabulary'
     },
     {
       id: 2,
       title: 'Chủ Điểm Ngữ Pháp Trọng Tâm 12 Units Tiếng Anh THCS',
       category: 'GRAMMAR',
+      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
       date: currentDateStr,
       description: 'Tổng hợp công thức, ví dụ loại trừ đáp án sai và ma trận ngữ pháp kiểm tra định kỳ.',
-      author: authorName
+      author: authorName,
+      link: '/materials?type=grammar'
     },
     {
       id: 3,
-      title: 'Hướng Dẫn Thiết Kế Bài Giảng Điện Tử & iFrame Game Tương Tác',
-      category: 'VOCABULARY',
+      title: 'Trọn Bộ Tapescript & File Audio Luyện Nghe Tiếng Anh THCS',
+      category: 'AUDIO',
+      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
       date: currentDateStr,
-      description: 'Tích hợp các trò chơi ghép cặp, trắc nghiệm và flashcards vào tiết dạy trên lớp.',
-      author: authorName
+      description: 'File âm thanh chuẩn mono tích hợp icon cái loa cho từng phần nghe chuẩn thời lượng.',
+      author: authorName,
+      link: '/worksheet?sec=listening'
     },
     {
       id: 4,
-      title: 'Ma Trận Đề Thi CV7991 Theo Định Hướng Năng Lực Học Sinh',
-      category: 'GRAMMAR',
+      title: 'Tuyển Tập Infographic Kiến Thức Tiếng Anh THCS Trực Quan',
+      category: 'INFOGRAPHIC',
+      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
       date: currentDateStr,
-      description: 'Phân tích ma trận đề thi 15 phút, 45 phút và học kỳ bám sát chương trình mới.',
-      author: authorName
+      description: 'Hình ảnh Infographic tóm tắt ngữ pháp giúp học sinh dễ nhớ bài học trực quan.',
+      author: authorName,
+      link: '/materials?type=infographic'
     },
     {
       id: 5,
-      title: 'Tuyển Tập Infographic Kiến Thức Tiếng Anh THCS Trực Quan',
-      category: 'VOCABULARY',
+      title: 'Hướng Dẫn Thiết Kế iFrame Game & Project Tương Tác',
+      category: 'PROJECT',
+      badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
       date: currentDateStr,
-      description: 'Hình ảnh Infographic tóm tắt ngữ pháp giúp học sinh dễ nhớ bài học.',
-      author: authorName
+      description: 'Tích hợp các trò chơi ghép cặp, trắc nghiệm và flashcards vào tiết dạy trên lớp.',
+      author: authorName,
+      link: '/games'
+    },
+    {
+      id: 6,
+      title: 'Bộ Phiếu Bài Tập 4 Kỹ Năng Tích Hợp AI Chấm Điểm & Nhắc Lỗi',
+      category: 'WORKSHEET',
+      badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+      date: currentDateStr,
+      description: 'Phiếu làm bài 4 kỹ năng Listening, Speaking, Reading, Writing có đáp án cho GV.',
+      author: authorName,
+      link: '/worksheet'
     }
   ];
 
-  const displayArticles = articles.length > 0 ? articles : defaultArticles;
+  const displayArticles = articles.length >= 6 ? articles : defaultArticles;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 font-sans animate-fadeIn">
       
-      {/* 1. TOP HERO BANNER WITH AI CLASSROOM BACKGROUND IMAGE */}
+      {/* 1. TOP HERO BANNER WITH VIBRANT AI CLASSROOM BACKGROUND */}
       <PageHeroBanner
         title={`Chào mừng trở lại, ${authorName}! 👋`}
         subtitle="Khám phá nền tảng giáo dục thông minh với đầy đủ công cụ quản lý chuyên môn, trò chơi tương tác, ngân hàng đề thi bám sát ma trận CV7991 và thư viện tài liệu phong phú."
@@ -235,12 +258,12 @@ export const HomePage = () => {
 
       </div>
 
-      {/* 3. HỌC LIỆU GLOBAL SUCCESS 📰 */}
+      {/* 3. HỌC LIỆU GLOBAL SUCCESS (ĐỦ 6 BOXES CHO 6 CHỦ ĐỀ KHÁC NHAU) 📰 */}
       <div className="space-y-6 pt-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <h2 className="text-xl font-black text-white flex items-center gap-2 border-l-4 border-indigo-500 pl-3">
             <Newspaper className="w-6 h-6 text-indigo-400" />
-            Học Liệu Global Success 📰
+            Học Liệu Global Success 📰 (6 Nội Dung Chuyên Môn)
           </h2>
 
           <Link to="/materials" className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
@@ -248,35 +271,38 @@ export const HomePage = () => {
           </Link>
         </div>
 
+        {/* EXACTLY 6 BOXES IN 2 ROWS OF 3 GRID COLUMNS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayArticles.map((art, aIdx) => (
             <Link 
               key={aIdx} 
-              to="/materials" 
-              className="rounded-3xl bg-slate-900/60 border border-slate-800/80 hover:border-indigo-500/50 p-6 space-y-4 transition-all group shadow-xl backdrop-blur-sm block"
+              to={art.link || '/materials'} 
+              className="rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 p-6 space-y-4 transition-all group shadow-xl backdrop-blur-sm block flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between text-xs">
-                <span className={`px-3 py-1 rounded-full font-black text-[11px] border uppercase ${
-                  art.category === 'GRAMMAR' 
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                    : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
-                }`}>
-                  {art.category || 'VOCABULARY'}
-                </span>
-                <span className="text-slate-400 font-semibold">{art.date || currentDateStr}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className={`px-3 py-1 rounded-full font-black text-[11px] border uppercase ${
+                    art.badgeColor || 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                  }`}>
+                    {art.category || 'VOCABULARY'}
+                  </span>
+                  <span className="text-slate-400 font-semibold">{art.date || currentDateStr}</span>
+                </div>
+
+                <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
+                  {art.title}
+                </h3>
+
+                <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                  {art.description || art.content || 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.'}
+                </p>
               </div>
 
-              <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
-                {art.title}
-              </h3>
-
-              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                {art.description || art.content || 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.'}
-              </p>
-
-              <div className="flex items-center justify-between text-xs font-bold text-slate-400 pt-3 border-t border-slate-800/80">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 pt-3 border-t border-slate-800/80 mt-auto">
                 <span>Tác giả: {authorName}</span>
-                <span className="text-indigo-400 group-hover:underline">Đọc tiếp →</span>
+                <span className="text-indigo-400 group-hover:underline flex items-center gap-1">
+                  Đọc tiếp →
+                </span>
               </div>
             </Link>
           ))}

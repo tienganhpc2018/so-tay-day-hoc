@@ -5,33 +5,40 @@ export const PageHeroBanner = ({
   title, 
   subtitle, 
   badge = 'SỔ TAY DẠY HỌC THCS • GLOBAL SUCCESS', 
-  bgGradient = 'from-slate-950/85 via-indigo-950/75 to-slate-950/85',
+  bgGradient = 'from-slate-950 via-slate-900/95 to-slate-900/80',
   bgImage = null,
   showVipBadge = false,
   actions = null
 }) => {
   return (
-    <div className="relative rounded-[32px] overflow-hidden border-2 border-brand-500/40 p-8 sm:p-12 shadow-2xl transition-all duration-300 font-sans min-h-[220px] flex flex-col justify-center bg-slate-900">
+    <div className="relative rounded-[32px] overflow-hidden border-2 border-brand-500/40 p-8 sm:p-12 shadow-2xl transition-all duration-300 font-sans min-h-[240px] flex flex-col justify-center bg-slate-950 group">
       
-      {/* High Visibility Background Image */}
+      {/* 1. Fully Visible Background Image Container */}
       {bgImage && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-65 scale-105 pointer-events-none transition-transform duration-700"
-          style={{ backgroundImage: `url(${bgImage})` }}
-        />
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={bgImage} 
+            alt={title}
+            className="w-full h-full object-cover object-center opacity-85 group-hover:scale-105 transition-transform duration-700"
+            onError={(e) => {
+              // Fallback to stylized gradient if image path fails
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          {/* Text backdrop gradient overlay for 100% text contrast while leaving image bright on the right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/40 pointer-events-none" />
+        </div>
       )}
 
-      {/* Semi-transparent Dark Gradient Overlay for perfect readability */}
-      <div className={`absolute inset-0 bg-gradient-to-r ${bgGradient} pointer-events-none`} />
+      {/* Decorative Radial Glowing Accent */}
+      <div className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-500 via-indigo-500 to-transparent z-0" />
 
-      {/* Decorative Radial Accent */}
-      <div className="absolute top-0 right-0 w-full h-full opacity-30 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-500 via-indigo-500 to-transparent" />
-
+      {/* 2. Banner Text Content */}
       <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div className="space-y-3 max-w-3xl">
           
           {badge && (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/80 text-brand-300 border border-brand-500/50 text-xs font-black uppercase tracking-wider shadow-lg backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-slate-950/90 text-brand-300 border border-brand-500/60 text-xs font-black uppercase tracking-wider shadow-lg backdrop-blur-md">
               <Sparkles className="w-4 h-4 text-brand-400" />
               {badge}
             </div>
