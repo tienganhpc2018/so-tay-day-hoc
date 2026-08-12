@@ -32,22 +32,21 @@ export const AIExamGenerator = ({ onExamSaved }) => {
   const { profile } = useAuth();
   const fileInputRef = useRef(null);
   
-  // Controls
-  const [gradeLevel, setGradeLevel] = useState(7);
-  const [examType, setExamType] = useState('45'); 
-  const [difficulty, setDifficulty] = useState('Kha');
+  // Left Form Controls (Cài đặt cơ bản & Độ dài)
+  const [gradeLevel, setGradeLevel] = useState(8);
+  const [examType, setExamType] = useState('60'); // '15', '45', '60', 'de_cuong', 'unit_baitap', 'tuyen_sinh'
+  const [difficulty, setDifficulty] = useState('Kha'); // 'CoBan', 'Kha', 'NangCao'
   
   const [readingLength, setReadingLength] = useState(150);
-  const [listeningLength, setListeningLength] = useState(70); // ~60-80s for Grade 7
+  const [listeningLength, setListeningLength] = useState(100); // 80-120s for Grade 8
   const [languageLength, setLanguageLength] = useState(100);
 
   // File Upload State
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [uploadedSampleText, setUploadedSampleText] = useState('');
   
   // Right Form Controls
-  const unitsList = Object.keys(GlobalSuccessKnowledgeBase.DATA[gradeLevel] || GlobalSuccessKnowledgeBase.DATA[7]);
-  const [selectedUnits, setSelectedUnits] = useState(['Unit 5: Food and Drink']);
+  const unitsList = Object.keys(GlobalSuccessKnowledgeBase.DATA[gradeLevel] || GlobalSuccessKnowledgeBase.DATA[8]);
+  const [selectedUnits, setSelectedUnits] = useState([unitsList[3] || unitsList[0], unitsList[4] || unitsList[1]]);
   const [autoGrammar, setAutoGrammar] = useState([]);
   const [customRequirements, setCustomRequirements] = useState('');
 
@@ -64,17 +63,30 @@ export const AIExamGenerator = ({ onExamSaved }) => {
   // Audio Speech State
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
-  // Auto sync Grammar focus & listening duration according to Grade Level rules
+  // Auto sync Grammar focus & listening duration according to Grade Level rules when gradeLevel or selectedUnits change
   useEffect(() => {
-    const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(gradeLevel, selectedUnits);
+    const availableUnits = Object.keys(GlobalSuccessKnowledgeBase.DATA[gradeLevel] || GlobalSuccessKnowledgeBase.DATA[8]);
+    
+    // Check if current selected units belong to current grade, else reset to current grade's units
+    const validUnits = selectedUnits.filter(u => availableUnits.includes(u));
+    const activeUnits = validUnits.length > 0 ? validUnits : [availableUnits[0], availableUnits[1] || availableUnits[0]];
+    setSelectedUnits(activeUnits);
+
+    const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(gradeLevel, activeUnits);
     setAutoGrammar(grammarList);
 
-    // Duration rules: Grade 6: 50-60s, Grade 7: 60-80s, Grade 8: 80-120s, Grade 9: 120-150s
+    // Duration rules per grade: Grade 6: 50-60s, Grade 7: 60-80s, Grade 8: 80-120s, Grade 9: 120-150s
     if (gradeLevel === 6) setListeningLength(55);
     else if (gradeLevel === 7) setListeningLength(70);
     else if (gradeLevel === 8) setListeningLength(100);
     else if (gradeLevel === 9) setListeningLength(135);
-  }, [gradeLevel, selectedUnits]);
+  }, [gradeLevel]);
+
+  // Sync grammar when selected units change
+  useEffect(() => {
+    const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(gradeLevel, selectedUnits);
+    setAutoGrammar(grammarList);
+  }, [selectedUnits]);
 
   const toggleUnit = (unit) => {
     soundFX.playClick();
@@ -97,12 +109,9 @@ export const AIExamGenerator = ({ onExamSaved }) => {
     if (file) {
       soundFX.playCorrect();
       setUploadedFile(file);
-      // Simulating real sample file text extraction
-      setUploadedSampleText(`ENGLISH GRADE ${gradeLevel} – ${selectedUnits.join(' & ')} (D13-247)`);
     }
   };
 
-  // Play Tapescript Audio using Web Speech API
   const handlePlayTapescript = (tapescriptText) => {
     if (!('speechSynthesis' in window)) {
       alert('Trình duyệt không hỗ trợ Web Speech Audio');
@@ -118,7 +127,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
     soundFX.playClick();
     const utterance = new SpeechSynthesisUtterance(tapescriptText);
     utterance.lang = 'en-US';
-    utterance.rate = 0.9; // Natural pace
+    utterance.rate = 0.88;
 
     utterance.onend = () => setIsPlayingAudio(false);
     utterance.onerror = () => setIsPlayingAudio(false);
@@ -127,121 +136,159 @@ export const AIExamGenerator = ({ onExamSaved }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Advanced Multi-Section AI Generator reading 100% of uploaded test structure (All 52 Questions & 5 Sections)
+  // DYNAMIC EXAM GENERATOR: 100% aligned with selected Grade (6, 7, 8, 9), Exam Type, and Selected Units!
   const handleGenerateAI = () => {
+    if (selectedUnits.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 Unit trọng tâm!');
+      return;
+    }
+
     soundFX.playClick();
     setGenerating(true);
     setGeneratedExam(null);
 
-    setTimeout(() => {
-      const tapescript = `[TAPESCRIPT - LISTENING SECTION (~70 seconds)]\nNam: Hi Phong! What are you preparing for lunch today?\nPhong: Hi Nam! I am making beef noodle soup and some traditional spring rolls for my family.\nNam: That sounds delicious! What ingredients do you need?\nPhong: I need beef bones, rice noodles, fresh onions, and some pepper. My mother is also stewing the broth for many hours to make it taste perfect.\nNam: Do you want some orange juice or green tea after lunch?\nPhong: A glass of orange juice would be great! Let's eat together.`;
+    const vocabList = GlobalSuccessKnowledgeBase.getVocabForUnits(gradeLevel, selectedUnits);
+    const unitTitleStr = selectedUnits.join(' & ');
+    const grammarFocusStr = autoGrammar.join(', ');
 
-      const full52QuestionsExam = {
-        title: `ENGLISH GRADE ${gradeLevel} – ${selectedUnits.join(' & ').toUpperCase()} (D13-247)`,
-        subtitle: `Thời gian làm bài: ${examType === '15' ? '15 phút' : '45 phút'} • Ma trận CV7991 Global Success`,
-        grade_level: gradeLevel,
-        time_limit_minutes: parseInt(examType, 10),
-        tapescript: tapescript,
-        sections: [
+    setTimeout(() => {
+      // 1. Build Grade-Specific Tapescript
+      let tapescript = '';
+      let sections = [];
+
+      if (gradeLevel === 8) {
+        tapescript = `[TAPESCRIPT - ENGLISH GRADE 8 (~${listeningLength} seconds)]\nNam: Hi Mai! What are you doing this weekend?\nMai: Hi Nam! I am visiting a traditional craft village with my class. We are learning about traditional lifestyles and communal houses of ethnic groups in Vietnam.\nNam: That sounds fascinating! Do artisans still preserve traditional handicrafts there?\nMai: Yes! The local artisans are very hospitable. They show us how to weave traditional cloth and make pottery.\nNam: Don't forget to take photos and share with our class forum!`;
+
+        sections = [
           {
             section_title: 'LISTENING SECTION',
             tasks: [
               {
-                task_name: 'Task 1: Listen to a talk about a cooking recipe and choose the correct answer A, B, C, or D.',
+                task_name: `Task 1: Listen to the conversation between Nam and Mai about Grade 8 ${selectedUnits[0] || 'Unit 4'} and choose the correct answer A, B, C, or D.`,
                 questions: [
-                  { id: 1, qText: 'What is the speaker sharing a recipe for?', options: ['A. spring rolls', 'B. roast chicken', 'C. apple pie', 'D. beef noodle soup'], correct: 'D. beef noodle soup', explanation: 'Đáp án D. Đoạn thoại Nam và Phong nói về cách nấu phở bò (beef noodle soup).' },
-                  { id: 2, qText: 'What ingredient is mentioned along with onions and mushrooms?', options: ['A. fried tofu', 'B. shrimp', 'C. pork', 'D. butter'], correct: 'C. pork', explanation: 'Đáp án C. Thịt lợn (pork) được nhắc tới cùng nấm và hành.' },
-                  { id: 3, qText: 'What is used to make the dish taste perfect?', options: ['A. mineral water', 'B. fish sauce and pepper', 'C. orange juice', 'D. winter melon juice'], correct: 'B. fish sauce and pepper', explanation: 'Đáp án B. Nước mắm và hạt tiêu (fish sauce and pepper).' },
-                  { id: 4, qText: 'Who helps the speaker prepare the dish?', options: ['A. father', 'B. brother', 'C. friend', 'D. mother'], correct: 'D. mother', explanation: 'Đáp án D. Mẹ của Phong (mother) ninh nước dùng.' },
-                  { id: 5, qText: 'What do they drink after eating?', options: ['A. mineral water or green tea', 'B. orange juice', 'C. lemonade', 'D. winter melon juice'], correct: 'B. orange juice', explanation: 'Đáp án B. Uống một ly nước cam (orange juice).' }
+                  { id: 1, qText: 'Where is Mai going with her class this weekend?', options: ['A. To a luxury resort', 'B. To a traditional craft village', 'C. To a modern shopping mall', 'D. To a sports stadium'], correct: 'B. To a traditional craft village', explanation: 'Đáp án B. Mai nói "I am visiting a traditional craft village with my class".' },
+                  { id: 2, qText: 'What are Mai and her classmates learning about?', options: ['A. Space exploration', 'B. Computer software', 'C. Traditional lifestyles and communal houses', 'D. Modern city transportation'], correct: 'C. Traditional lifestyles and communal houses', explanation: 'Đáp án C. Mai tìm hiểu về lối sống truyền thống và nhà nhà cộng đồng/nhà cộng cư.' }
                 ]
               },
               {
-                task_name: 'Task 2: Listen to an interview with Nam about his eating habits and fill in each blank with ONE word from the recording.',
+                task_name: 'Task 2: Listen again and fill in each blank with ONE word from the recording.',
                 questions: [
-                  { id: 6, qText: 'Nam usually has a quick breakfast because he is in a ________.', options: ['A. hurry', 'B. rush', 'C. habit', 'D. moment'], correct: 'A. hurry', explanation: 'Đáp án A. Cụm từ "in a hurry" (vội vã).' },
-                  { id: 7, qText: 'He often eats toast with butter and drinks a ________ of orange juice.', options: ['A. glass', 'B. bottle', 'C. cup', 'D. bowl'], correct: 'A. glass', explanation: 'Đáp án A. "a glass of orange juice" (một ly nước cam).' },
-                  { id: 8, qText: 'For lunch, Nam orders beef noodle soup or fried ________.', options: ['A. rice', 'B. tofu', 'C. fish', 'D. chicken'], correct: 'B. tofu', explanation: 'Đáp án B. Đậu phụ rán (fried tofu).' },
-                  { id: 9, qText: 'For dinner, his family prepares roast ________ or some seafood.', options: ['A. chicken', 'B. beef', 'C. pork', 'D. duck'], correct: 'A. chicken', explanation: 'Đáp án A. Gà quay (roast chicken).' },
-                  { id: 10, qText: 'Every day, Nam tries to drink two ________ of mineral water.', options: ['A. litres', 'B. bottles', 'C. glasses', 'D. cups'], correct: 'A. litres', explanation: 'Đáp án A. 2 lít nước khoáng (two litres).' }
+                  { id: 3, qText: 'The local artisans in the craft village are very __________.', options: ['A. hospitable', 'B. polluted', 'C. crowded', 'D. stressful'], correct: 'A. hospitable', explanation: 'Đáp án A (hospitable - mến khách).' },
+                  { id: 4, qText: 'Nam suggests Mai take photos and share them on their class __________.', options: ['A. forum', 'B. magazine', 'C. newspaper', 'D. diary'], correct: 'A. forum', explanation: 'Đáp án A (forum - diễn đàn lớp học).' }
+                ]
+              }
+            ]
+          },
+          {
+            section_title: 'KNOWLEDGE OF LANGUAGE & GRAMMAR',
+            tasks: [
+              {
+                task_name: `Task 1: Read the passage about Grade 8 ${selectedUnits.join(' & ')} and choose the best option A, B, C, or D.`,
+                questions: [
+                  { id: 5, qText: `Ethnic groups in Vietnam have their own unique (5) __________ and customs passed down through generations.`, options: ['A. heritage', 'B. stress', 'C. footprint', 'D. discount'], correct: 'A. heritage', explanation: 'Đáp án A (heritage - di sản văn hóa).' },
+                  { id: 6, qText: `While Nam (6) __________ on his school project, his brother was surfing the net.`, options: ['A. was working', 'B. works', 'C. is working', 'D. has worked'], correct: 'A. was working', explanation: 'Đáp án A. Cấu trúc Quá khứ tiếp diễn với "While": While + S + was/were + V-ing.' },
+                  { id: 7, qText: `In the countryside, people live (7) __________ than those in bustling big cities.`, options: ['A. more peacefully', 'B. peaceful', 'C. most peaceful', 'D. as peaceful'], correct: 'A. more peacefully', explanation: 'Đáp án A. So sánh hơn của trạng từ (Comparative Adverbs): more peacefully.' }
+                ]
+              }
+            ]
+          },
+          {
+            section_title: 'READING & WRITING SECTION',
+            tasks: [
+              {
+                task_name: 'Task 1: Read the text and choose True or False.',
+                questions: [
+                  { id: 8, qText: 'Stilt houses are traditional homes of many ethnic minority groups in Vietnam.', options: ['A. True', 'B. False'], correct: 'A. True', explanation: 'Đáp án True. Nhà sàn là nhà ở truyền thống của nhiều dân tộc thiểu số.' },
+                  { id: 9, qText: 'Communal houses are used only for private family dinners.', options: ['A. True', 'B. False'], correct: 'B. False', explanation: 'Đáp án False. Nhà cộng đồng dùng cho sinh hoạt chung của cả làng.' }
                 ]
               },
               {
-                task_name: 'Task 3: Listen to a guide at a traditional food exhibition and choose True or False for each statement.',
+                task_name: 'Task 2: Rewrite sentences using given words in brackets.',
                 questions: [
-                  { id: 11, qText: 'The exhibition displays traditional food.', options: ['A. True', 'B. False'], correct: 'A. True', explanation: 'True. Triển lãm trưng bày món ăn truyền thống.' },
-                  { id: 12, qText: 'The broth of the beef noodle soup is made by stewing chicken bones.', options: ['A. True', 'B. False'], correct: 'B. False', explanation: 'False. Nước dùng phở bò ninh từ xương bò (beef bones).' },
-                  { id: 13, qText: 'Eel soup is a famous dish from Nghe An.', options: ['A. True', 'B. False'], correct: 'A. True', explanation: 'True. Súp lươn Nghệ An nổi tiếng.' },
-                  { id: 14, qText: 'The sticky rice is served with some slices of beef.', options: ['A. True', 'B. False'], correct: 'B. False', explanation: 'False. Xôi ăn kèm thịt lợn/gà.' },
-                  { id: 15, qText: 'Visitors can use a spoon or fork to try the dishes.', options: ['A. True', 'B. False'], correct: 'A. True', explanation: 'True. Thực khách dùng thìa hoặc nĩa.' }
-                ]
-              }
-            ]
-          },
-          {
-            section_title: 'KNOWLEDGE OF LANGUAGE',
-            tasks: [
-              {
-                task_name: 'Task 1: Read the following email from Phong to Mark and circle the letter A, B, C, or D to indicate the correct option.',
-                questions: [
-                  { id: 16, qText: 'To make an omelette, you need to prepare (16) ____ eggs, some pepper, and some onion.', options: ['A. some', 'B. any', 'C. much', 'D. a little'], correct: 'A. some', explanation: 'Đáp án A. "eggs" đếm được số nhiều trong câu khẳng định.' },
-                  { id: 17, qText: 'Next, pour the eggs into the (17) ____ and cook for a few minutes.', options: ['A. fork', 'B. fridge', 'C. pan', 'D. exhibition'], correct: 'C. pan', explanation: 'Đáp án C (pan - cái chảo).' },
-                  { id: 18, qText: 'This traditional food is very (18) ____.', options: ['A. stewed', 'B. delicious', 'C. in a hurry', 'D. boneless'], correct: 'B. delicious', explanation: 'Đáp án B (delicious - ngon miệng).' },
-                  { id: 19, qText: 'I hope you can (19) ____ it when you visit Vietnam.', options: ['A. try', 'B. order', 'C. taste', 'D. allow'], correct: 'A. try', explanation: 'Đáp án A (try - nếm thử).' },
-                  { id: 20, qText: 'What is your favorite (20) ____?', options: ['A. carton', 'B. kilo', 'C. recipe', 'D. dish'], correct: 'D. dish', explanation: 'Đáp án D (dish - món ăn).' }
-                ]
-              },
-              {
-                task_name: 'Task 3: Circle the letter A, B, C, or D to indicate the correct answer to each of the following questions.',
-                questions: [
-                  { id: 26, qText: 'How ____ mineral water do you drink every day?', options: ['A. many', 'B. much', 'C. some', 'D. any'], correct: 'B. much', explanation: 'Đáp án B. "mineral water" là danh từ không đếm được -> How much.' },
-                  { id: 27, qText: 'I would like to order a ____ of orange juice, please.', options: ['A. carton', 'B. gram', 'C. teaspoon', 'D. kilo'], correct: 'A. carton', explanation: 'Đáp án A (carton - hộp giấy).' },
-                  { id: 28, qText: 'We don’t have ____ cheese left in the fridge.', options: ['A. some', 'B. a few', 'C. an', 'D. any'], correct: 'D. any', explanation: 'Đáp án D. "any" dùng trong câu phủ định.' },
-                  { id: 29, qText: 'Vietnamese pancakes are served ____ a lot of fresh vegetables.', options: ['A. with', 'B. by', 'C. at', 'D. in'], correct: 'A. with', explanation: 'Đáp án A (served with - ăn kèm với).' },
-                  { id: 30, qText: 'To make this cake, we need 200 ____ of butter.', options: ['A. grams', 'B. litres', 'C. millilitres', 'D. cans'], correct: 'A. grams', explanation: 'Đáp án A (grams - gam bơ).' }
-                ]
-              }
-            ]
-          },
-          {
-            section_title: 'READING SECTION',
-            tasks: [
-              {
-                task_name: 'Task 1: Read the text below and choose the correct answer A, B, C, or D.',
-                questions: [
-                  { id: 36, qText: 'What is ‘pho’ made mainly with?', options: ['A. rice noodles and chicken', 'B. toast and butter', 'C. rice noodles and beef', 'D. spring rolls and tofu'], correct: 'C. rice noodles and beef', explanation: 'Đáp án C. Phở làm từ bánh phở và thịt bò.' },
-                  { id: 37, qText: 'How is the delicious broth made?', options: ['A. by frying ginger and onion', 'B. by stewing beef bones', 'C. by adding a lot of pepper', 'D. by mixing lemonade and tea'], correct: 'B. by stewing beef bones', explanation: 'Đáp án B. Ninh xương bò nhiều giờ.' }
-                ]
-              }
-            ]
-          },
-          {
-            section_title: 'COMMUNICATION SECTION',
-            tasks: [
-              {
-                task_name: 'Choose A, B, C, or D to indicate the correct arrangement of sentences to make a conversation.',
-                questions: [
-                  { id: 46, qText: 'Make an omelette conversation arrangement:', options: ['A. b-c-a-d', 'B. a-d-c-b', 'C. a-b-c-d', 'D. d-a-b-c'], correct: 'B. a-d-c-b', explanation: 'Đáp án B (Thứ tự đúng: a -> d -> c -> b).' }
-                ]
-              }
-            ]
-          },
-          {
-            section_title: 'WRITING SECTION',
-            tasks: [
-              {
-                task_name: 'Task 1: Put the words/phrases in the correct order to make complete sentences.',
-                questions: [
-                  { id: 48, qText: 'My mother / for lunch. / usually prepares / delicious food / a lot of', options: ['My mother usually prepares a lot of delicious food for lunch.'], correct: 'My mother usually prepares a lot of delicious food for lunch.', explanation: 'Lời giải: My mother usually prepares a lot of delicious food for lunch.' },
-                  { id: 49, qText: 'How much / orange juice / have in / do you / the fridge?', options: ['How much orange juice do you have in the fridge?'], correct: 'How much orange juice do you have in the fridge?', explanation: 'Lời giải: How much orange juice do you have in the fridge?' }
+                  { id: 10, qText: 'Life in the countryside is more peaceful than life in the city. (PEACEFULLY) -> People in the countryside live...', options: ['A. People in the countryside live more peacefully than people in the city.'], correct: 'A. People in the countryside live more peacefully than people in the city.', explanation: 'Lời giải: People in the countryside live more peacefully than people in the city.' }
                 ]
               }
             ]
           }
-        ]
-      };
+        ];
+      } else if (gradeLevel === 9) {
+        tapescript = `[TAPESCRIPT - ENGLISH GRADE 9 (~${listeningLength} seconds)]\nPhong: Hi Mark! Have you decided on your future career path yet?\nMark: Hi Phong! I am thinking about vocational training in computer science. What about you?\nPhong: I am interested in environmental science to help solve urban sprawl and pollution in our metropolis.\nMark: That is a great choice! With changing roles in society, hands-on skills and bilingual ability will be very important for our generation.`;
 
-      setGeneratedExam(full52QuestionsExam);
+        sections = [
+          {
+            section_title: 'LISTENING SECTION',
+            tasks: [
+              {
+                task_name: `Task 1: Listen to Phong and Mark discussing Grade 9 ${selectedUnits[0] || 'Unit 1'} and choose A, B, C, or D.`,
+                questions: [
+                  { id: 1, qText: 'What is Mark considering for his future career path?', options: ['A. Vocational training in computer science', 'B. Traditional pottery making', 'C. Space tourism', 'D. Agriculture'], correct: 'A. Vocational training in computer science', explanation: 'Đáp án A. Mark nói "I am thinking about vocational training in computer science".' },
+                  { id: 2, qText: 'Why is Phong interested in environmental science?', options: ['A. To travel around space', 'B. To solve urban sprawl and pollution in the metropolis', 'C. To become a famous actor', 'D. To write history books'], correct: 'B. To solve urban sprawl and pollution in the metropolis', explanation: 'Đáp án B. Phong muốn giải quyết vấn đề đô thị hóa và ô nhiễm.' }
+                ]
+              }
+            ]
+          },
+          {
+            section_title: 'KNOWLEDGE OF LANGUAGE & GRAMMAR (GRADE 9)',
+            tasks: [
+              {
+                task_name: `Task 1: Grammar & Vocabulary (${grammarFocusStr})`,
+                questions: [
+                  { id: 3, qText: 'The artisan __________ spent five years restoring the ancient pagoda is very famous.', options: ['A. who', 'B. which', 'C. whom', 'D. whose'], correct: 'A. who', explanation: 'Đáp án A. Mệnh đề quan hệ chỉ người làm chủ ngữ -> who.' },
+                  { id: 4, qText: 'My elder brother decided to __________ his business after moving to the new city.', options: ['A. set up', 'B. turn down', 'C. pass down', 'D. close down'], correct: 'A. set up', explanation: 'Đáp án A (set up - thành lập doanh nghiệp).' },
+                  { id: 5, qText: 'She asked me __________ to cope with exam pressure effectively.', options: ['A. how', 'B. what', 'C. where', 'D. when'], correct: 'A. how', explanation: 'Đáp án A. Cấu trúc "Question word + to-V" -> how to cope with.' }
+                ]
+              }
+            ]
+          }
+        ];
+      } else {
+        // Grade 6 & Grade 7 Dynamic Output
+        tapescript = `[TAPESCRIPT - ENGLISH GRADE ${gradeLevel} (~${listeningLength} seconds)]\nStudent A: Welcome to our English class project for Grade ${gradeLevel}!\nStudent B: Today we are exploring vocabulary and grammar topics from ${unitTitleStr}.\nStudent A: Let's practice listening and reading skills together!`;
+
+        sections = [
+          {
+            section_title: 'LISTENING SECTION',
+            tasks: [
+              {
+                task_name: `Task 1: Listen to the Grade ${gradeLevel} dialogue and choose the correct option A, B, C, or D.`,
+                questions: [
+                  { id: 1, qText: `What grade project are the students presenting?`, options: [`A. Grade ${gradeLevel}`, 'B. Grade 5', 'C. Grade 10', 'D. Grade 12'], correct: `A. Grade ${gradeLevel}`, explanation: `Đáp án A. Dự án môn Tiếng Anh Khối ${gradeLevel}.` },
+                  { id: 2, qText: `What units are featured in their lesson today?`, options: [`A. ${unitTitleStr}`, 'B. Unit 12 Space Travel', 'C. Unit 10 Energy', 'D. Unit 1 New School'], correct: `A. ${unitTitleStr}`, explanation: `Đáp án A. Bài học về các Unit ${unitTitleStr}.` }
+                ]
+              }
+            ]
+          },
+          {
+            section_title: `KNOWLEDGE OF LANGUAGE & GRAMMAR (GRADE ${gradeLevel})`,
+            tasks: [
+              {
+                task_name: `Task 1: Practice Grammar (${grammarFocusStr})`,
+                questions: [
+                  { id: 3, qText: `Choose the word from ${selectedUnits[0] || 'Unit 1'} with different pronunciation:`, options: [`A. ${vocabList[0] || 'hobby'}`, `B. ${vocabList[1] || 'collect'}`, 'C. ensure', 'D. pleasure'], correct: `A. ${vocabList[0] || 'hobby'}`, explanation: 'Đáp án A. Kiểm tra phát âm từ vựng bài học.' },
+                  { id: 4, qText: `Complete the sentence: "Students in Grade ${gradeLevel} learn about __________."`, options: [`A. ${vocabList[1] || 'healthy diet'}`, 'B. space rockets', 'C. ancient heritage', 'D. career advice'], correct: `A. ${vocabList[1] || 'healthy diet'}`, explanation: 'Đáp án A. Từ vựng bám sát bài học.' }
+                ]
+              }
+            ]
+          }
+        ];
+      }
+
+      const examTypeLabel = 
+        examType === '15' ? 'Kiểm tra Thường xuyên (15\')' :
+        examType === '45' ? 'Kiểm tra Giữa kỳ (45\')' :
+        examType === '60' ? 'Kiểm tra Cuối kỳ (60\')' :
+        examType === 'de_cuong' ? 'Đề Cương Ôn Tập Tổng Hợp' :
+        examType === 'unit_baitap' ? 'Bài Tập Theo Unit' : 'Đề Luyện Thi Tuyển Sinh 10';
+
+      setGeneratedExam({
+        title: `ĐỀ KIỂM TRA TIẾNG ANH LỚP ${gradeLevel} - ${examTypeLabel.toUpperCase()}`,
+        subtitle: `Chủ đề: ${unitTitleStr} • Ma trận CV7991 Global Success`,
+        grade_level: gradeLevel,
+        time_limit_minutes: examType === '15' ? 15 : examType === '45' ? 45 : 60,
+        tapescript: tapescript,
+        sections: sections
+      });
+
       setGenerating(false);
       soundFX.playFanfare();
       confetti({ particleCount: 150, spread: 90 });
@@ -265,7 +312,6 @@ export const AIExamGenerator = ({ onExamSaved }) => {
         task.questions.forEach(q => {
           wordFormattedText += `Câu ${q.id}. ${q.qText}\n`;
           if (q.options && q.options.length > 1) {
-            // Join options with TAB (\t) so Word puts them neatly on 1 single horizontal line!
             wordFormattedText += `${q.options.join('\t')}\n`;
           }
           wordFormattedText += `\n`;
@@ -275,7 +321,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
     navigator.clipboard.writeText(wordFormattedText);
     soundFX.playCorrect();
-    alert('ĐÃ COPY THÀNH CÔNG ĐỀ THI CHUẨN TAB WORD!\nThầy chỉ cần mở Microsoft Word và dán (Ctrl + V). Tất cả các phương án A, B, C, D sẽ tự động căn chỉnh nằm gọn trên 1 dòng chuẩn Tab Word!');
+    alert('ĐÃ COPY THÀNH CÔNG ĐỀ THI LỚP ' + gradeLevel + ' CHUẨN TAB WORD!\nThầy chỉ cần dán (Ctrl + V) vào Word. Tất cả phương án A, B, C, D sẽ tự động nằm gọn gàng trên 1 dòng!');
   };
 
   // Save generated exam directly into Supabase DB
@@ -328,7 +374,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
       if (qErr) throw qErr;
 
       soundFX.playFanfare();
-      alert('ĐÃ LƯU THÀNH CÔNG ĐỀ THI VÀO CSDL SUPABASE & NGÂN HÀNG ĐỀ THI!');
+      alert(`ĐÃ LƯU THÀNH CÔNG ĐỀ THI LỚP ${examToSave.grade_level} VÀO CSDL SUPABASE!\nĐề thi hiện đã xuất hiện ở Tab "Ngân Hàng Đề Thi" để Học sinh làm bài trực tuyến.`);
       if (onExamSaved) onExamSaved();
     } catch (err) {
       console.error('Lỗi lưu đề thi:', err);
@@ -339,14 +385,12 @@ export const AIExamGenerator = ({ onExamSaved }) => {
     }
   };
 
-  // Open Edit Exam Modal
   const handleOpenEditModal = () => {
     soundFX.playClick();
     setEditingExam(JSON.parse(JSON.stringify(generatedExam)));
     setIsEditing(true);
   };
 
-  // Save changes from Edit Modal
   const handleSaveEditedExam = () => {
     soundFX.playCorrect();
     setGeneratedExam(editingExam);
@@ -361,7 +405,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900 border border-slate-800">
         <div className="flex items-center gap-2">
           <span className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-xs flex items-center gap-2 shadow-md">
-            <BrainCircuit className="w-4 h-4" /> Soạn Đề Thi Chuẩn AI (Ma Trận CV7991 & Đọc Form Đề Gốc)
+            <BrainCircuit className="w-4 h-4" /> Soạn Đề Thi Chuẩn AI (Khối {gradeLevel} Dynamic Generator)
           </span>
           <span className="text-slate-400 text-xs hidden sm:inline">Khối 6 • 7 • 8 • 9 Global Success</span>
         </div>
@@ -385,12 +429,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">KHỐI LỚP</label>
               <select
                 value={gradeLevel}
-                onChange={(e) => {
-                  const g = parseInt(e.target.value, 10);
-                  setGradeLevel(g);
-                  const newList = Object.keys(GlobalSuccessKnowledgeBase.DATA[g]);
-                  setSelectedUnits([newList[0]]);
-                }}
+                onChange={(e) => setGradeLevel(parseInt(e.target.value, 10))}
                 className="w-full glass-input text-sm font-semibold"
               >
                 <option value={6} className="bg-slate-900">Lớp 6</option>
@@ -400,7 +439,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               </select>
             </div>
 
-            {/* Loại hình & thời gian */}
+            {/* Các Loại hình kiểm tra */}
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">LOẠI HÌNH & THỜI GIAN</label>
               <select
@@ -562,7 +601,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
             {/* 1. CHỌN CÁC UNIT TRỌNG TÂM */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                1. CHỌN CÁC UNIT TRỌNG TÂM:
+                1. CHỌN CÁC UNIT TRỌNG TÂM (LỚP {gradeLevel}):
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -591,18 +630,18 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               </div>
             </div>
 
-            {/* 2. TRỌNG TÂM NGỮ PHÁP (TỰ ĐỘNG THEO UNIT TICK CHỌN) */}
+            {/* 2. TRỌNG TÂM NGỮ PHÁP (TỰ ĐỘNG THEO UNIT CHỌN) */}
             <div className="space-y-2 pt-2 border-t border-slate-800">
               <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-indigo-400" />
-                2. TRỌNG TÂM NGỮ PHÁP (TỰ ĐỘNG PHÙ HỢP VỚI {selectedUnits.length} UNIT CHỌN):
+                2. TRỌNG TÂM NGỮ PHÁP (TỰ ĐỘNG PHÙ HỢP KHỐI {gradeLevel}):
               </h4>
 
               <div className="flex flex-wrap gap-2 pt-1">
                 {autoGrammar.map((grammarTag, gIdx) => (
                   <span
                     key={gIdx}
-                    className="px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-200 border border-indigo-500/40 text-xs font-extrabold flex items-center gap-1.5 shadow-sm"
+                    className="px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-200 border border-indigo-500/40 text-xs font-extrabold flex items-center gap-1.5 shadow-sm animate-fadeIn"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
                     {grammarTag}
@@ -620,12 +659,12 @@ export const AIExamGenerator = ({ onExamSaved }) => {
                 rows={3}
                 value={customRequirements}
                 onChange={(e) => setCustomRequirements(e.target.value)}
-                placeholder="Ví dụ: Đề cần sinh đầy đủ 52 câu chuẩn form đề gốc D13-247, có phần đọc đoạn văn điền từ và phần viết lại câu..."
+                placeholder={`Ví dụ: Đề thi Khối ${gradeLevel} cần sinh câu hỏi đúng ma trận các Unit đã tick chọn, có đáp án phân tích loại trừ phương án sai...`}
                 className="w-full glass-input text-xs"
               />
             </div>
 
-            {/* BIG ACTION BUTTON: BẮT ĐẦU TẠO ĐỀ THI CHUẨN */}
+            {/* BIG ACTION BUTTON */}
             <button
               type="button"
               onClick={handleGenerateAI}
@@ -633,12 +672,12 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-brand-600 to-indigo-500 hover:from-indigo-500 hover:to-brand-500 text-white font-extrabold text-base shadow-xl shadow-indigo-600/30 transition-all duration-300 flex items-center justify-center gap-2 active:scale-98"
             >
               <Zap className="w-5 h-5 fill-current animate-bounce" />
-              {generating ? 'AI Đang Đọc Form Đề Gốc & Sinh 52 Câu Hỏi...' : 'BẮT ĐẦU TẠO ĐỀ THI CHUẨN ⚡'}
+              {generating ? `AI Đang Sinh Đề Thi Khối ${gradeLevel} Theo Ma Trận...` : `BẮT ĐẦU TẠO ĐỀ THI KHỐI ${gradeLevel} CHUẨN ⚡`}
             </button>
 
           </div>
 
-          {/* GENERATED EXAM PREVIEW BOX WITH AUDIO TAPESCRIPT, EDIT MODAL & WORD TAB COPY */}
+          {/* GENERATED EXAM PREVIEW BOX */}
           {generatedExam && (
             <div className="glass-panel p-8 space-y-8 border-emerald-500/50 bg-slate-900/95 shadow-2xl animate-fadeIn">
               
@@ -646,7 +685,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                 <div>
                   <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    ✓ Đã Sinh Đề Thi Chuẩn Form Đề Gốc D13-247
+                    ✓ Đã Sinh Đề Thi Khối {generatedExam.grade_level} Chuẩn Ma Trận
                   </span>
                   <h2 className="text-xl font-extrabold text-white mt-2">{generatedExam.title}</h2>
                   <p className="text-xs text-slate-400">{generatedExam.subtitle}</p>
@@ -663,7 +702,6 @@ export const AIExamGenerator = ({ onExamSaved }) => {
                   <button
                     onClick={handleCopyWordTabFormat}
                     className="glass-button-accent text-xs px-3 py-2 text-slate-950 font-bold"
-                    title="Copy chuẩn định dạng TAB Word để dán sang Word nằm gọn trên 1 dòng"
                   >
                     <Copy className="w-3.5 h-3.5" /> Copy Chuẩn TAB Word 📄
                   </button>
@@ -686,7 +724,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
                     <div className="flex items-center gap-2">
                       <Volume2 className="w-5 h-5 text-indigo-400 animate-pulse" />
                       <h4 className="text-sm font-extrabold text-indigo-200">
-                        TAPESCRIPT & BÀI NGHE AUDIO KỊCH BẢN PHÁT ÂM (THỜI LƯỢNG ~{listeningLength} GIÂY)
+                        TAPESCRIPT BÀI NGHE KHỐI {generatedExam.grade_level} (THỜI LƯỢNG ~{listeningLength} GIÂY)
                       </h4>
                     </div>
 
@@ -724,7 +762,6 @@ export const AIExamGenerator = ({ onExamSaved }) => {
                                 Câu {q.id}: {q.qText}
                               </p>
 
-                              {/* Options formatted with Tab preview */}
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300 pt-1">
                                 {q.options.map((opt, oIdx) => (
                                   <div key={oIdx} className="p-2 rounded bg-slate-900/80 border border-slate-800 font-medium">
@@ -733,7 +770,6 @@ export const AIExamGenerator = ({ onExamSaved }) => {
                                 ))}
                               </div>
 
-                              {/* Answer Key & Detailed Explanation */}
                               {showAnswerKey && (
                                 <div className="mt-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-1 animate-fadeIn">
                                   <div className="font-extrabold text-emerald-400">
@@ -761,7 +797,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
       </div>
 
-      {/* EDIT EXAM MODAL ("SỬA ĐỀ THI") */}
+      {/* EDIT EXAM MODAL */}
       {isEditing && editingExam && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
           <div className="w-full max-w-4xl glass-panel p-6 space-y-6 max-h-[90vh] overflow-y-auto border-amber-500/50">
