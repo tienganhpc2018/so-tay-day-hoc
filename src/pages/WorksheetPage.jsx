@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { 
   Sparkles, 
   BookOpen, 
@@ -36,7 +37,8 @@ import {
   Mic,
   MessageSquare,
   FileCode,
-  AlertCircle
+  AlertCircle,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { GlobalSuccessKnowledgeBase } from '../data/globalSuccessData';
@@ -44,16 +46,13 @@ import { GlobalSuccessKnowledgeBase } from '../data/globalSuccessData';
 export const WorksheetPage = () => {
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
-  const initialSecParam = searchParams.get('sec'); // 'listening', 'speaking', 'reading', 'writing'
+  const secParam = searchParams.get('sec') || 'listening';
 
-  // Left Sidebar Controls
   const [gradeLevel, setGradeLevel] = useState(8);
   const [lessonSection, setLessonSection] = useState('A closer look 1');
   const [selectedUnits, setSelectedUnits] = useState(['Unit 1: Leisure Time']);
-  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
   const [selectedGrammar, setSelectedGrammar] = useState([]);
 
-  // Section Checkboxes & Accordion Expand States
   const [activeSections, setActiveSections] = useState({
     listening: true,
     speaking: true,
@@ -64,33 +63,41 @@ export const WorksheetPage = () => {
   });
 
   const [expandedSections, setExpandedSections] = useState({
-    listening: initialSecParam === 'listening',
-    speaking: initialSecParam === 'speaking',
+    listening: secParam === 'listening',
+    speaking: secParam === 'speaking',
     knowledge: false,
-    reading: initialSecParam === 'reading',
+    reading: secParam === 'reading',
     communication: false,
-    writing: initialSecParam === 'writing'
+    writing: secParam === 'writing'
   });
 
-  // Top Mode Controls
   const [modeAnswer, setModeAnswer] = useState('gv');
-  const [showConfigSummary, setShowConfigSummary] = useState(true);
   const [showAIStudioEmbed, setShowAIStudioEmbed] = useState(false);
   const [aiStudioUrl, setAiStudioUrl] = useState('https://aistudio.google.com/');
 
-  // Audio Playback State
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [showTapescript, setShowTapescript] = useState(false);
 
-  // Student AI Submission & Grading State (Speaking & Writing)
-  const [studentSubmissionType, setStudentSubmissionType] = useState('text'); // 'text', 'link', 'audio'
+  const [studentSubmissionType, setStudentSubmissionType] = useState('text');
   const [studentSubmissionContent, setStudentSubmissionContent] = useState('');
   const [uploadedSubmissionFile, setUploadedSubmissionFile] = useState(null);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [aiEvaluationResult, setAiEvaluationResult] = useState(null);
 
-  // Dynamic Worksheet Content State
   const [dynamicWorksheet, setDynamicWorksheet] = useState(null);
+
+  useEffect(() => {
+    if (secParam) {
+      setExpandedSections({
+        listening: secParam === 'listening',
+        speaking: secParam === 'speaking',
+        knowledge: false,
+        reading: secParam === 'reading',
+        communication: false,
+        writing: secParam === 'writing'
+      });
+    }
+  }, [secParam]);
 
   useEffect(() => {
     try {
@@ -107,6 +114,7 @@ export const WorksheetPage = () => {
       generateDynamicWorksheetContent(gradeLevel, activeUnits, lessonSection);
     } catch (err) {
       console.error('Worksheet state sync error:', err);
+      generateDynamicWorksheetContent(8, ['Unit 1: Leisure Time'], 'A closer look 1');
     }
   }, [gradeLevel, lessonSection]);
 
@@ -138,11 +146,10 @@ export const WorksheetPage = () => {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Generate Worksheet Content
   const generateDynamicWorksheetContent = (grade, unitsArr, section) => {
     const vocabList = GlobalSuccessKnowledgeBase.getVocabForUnits(grade, unitsArr);
     const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(grade, unitsArr);
-    const unitTitleStr = unitsArr.join(' & ');
+    const unitTitleStr = (unitsArr || []).join(' & ');
 
     const tapescriptText = `Speaker: Welcome to Grade ${grade} English! Today we practice ${unitTitleStr}. Remember to focus on vocabulary and key grammar structures: ${grammarList.slice(0, 2).join(', ')}. Listen carefully and choose the best answers.`;
 
@@ -212,7 +219,6 @@ export const WorksheetPage = () => {
     });
   };
 
-  // AI Speaking & Writing Assessment Runner
   const handleRunAIEvaluation = () => {
     if (!studentSubmissionContent.trim() && !uploadedSubmissionFile) {
       alert('Vui lòng dán link bài làm, nhập đoạn văn hoặc chọn file audio ghi âm!');
@@ -264,71 +270,52 @@ export const WorksheetPage = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  const handlePrint = () => {
-    soundFX.playClick();
-    window.print();
-  };
-
-  const availableGradeUnits = Object.keys(GlobalSuccessKnowledgeBase?.DATA?.[gradeLevel] || GlobalSuccessKnowledgeBase?.DATA?.[8] || {});
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 space-y-6 animate-fadeIn font-sans">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* 1. TOP HEADER BAR */}
-      <div className="glass-panel p-4 sm:p-6 border-indigo-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg">
-            <GraduationCap className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold text-white">Kiểm Tra & Đánh Giá Tương Tác (Chấm AI)</h1>
-              <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-black">
-                V4.0
-              </span>
+      {/* HERO BANNER WITH AI PLAYGROUND BACKGROUND IMAGE */}
+      <PageHeroBanner
+        title="Kiểm Tra & Đánh Giá Tương Tác 📝"
+        subtitle="Phiếu làm bài 4 kỹ năng Listening, Speaking, Reading, Writing tích hợp AI chấm bài và nhắc lỗi sai tự động. Xuất Word chuẩn TAB hoặc in khổ A4."
+        badge="KIỂM TRA DẠY HỌC • CHẤM ĐIỂM THỜI GIAN THỰC"
+        bgImage="/images/hero_playground_bg.jpg"
+        actions={
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 text-xs backdrop-blur-md">
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setModeAnswer('gv');
+                }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                  modeAnswer === 'gv' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                }`}
+              >
+                Hiện đáp án (Đề GV)
+              </button>
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setModeAnswer('student');
+                }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                  modeAnswer === 'student' ? 'bg-emerald-600 text-white' : 'text-slate-400'
+                }`}
+              >
+                Phiếu học sinh
+              </button>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Phiếu làm bài 4 kỹ năng Listening, Speaking, Reading, Writing tích hợp AI chấm bài và nhắc lỗi sai
-            </p>
-          </div>
-        </div>
 
-        {/* Top Controls Right */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 text-xs">
             <button
-              onClick={() => {
-                soundFX.playClick();
-                setModeAnswer('gv');
-              }}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
-                modeAnswer === 'gv' ? 'bg-indigo-600 text-white' : 'text-slate-400'
-              }`}
+              onClick={() => setShowAIStudioEmbed(!showAIStudioEmbed)}
+              className="px-4 py-2 rounded-xl bg-purple-600/30 border border-purple-500/50 text-purple-300 text-xs font-bold flex items-center gap-1.5 hover:bg-purple-600/50 backdrop-blur-md"
             >
-              Hiện đáp án (Đề GV)
-            </button>
-            <button
-              onClick={() => {
-                soundFX.playClick();
-                setModeAnswer('student');
-              }}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
-                modeAnswer === 'student' ? 'bg-emerald-600 text-white' : 'text-slate-400'
-              }`}
-            >
-              Phiếu học sinh
+              <ExternalLink className="w-3.5 h-3.5" />
+              {showAIStudioEmbed ? 'Đóng App AI Studio' : 'Chạy App AI Studio Trực Tiếp'}
             </button>
           </div>
-
-          <button
-            onClick={() => setShowAIStudioEmbed(!showAIStudioEmbed)}
-            className="px-3 py-2 rounded-xl bg-purple-600/30 border border-purple-500/40 text-purple-300 text-xs font-bold flex items-center gap-1.5 hover:bg-purple-600/50"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            {showAIStudioEmbed ? 'Đóng App AI Studio' : 'Chạy App AI Studio Trực Tiếp'}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Embedded AI Studio View */}
       {showAIStudioEmbed && (
@@ -355,7 +342,6 @@ export const WorksheetPage = () => {
         {/* LEFT CONTROLS (4 Cols) */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* Card 1: Chọn Khối */}
           <div className="glass-panel p-6 space-y-4">
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">CHỌN KHỐI LỚP:</label>
             <div className="grid grid-cols-4 gap-2">
@@ -378,7 +364,6 @@ export const WorksheetPage = () => {
             </div>
           </div>
 
-          {/* Card 2: 4 KỸ NĂNG CÓ ACCORDION SỔ XUỐNG */}
           <div className="glass-panel p-6 space-y-4">
             <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
               <Layers className="w-4 h-4 text-indigo-400" />
@@ -426,14 +411,12 @@ export const WorksheetPage = () => {
             </div>
           </div>
 
-          {/* BOX NỘP BÀI HỌC SINH ĐỂ AI PHÂN TÍCH & CHẤM LỖI SAI (SPEAKING & WRITING) */}
           <div className="glass-panel p-6 space-y-4 border-amber-500/40 bg-slate-900/90 shadow-xl">
             <h4 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-amber-400" />
               CHẤM BÀI SPEAKING / WRITING BẰNG AI
             </h4>
 
-            {/* Sub-tabs: Text, Link, Audio file */}
             <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl text-[10px] font-bold">
               <button
                 onClick={() => setStudentSubmissionType('text')}
@@ -490,7 +473,6 @@ export const WorksheetPage = () => {
               {isAnalyzingAI ? 'AI Đang Phân Tích & Chấm Lỗi Sai...' : '🤖 Nộp Bài ĐỂ AI Phân Tích & Chấm Điểm'}
             </button>
 
-            {/* AI Evaluation Result Card */}
             {aiEvaluationResult && (
               <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/50 text-xs space-y-3 animate-fadeIn">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -558,7 +540,7 @@ export const WorksheetPage = () => {
 
             </div>
           ) : (
-            <div className="glass-panel p-12 text-center text-slate-400">Đang nạp phiếu...</div>
+            <div className="glass-panel p-12 text-center text-slate-400">Đang nạp phiếu bài tập...</div>
           )}
         </div>
 

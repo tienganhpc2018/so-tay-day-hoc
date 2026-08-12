@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { StudentBehaviorCard } from '../components/behavior/StudentBehaviorCard';
 import { RandomStudentPicker } from '../components/behavior/RandomStudentPicker';
 import { TableSkeleton } from '../components/common/Skeleton';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import { UserCheck, Dices, PlusCircle, MinusCircle, Star, Search, ShieldCheck, Calendar } from 'lucide-react';
 
@@ -98,63 +99,51 @@ export const BehaviorPage = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 font-sans">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* Top Banner */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-brand-500/30">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-white flex items-center gap-3">
-              <UserCheck className="w-7 h-7 text-emerald-400" />
-              Sổ Nề Nếp & Ý Thức Học Sinh
-            </h1>
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold border border-emerald-500/30 text-xs flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              NĂM HỌC {academicYear}
-            </span>
-          </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Quản lý cộng/trừ điểm nề nếp trực tiếp trong giờ Tiếng Anh, điểm danh & Gọi tên ngẫu nhiên (Năm học {academicYear}).
-          </p>
-        </div>
+      {/* HERO BANNER WITH AI LIBRARY BACKGROUND IMAGE */}
+      <PageHeroBanner
+        title={`Sổ Nề Nếp & Ý Thức Học Sinh (${academicYear}) 📋`}
+        subtitle={`Quản lý cộng/trừ điểm nề nếp trực tiếp trong giờ Tiếng Anh, điểm danh & Gọi tên ngẫu nhiên cho Năm học ${academicYear}.`}
+        badge={`QUẢN LÝ NỀ NẾP • LỚP ${selectedClass}`}
+        bgImage="/images/hero_library_bg.jpg"
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 text-xs font-bold backdrop-blur-md">
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setAcademicYear('2025-2026');
+                  setSearchParams({ year: '2025-2026' });
+                }}
+                className={`px-3 py-1.5 rounded-xl transition-all ${academicYear === '2025-2026' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              >
+                Năm 2025 - 2026
+              </button>
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setAcademicYear('2026-2027');
+                  setSearchParams({ year: '2026-2027' });
+                }}
+                className={`px-3 py-1.5 rounded-xl transition-all ${academicYear === '2026-2027' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              >
+                Năm 2026 - 2027
+              </button>
+            </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-xs font-bold">
             <button
               onClick={() => {
                 soundFX.playClick();
-                setAcademicYear('2025-2026');
-                setSearchParams({ year: '2025-2026' });
+                setIsPickerOpen(true);
               }}
-              className={`px-3 py-1.5 rounded-xl transition-all ${academicYear === '2025-2026' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              className="glass-button-accent text-xs px-4 py-2.5"
             >
-              2025 - 2026
-            </button>
-            <button
-              onClick={() => {
-                soundFX.playClick();
-                setAcademicYear('2026-2027');
-                setSearchParams({ year: '2026-2027' });
-              }}
-              className={`px-3 py-1.5 rounded-xl transition-all ${academicYear === '2026-2027' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-            >
-              2026 - 2027
+              <Dices className="w-4 h-4" /> Gọi Tên Ngẫu Nhiên 🎲
             </button>
           </div>
-
-          <button
-            onClick={() => {
-              soundFX.playClick();
-              setIsPickerOpen(true);
-            }}
-            className="glass-button-accent text-xs px-4 py-2.5"
-          >
-            <Dices className="w-4 h-4" />
-            Gọi Tên Ngẫu Nhiên 🎲
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Search & Class Selector */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -171,7 +160,7 @@ export const BehaviorPage = () => {
 
         <div className="flex items-center gap-2 text-xs text-slate-400 font-semibold">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Danh sách Lớp 8A5 • Quản lý nề nếp Năm học {academicYear}</span>
+          <span>Danh sách Lớp 8A5 • Sĩ số {students.length} học sinh</span>
         </div>
       </div>
 
@@ -214,7 +203,6 @@ export const BehaviorPage = () => {
         </div>
       )}
 
-      {/* Random Picker Modal */}
       <RandomStudentPicker
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}

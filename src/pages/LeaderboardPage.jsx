@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { LeaderboardTable } from '../components/gamification/LeaderboardTable';
 import { BadgeGrid } from '../components/gamification/BadgeGrid';
 import { TableSkeleton } from '../components/common/Skeleton';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { Trophy, Award, Star } from 'lucide-react';
 import { soundFX } from '../utils/soundEffects';
 
 export const LeaderboardPage = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState('leaderboard'); // 'leaderboard' | 'badges'
+  const [activeTab, setActiveTab] = useState('leaderboard');
   const [students, setStudents] = useState([]);
   const [badges, setBadges] = useState([]);
   const [userBadgeIds, setUserBadgeIds] = useState([]);
@@ -22,7 +23,6 @@ export const LeaderboardPage = () => {
   const fetchGamificationData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch top students ordered by total_stars
       const { data: stData } = await supabase
         .from('profiles')
         .select('*')
@@ -31,7 +31,6 @@ export const LeaderboardPage = () => {
         .limit(20);
 
       if (!stData || stData.length === 0) {
-        // Fallback demo students for realistic display
         setStudents([
           { id: '1', full_name: 'Nguyễn Minh Anh', grade_level: 8, student_code: 'HS8A5_01', total_stars: 120 },
           { id: '2', full_name: 'Trần Bảo Nam', grade_level: 8, student_code: 'HS8A5_02', total_stars: 95 },
@@ -43,7 +42,6 @@ export const LeaderboardPage = () => {
         setStudents(stData);
       }
 
-      // 2. Fetch all badges
       const { data: bgData } = await supabase
         .from('badges')
         .select('*')
@@ -62,7 +60,6 @@ export const LeaderboardPage = () => {
         setBadges(bgData);
       }
 
-      // 3. Check user badges
       if (profile?.id) {
         const { data: ubData } = await supabase
           .from('student_badges')
@@ -79,51 +76,46 @@ export const LeaderboardPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* Banner */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-amber-500/30">
-        <div>
-          <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
-            <Trophy className="w-7 h-7 text-amber-400" />
-            Bảng Xếp Hạng & Bộ Sưu Tập Huy Hiệu
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Vinh danh học sinh có thành tích xuất sắc và bộ sưu tập huy hiệu Tiếng Anh THCS.
-          </p>
-        </div>
+      {/* HERO BANNER WITH AI SCHOOL BACKGROUND IMAGE */}
+      <PageHeroBanner
+        title="Bảng Xếp Hạng & Vinh Danh 🏆"
+        subtitle="Vinh danh học sinh có thành tích xuất sắc, tích lũy điểm Sao thưởng và bộ sưu tập huy hiệu Tiếng Anh THCS."
+        badge="VINH DANH THÀNH TÍCH • BANG XẾP HẠNG HỌC SINH"
+        bgImage="/images/hero_school_bg.jpg"
+        actions={
+          <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 w-fit backdrop-blur-md">
+            <button
+              onClick={() => {
+                soundFX.playClick();
+                setActiveTab('leaderboard');
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
+                activeTab === 'leaderboard'
+                  ? 'bg-amber-500 text-slate-950 shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Trophy className="w-4 h-4" /> Bảng Xếp Hạng
+            </button>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
-          <button
-            onClick={() => {
-              soundFX.playClick();
-              setActiveTab('leaderboard');
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
-              activeTab === 'leaderboard'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Trophy className="w-4 h-4" /> Bảng Xếp Hạng
-          </button>
-
-          <button
-            onClick={() => {
-              soundFX.playClick();
-              setActiveTab('badges');
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
-              activeTab === 'badges'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Award className="w-4 h-4" /> Huy Hiệu Thành Tích
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={() => {
+                soundFX.playClick();
+                setActiveTab('badges');
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
+                activeTab === 'badges'
+                  ? 'bg-amber-500 text-slate-950 shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Award className="w-4 h-4" /> Huy Hiệu Thành Tích
+            </button>
+          </div>
+        }
+      />
 
       {/* Content */}
       {loading ? (

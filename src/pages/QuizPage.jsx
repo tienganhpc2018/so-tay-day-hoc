@@ -6,6 +6,7 @@ import { QuizCard } from '../components/quiz/QuizCard';
 import { QuizTakeModal } from '../components/quiz/QuizTakeModal';
 import { AIExamGenerator } from '../components/quiz/AIExamGenerator';
 import { CardSkeleton } from '../components/common/Skeleton';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import { HelpCircle, Sparkles, BrainCircuit, BookOpen, Plus, Zap } from 'lucide-react';
 
@@ -37,7 +38,6 @@ export const QuizPage = () => {
   const fetchQuizzesAndResults = async () => {
     setLoading(true);
     try {
-      // Fetch quizzes filtered ONLY by selected grade
       const { data: qData, error: qError } = await supabase
         .from('quizzes')
         .select('*')
@@ -67,57 +67,51 @@ export const QuizPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 font-sans">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-brand-500/30">
-        <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-3">
-            <HelpCircle className="w-7 h-7 text-indigo-400" />
-            Ngân Hàng Đề Thi Khối {selectedGrade}
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Liệt kê duy nhất nội dung đề thi Khối {selectedGrade} bám sát ma trận CV7991 Global Success.
-          </p>
-        </div>
-
-        {/* Header Actions */}
-        <div className="flex items-center gap-3">
-          {isTeacher && (
-            <button
-              onClick={() => {
-                soundFX.playClick();
-                setActiveTab(activeTab === 'generator' ? 'bank' : 'generator');
-              }}
-              className="glass-button-accent text-xs px-4 py-2.5"
-            >
-              <Zap className="w-4 h-4" />
-              {activeTab === 'generator' ? 'Xem Ngân Hàng Đề' : 'Soạn Đề Thi Chuẩn AI ⚡'}
-            </button>
-          )}
-
-          {/* Grade Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
-            {[6, 7, 8, 9].map((g) => (
+      {/* HERO BANNER WITH AI SCHOOL BACKGROUND IMAGE */}
+      <PageHeroBanner
+        title={`Ngân Hàng Đề Thi Khối ${selectedGrade} ⚡`}
+        subtitle={`Liệt kê duy nhất nội dung đề thi Khối ${selectedGrade} bám sát ma trận CV7991 Global Success. Tự động sinh đề AI hoặc nạp file mẫu JSON.`}
+        badge={`NGÂN HÀNG ĐỀ THI • KHỐI LỚP ${selectedGrade}`}
+        bgImage="/images/hero_school_bg.jpg"
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            {isTeacher && (
               <button
-                key={g}
                 onClick={() => {
                   soundFX.playClick();
-                  setSelectedGrade(g);
-                  setSearchParams({ grade: g.toString() });
+                  setActiveTab(activeTab === 'generator' ? 'bank' : 'generator');
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                  selectedGrade === g
-                    ? 'bg-brand-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className="glass-button-accent text-xs px-4 py-2.5"
               >
-                Khối {g}
+                <Zap className="w-4 h-4" />
+                {activeTab === 'generator' ? 'Xem Ngân Hàng Đề' : 'Soạn Đề Thi Chuẩn AI ⚡'}
               </button>
-            ))}
+            )}
+
+            <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 backdrop-blur-md">
+              {[6, 7, 8, 9].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => {
+                    soundFX.playClick();
+                    setSelectedGrade(g);
+                    setSearchParams({ grade: g.toString() });
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                    selectedGrade === g
+                      ? 'bg-brand-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Khối {g}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Main Content Area */}
       {activeTab === 'generator' && isTeacher ? (
@@ -168,7 +162,6 @@ export const QuizPage = () => {
         </div>
       )}
 
-      {/* Take Quiz Modal */}
       <QuizTakeModal
         isOpen={!!activeQuiz}
         onClose={() => setActiveQuiz(null)}
