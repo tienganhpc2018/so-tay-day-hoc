@@ -21,7 +21,8 @@ import {
   Mic,
   FileText,
   Headphones,
-  CheckCircle2
+  CheckCircle2,
+  Calendar
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -29,8 +30,6 @@ export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(soundFX.isMuted());
-
-  // Dropdown States
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   const toggleSound = () => {
@@ -46,7 +45,6 @@ export const Navbar = () => {
     navigate('/auth');
   };
 
-  // Nav Items configuration with Sub-menus
   const navItems = [
     { 
       path: '/', 
@@ -58,10 +56,10 @@ export const Navbar = () => {
       label: 'Thư Mục Học Liệu', 
       icon: BookOpen,
       subMenus: [
-        { label: 'Grammar (Ngữ pháp)', path: '/materials?type=grammar' },
-        { label: 'Vocabulary (Từ vựng)', path: '/materials?type=vocabulary' },
-        { label: 'Infographic (Trực quan)', path: '/materials?type=infographic' },
-        { label: 'Ý tưởng dạy học', path: '/materials?type=ideas' }
+        { label: '1. Grammar (Ngữ pháp)', path: '/materials?type=grammar' },
+        { label: '2. Vocabulary (Từ vựng)', path: '/materials?type=vocabulary' },
+        { label: '3. Infographic (Trực quan)', path: '/materials?type=infographic' },
+        { label: '4. Ý tưởng dạy học', path: '/materials?type=ideas' }
       ]
     },
     { 
@@ -94,7 +92,11 @@ export const Navbar = () => {
     { 
       path: '/behavior', 
       label: 'Sổ Nề Nếp', 
-      icon: Users 
+      icon: Users,
+      subMenus: [
+        { label: 'Năm học 2025 - 2026', path: '/behavior?year=2025-2026' },
+        { label: 'Năm học 2026 - 2027', path: '/behavior?year=2026-2027' }
+      ]
     },
     { 
       path: '/leaderboard', 
@@ -112,13 +114,13 @@ export const Navbar = () => {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Logo & Brand Left */}
+          {/* Logo Left */}
           <Link 
             to="/" 
             onClick={() => soundFX.playClick()}
             className="flex items-center gap-3 shrink-0 group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/25 group-hover:scale-105 transition-all duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-400 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-all duration-300">
               <GraduationCap className="w-7 h-7" />
             </div>
             <div className="flex flex-col">
@@ -134,7 +136,7 @@ export const Navbar = () => {
             </div>
           </Link>
 
-          {/* Navigation Links Center (Top Icon + Bottom Label + Dropdown Sub-menus) */}
+          {/* Navigation Links Center */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2 py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -166,7 +168,7 @@ export const Navbar = () => {
 
                   {/* Dropdown Sub-menu Modal */}
                   {hasSubMenus && activeDropdown === item.path && (
-                    <div className="absolute top-full left-0 mt-1 w-56 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1 animate-fadeIn">
+                    <div className="absolute top-full left-0 mt-1 w-60 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1 animate-fadeIn">
                       {item.subMenus.map((sub, sIdx) => (
                         <Link
                           key={sIdx}
@@ -175,7 +177,7 @@ export const Navbar = () => {
                             soundFX.playClick();
                             setActiveDropdown(null);
                           }}
-                          className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+                          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
                         >
                           <span>{sub.label}</span>
                           <span className="text-[10px] text-indigo-400 font-mono">→</span>
@@ -191,76 +193,46 @@ export const Navbar = () => {
 
           {/* Right Action Bar */}
           <div className="flex items-center gap-3 shrink-0">
-            
-            {/* Sound Toggle */}
             <button
               onClick={toggleSound}
-              title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-              className="p-2.5 rounded-xl text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 transition-all active:scale-95"
+              className="p-2.5 rounded-xl text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 transition-all"
             >
               {isMuted ? <VolumeX className="w-5 h-5 text-rose-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
             </button>
 
-            {/* Stars Counter for Student */}
             {profile && (
               <div className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400 animate-pulse-fast" />
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 <span>{profile.total_stars || 0} Sao</span>
               </div>
             )}
 
-            {/* User Profile info & Logout */}
             {profile ? (
               <div className="flex items-center gap-2">
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-xs font-extrabold text-white max-w-[130px] truncate">
                     {profile.full_name}
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase bg-brand-500/20 text-brand-300 border border-brand-500/30">
                     {profile.role === 'admin' ? 'Quản trị VIP' : profile.role === 'teacher' ? 'Giáo viên VIP' : `Học sinh K${profile.grade_level || 8}`}
                   </span>
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  title="Đăng xuất"
-                  className="p-2.5 rounded-xl text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition-all active:scale-95"
+                  className="p-2.5 rounded-xl text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition-all"
                 >
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
             ) : (
-              <Link
-                to="/auth"
-                className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 transition-all"
-              >
+              <Link to="/auth" className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg">
                 ➔ Đăng nhập
               </Link>
             )}
           </div>
 
         </div>
-      </div>
-
-      {/* Mobile Nav bar bottom */}
-      <div className="lg:hidden flex items-center justify-around py-2 border-t border-slate-800 bg-slate-900/95 overflow-x-auto no-scrollbar">
-        {navItems.slice(0, 5).map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => soundFX.playClick()}
-              className={`flex flex-col items-center gap-0.5 text-[11px] font-bold whitespace-nowrap px-2 ${
-                isActive ? 'text-brand-400' : 'text-slate-400'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
       </div>
     </header>
   );

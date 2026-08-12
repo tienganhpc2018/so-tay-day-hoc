@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { StudentBehaviorCard } from '../components/behavior/StudentBehaviorCard';
 import { RandomStudentPicker } from '../components/behavior/RandomStudentPicker';
 import { TableSkeleton } from '../components/common/Skeleton';
 import { soundFX } from '../utils/soundEffects';
-import { UserCheck, Dices, PlusCircle, MinusCircle, Star, Search, ShieldCheck } from 'lucide-react';
+import { UserCheck, Dices, PlusCircle, MinusCircle, Star, Search, ShieldCheck, Calendar } from 'lucide-react';
 
 export const BehaviorPage = () => {
   const { isTeacher } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const yearParam = searchParams.get('year') || '2025-2026';
+
   const [selectedClass, setSelectedClass] = useState('8A5');
+  const [academicYear, setAcademicYear] = useState(yearParam);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,8 +22,12 @@ export const BehaviorPage = () => {
   const [logHistory, setLogHistory] = useState([]);
 
   useEffect(() => {
+    if (yearParam) setAcademicYear(yearParam);
+  }, [yearParam]);
+
+  useEffect(() => {
     fetchStudents();
-  }, [selectedClass]);
+  }, [selectedClass, academicYear]);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -29,9 +38,8 @@ export const BehaviorPage = () => {
         .eq('role', 'student')
         .order('full_name');
 
-      if (error) throw error;
+      if (error) console.error(error);
 
-      // If empty in DB, provide realistic student roster
       if (!data || data.length === 0) {
         const dummyRoster = Array.from({ length: 12 }).map((_, i) => ({
           id: `demo-student-${i + 1}`,
@@ -46,7 +54,7 @@ export const BehaviorPage = () => {
         setStudents(data);
       }
     } catch (err) {
-      console.error('Error fetching students for behavior page:', err);
+      console.error('Error fetching students:', err);
     } finally {
       setLoading(false);
     }
@@ -61,13 +69,9 @@ export const BehaviorPage = () => {
       if (actionType === 'plus' || actionType === 'praise') starDelta = points || 1;
       if (actionType === 'minus') starDelta = -(points || 1);
 
-      // Update student stars
       const newStars = Math.max(0, (student.total_stars || 0) + starDelta);
-
-      // Local update UI immediately
       setStudents(prev => prev.map(s => s.id === student.id ? { ...s, total_stars: newStars } : s));
 
-      // Add to log history
       setLogHistory(prev => [
         {
           id: Date.now(),
@@ -80,7 +84,6 @@ export const BehaviorPage = () => {
         ...prev
       ]);
 
-      // DB Update if real user
       if (!student.id.startsWith('demo-')) {
         await supabase.from('profiles').update({ total_stars: newStars }).eq('id', student.id);
       }
@@ -95,22 +98,51 @@ export const BehaviorPage = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 font-sans">
       
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-brand-500/30">
         <div>
-          <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
-            <UserCheck className="w-7 h-7 text-emerald-400" />
-            Sổ Nề Nếp & Ý Thức Học Sinh (Sĩ số: {students.length} HS)
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-white flex items-center gap-3">
+              <UserCheck className="w-7 h-7 text-emerald-400" />
+              Sổ Nề Nếp & Ý Thức Học Sinh
+            </h1>
+            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold border border-emerald-500/30 text-xs flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              NĂM HỌC {academicYear}
+            </span>
+          </div>
           <p className="text-xs text-slate-400 mt-1">
-            Quản lý cộng/trừ điểm nề nếp trực tiếp trong giờ Tiếng Anh, điểm danh & Gọi tên ngẫu nhiên.
+            Quản lý cộng/trừ điểm nề nếp trực tiếp trong giờ Tiếng Anh, điểm danh & Gọi tên ngẫu nhiên (Năm học {academicYear}).
           </p>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-xs font-bold">
+            <button
+              onClick={() => {
+                soundFX.playClick();
+                setAcademicYear('2025-2026');
+                setSearchParams({ year: '2025-2026' });
+              }}
+              className={`px-3 py-1.5 rounded-xl transition-all ${academicYear === '2025-2026' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+            >
+              2025 - 2026
+            </button>
+            <button
+              onClick={() => {
+                soundFX.playClick();
+                setAcademicYear('2026-2027');
+                setSearchParams({ year: '2026-2027' });
+              }}
+              className={`px-3 py-1.5 rounded-xl transition-all ${academicYear === '2026-2027' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+            >
+              2026 - 2027
+            </button>
+          </div>
+
           <button
             onClick={() => {
               soundFX.playClick();
@@ -133,13 +165,13 @@ export const BehaviorPage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm kiếm học sinh theo tên hoặc mã..."
-            className="w-full glass-input pl-10 text-xs"
+            className="w-full glass-input pl-10 text-xs py-2"
           />
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-slate-400 font-semibold">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Danh sách Lớp 8A5 • Năm học 2025 - 2026</span>
+          <span>Danh sách Lớp 8A5 • Quản lý nề nếp Năm học {academicYear}</span>
         </div>
       </div>
 
@@ -161,11 +193,11 @@ export const BehaviorPage = () => {
 
       {/* Log History */}
       {logHistory.length > 0 && (
-        <div className="glass-panel p-6 space-y-4">
-          <h3 className="text-base font-bold text-white">Lịch Sử Nhật Ký Nề Nếp Trong Giờ Học</h3>
+        <div className="glass-panel p-6 space-y-4 border-slate-800">
+          <h3 className="text-base font-extrabold text-white">Lịch Sử Nhật Ký Nề Nếp Năm Học {academicYear}</h3>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {logHistory.map((log) => (
-              <div key={log.id} className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs flex items-center justify-between">
+              <div key={log.id} className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs flex items-center justify-between">
                 <div>
                   <span className="font-bold text-white">{log.studentName}: </span>
                   <span className="text-slate-300">{log.note}</span>
