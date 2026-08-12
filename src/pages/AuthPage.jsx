@@ -2,59 +2,41 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { soundFX } from '../utils/soundEffects';
-import { GraduationCap, Mail, Lock, User, UserCheck, KeyRound, Sparkles, AlertCircle } from 'lucide-react';
+import { GraduationCap, Mail, Lock, User, AlertCircle, Sparkles } from 'lucide-react';
 
 export const AuthPage = () => {
   const navigate = useNavigate();
   const { loginWithEmail, loginStudentQuick, registerUser, errorMsg } = useAuth();
   
-  const [activeTab, setActiveTab] = useState('student'); // 'student' | 'teacher' | 'register'
-  const [studentCode, setStudentCode] = useState('');
-  const [studentPassword, setStudentPassword] = useState('');
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   
-  const [email, setEmail] = useState('');
+  // Login State
+  const [emailOrCode, setEmailOrCode] = useState('');
   const [password, setPassword] = useState('');
 
-  const [regFullName, setRegFullName] = useState('');
+  // Register State (Strictly: Full Name, Email, Password)
+  const [fullName, setFullName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
-  const [regRole, setRegRole] = useState('student');
-  const [regGrade, setRegGrade] = useState('8');
-  const [regStudentCode, setRegStudentCode] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
 
-  const handleStudentLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (!studentCode || !studentPassword) return;
+    if (!emailOrCode || !password) return;
     setLoading(true);
     setLocalError(null);
     soundFX.playClick();
 
-    const res = await loginStudentQuick(studentCode, studentPassword);
+    const res = emailOrCode.includes('@')
+      ? await loginWithEmail(emailOrCode, password)
+      : await loginStudentQuick(emailOrCode, password);
+
     setLoading(false);
     if (res.success) {
       soundFX.playCorrect();
-      navigate('/materials');
-    } else {
-      soundFX.playWrong();
-      setLocalError(res.error);
-    }
-  };
-
-  const handleTeacherLogin = async (e) => {
-    e.preventDefault();
-    if (!email || !password) return;
-    setLoading(true);
-    setLocalError(null);
-    soundFX.playClick();
-
-    const res = await loginWithEmail(email, password);
-    setLoading(false);
-    if (res.success) {
-      soundFX.playCorrect();
-      navigate('/materials');
+      navigate('/');
     } else {
       soundFX.playWrong();
       setLocalError(res.error);
@@ -63,24 +45,27 @@ export const AuthPage = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (!fullName || !regEmail || !regPassword) return;
     setLoading(true);
     setLocalError(null);
     soundFX.playClick();
 
     const res = await registerUser({
+      fullName,
       email: regEmail,
-      password: regPassword,
-      fullName: regFullName,
-      role: regRole,
-      gradeLevel: regGrade,
-      studentCode: regStudentCode
+      password: regPassword
     });
 
     setLoading(false);
     if (res.success) {
       soundFX.playFanfare();
-      setActiveTab('student');
-      setLocalError('Đăng ký thành công! Vui lòng đăng nhập.');
+      setIsRegisterMode(false);
+      setEmailOrCode(regEmail);
+      setPassword(regPassword);
+      setLocalError('Đăng ký thành công! Đang tự động đăng nhập...');
+      // Auto login
+      await loginWithEmail(regEmail, regPassword);
+      navigate('/');
     } else {
       soundFX.playWrong();
       setLocalError(res.error);
@@ -91,55 +76,39 @@ export const AuthPage = () => {
     <div className="min-h-[85vh] flex items-center justify-center p-4">
       <div className="w-full max-w-md glass-panel p-8 space-y-6 shadow-2xl border-brand-500/30">
         
-        {/* Header Logo */}
+        {/* Header Logo & Title (Bỏ dòng Khối 6-9 theo yêu cầu) */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
             <GraduationCap className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-extrabold text-white">SỔ TAY TIẾNG ANH THCS</h1>
-          <p className="text-xs text-slate-400">Khối 6 • 7 • 8 • 9 Global Success</p>
+          <h1 className="text-2xl font-black text-white tracking-wide">SỔ TAY DẠY HỌC</h1>
         </div>
 
         {/* Tab Switcher */}
-        <div className="grid grid-cols-3 p-1 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-bold">
+        <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-bold">
           <button
             onClick={() => {
               soundFX.playClick();
-              setActiveTab('student');
+              setIsRegisterMode(false);
               setLocalError(null);
             }}
-            className={`py-2 rounded-lg transition-all ${
-              activeTab === 'student'
+            className={`py-2.5 rounded-lg transition-all ${
+              !isRegisterMode
                 ? 'bg-brand-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Học Sinh
+            Đăng Nhập
           </button>
 
           <button
             onClick={() => {
               soundFX.playClick();
-              setActiveTab('teacher');
+              setIsRegisterMode(true);
               setLocalError(null);
             }}
-            className={`py-2 rounded-lg transition-all ${
-              activeTab === 'teacher'
-                ? 'bg-brand-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Giáo Viên
-          </button>
-
-          <button
-            onClick={() => {
-              soundFX.playClick();
-              setActiveTab('register');
-              setLocalError(null);
-            }}
-            className={`py-2 rounded-lg transition-all ${
-              activeTab === 'register'
+            className={`py-2.5 rounded-lg transition-all ${
+              isRegisterMode
                 ? 'bg-brand-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
@@ -148,7 +117,7 @@ export const AuthPage = () => {
           </button>
         </div>
 
-        {/* Error Alert */}
+        {/* Error / Alert Notice */}
         {(localError || errorMsg) && (
           <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -156,21 +125,21 @@ export const AuthPage = () => {
           </div>
         )}
 
-        {/* Form 1: Student Quick Login */}
-        {activeTab === 'student' && (
-          <form onSubmit={handleStudentLogin} className="space-y-4">
+        {/* Form 1: Đăng Nhập (Email hoặc Mã Học Sinh) */}
+        {!isRegisterMode ? (
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Mã Học Sinh hoặc Tên Đăng Nhập
+                Email hoặc Mã Học Sinh / Tên Đăng Nhập
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
                 <input
                   type="text"
-                  value={studentCode}
-                  onChange={(e) => setStudentCode(e.target.value)}
-                  placeholder="Ví dụ: hs8a5_01 hoặc email"
-                  className="w-full glass-input pl-9"
+                  value={emailOrCode}
+                  onChange={(e) => setEmailOrCode(e.target.value)}
+                  placeholder="giaovien@gmail.com hoặc hs8a5_01"
+                  className="w-full glass-input pl-9 text-sm"
                   required
                 />
               </div>
@@ -181,60 +150,13 @@ export const AuthPage = () => {
                 Mật Khẩu
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  value={studentPassword}
-                  onChange={(e) => setStudentPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full glass-input pl-9"
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full glass-button-accent py-3 font-bold text-slate-950 text-sm"
-            >
-              {loading ? 'Đang Đăng Nhập...' : 'Đăng Nhập Học Sinh 🚀'}
-            </button>
-          </form>
-        )}
-
-        {/* Form 2: Teacher Login */}
-        {activeTab === 'teacher' && (
-          <form onSubmit={handleTeacherLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Email Giáo Viên / Admin
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="giaovien@truong.edu.vn"
-                  className="w-full glass-input pl-9"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Mật Khẩu
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full glass-input pl-9"
+                  className="w-full glass-input pl-9 text-sm"
                   required
                 />
               </div>
@@ -245,75 +167,54 @@ export const AuthPage = () => {
               disabled={loading}
               className="w-full glass-button-primary py-3 font-bold text-sm"
             >
-              {loading ? 'Đang Đăng Nhập...' : 'Đăng Nhập Quản Lý / Giáo Viên'}
+              {loading ? 'Đang Đăng Nhập...' : 'Đăng Nhập 🚀'}
             </button>
           </form>
-        )}
-
-        {/* Form 3: Register */}
-        {activeTab === 'register' && (
-          <form onSubmit={handleRegister} className="space-y-3">
+        ) : (
+          /* Form 2: Đăng Ký (Chỉ đúng 3 trường: Họ tên, Email, Mật khẩu - Bỏ hẳn dropdown Vai Trò & Khối Lớp) */
+          <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Họ và Tên</label>
-              <input
-                type="text"
-                value={regFullName}
-                onChange={(e) => setRegFullName(e.target.value)}
-                placeholder="Nguyễn Văn A"
-                className="w-full glass-input"
-                required
-              />
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Nguyễn Văn A"
+                  className="w-full glass-input pl-9 text-sm"
+                  required
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Email</label>
-              <input
-                type="email"
-                value={regEmail}
-                onChange={(e) => setRegEmail(e.target.value)}
-                placeholder="hocsinh@gmail.com"
-                className="w-full glass-input"
-                required
-              />
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="email@example.com"
+                  className="w-full glass-input pl-9 text-sm"
+                  required
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Mật Khẩu</label>
-              <input
-                type="password"
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="Mật khẩu tối thiểu 6 ký tự"
-                className="w-full glass-input"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Vai Trò</label>
-                <select
-                  value={regRole}
-                  onChange={(e) => setRegRole(e.target.value)}
-                  className="w-full glass-input"
-                >
-                  <option value="student" className="bg-slate-900">Học Sinh</option>
-                  <option value="teacher" className="bg-slate-900">Giáo Viên</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Khối Lớp</label>
-                <select
-                  value={regGrade}
-                  onChange={(e) => setRegGrade(e.target.value)}
-                  className="w-full glass-input"
-                >
-                  <option value="6" className="bg-slate-900">Khối 6</option>
-                  <option value="7" className="bg-slate-900">Khối 7</option>
-                  <option value="8" className="bg-slate-900">Khối 8</option>
-                  <option value="9" className="bg-slate-900">Khối 9</option>
-                </select>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                <input
+                  type="password"
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu"
+                  className="w-full glass-input pl-9 text-sm"
+                  required
+                />
               </div>
             </div>
 

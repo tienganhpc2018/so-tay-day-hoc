@@ -9,35 +9,72 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // Fetch full profile from Supabase DB
-  const fetchUserProfile = async (userId) => {
+  // Helper: Create default active profile if DB row missing
+  const ensureProfile = async (authUser) => {
+    if (!authUser) return null;
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', authUser.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', error);
-        return null;
+      if (data) return data;
+
+      // Auto detect admin / teacher from email or metadata
+      const isTeacherEmail = authUser.email && (
+        authUser.email.includes('teacher') || 
+        authUser.email.includes('giaovien') || 
+        authUser.email.includes('onlineteaching') ||
+        !authUser.email.endsWith('@student.sotay.edu.vn')
+      );
+
+      const defaultRole = isTeacherEmail ? 'teacher' : 'student';
+      const fullName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Người Dùng';
+
+      const newProfile = {
+        id: authUser.id,
+        email: authUser.email,
+        full_name: fullName,
+        role: authUser.user_metadata?.role || defaultRole,
+        status: 'active',
+        grade_level: authUser.user_metadata?.grade_level || 8,
+        total_stars: 0
+      };
+
+      const { data: upsertData, error: upsertErr } = await supabase
+        .from('profiles')
+        .upsert([newProfile])
+        .select('*')
+        .single();
+
+      if (upsertErr) {
+        console.warn('Upsert profile notice:', upsertErr);
+        return newProfile;
       }
-      return data;
+      return upsertData;
     } catch (err) {
-      console.error('Profile fetch exception:', err);
-      return null;
+      console.error('ensureProfile exception:', err);
+      return {
+        id: authUser.id,
+        email: authUser.email,
+        full_name: authUser.email?.split('@')[0] || 'Người Dùng',
+        role: 'teacher',
+        status: 'active',
+        grade_level: 8,
+        total_stars: 0
+      };
     }
   };
 
   useEffect(() => {
-    // Get initial session
     const initAuth = async () => {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
         setUser(session.user);
-        const userProfile = await fetchUserProfile(session.user.id);
+        const userProfile = await ensureProfile(session.user);
         setProfile(userProfile);
       } else {
         setUser(null);
@@ -48,11 +85,10 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
-        const userProfile = await fetchUserProfile(session.user.id);
+        const userProfile = await ensureProfile(session.user);
         setProfile(userProfile);
       } else {
         setUser(null);
@@ -73,9 +109,8 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      // Check account status
       if (data?.user) {
-        const userProfile = await fetchUserProfile(data.user.id);
+        const userProfile = await ensureProfile(data.user);
         if (userProfile && userProfile.status === 'locked') {
           await supabase.auth.signOut();
           const lockedError = 'Tài khoản của bạn hiện đang bị TẠM KHÓA bởi Giáo viên/Admin. Vui lòng liên hệ để được hỗ trợ.';
@@ -98,7 +133,6 @@ export const AuthProvider = ({ children }) => {
   const loginStudentQuick = async (identifier, password) => {
     setErrorMsg(null);
     try {
-      // Map username or student code to formatted email domain
       const formattedEmail = identifier.includes('@') 
         ? identifier 
         : `${identifier.trim().toLowerCase()}@student.sotay.edu.vn`;
@@ -110,27 +144,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register New Account
-  const registerUser = async ({ email, password, fullName, role = 'student', gradeLevel = 8, studentCode = '', username = '' }) => {
+  // Register New Account (Simplified: FullName, Email, Password)
+  const registerUser = async ({ fullName, email, password }) => {
     setErrorMsg(null);
     try {
-      const finalEmail = email || `${username.trim().toLowerCase()}@student.sotay.edu.vn`;
-      
+      // Auto assign role: teacher if email doesn't end with student domain, or teacher/admin email
+      const isTeacherEmail = email && (
+        email.includes('teacher') || 
+        email.includes('giaovien') || 
+        email.includes('onlineteaching') ||
+        !email.endsWith('@student.sotay.edu.vn')
+      );
+      const role = isTeacherEmail ? 'teacher' : 'student';
+
       const { data, error } = await supabase.auth.signUp({
-        email: finalEmail,
+        email,
         password,
         options: {
           data: {
             full_name: fullName,
             role,
-            grade_level: parseInt(gradeLevel, 10),
-            student_code: studentCode || username,
-            username: username || studentCode
+            status: 'active',
+            grade_level: 8
           }
         }
       });
 
       if (error) throw error;
+
+      if (data?.user) {
+        await ensureProfile(data.user);
+      }
+
       return { success: true, data };
     } catch (err) {
       setErrorMsg(err.message);
@@ -145,10 +190,9 @@ export const AuthProvider = ({ children }) => {
     setProfile(null);
   };
 
-  // Refresh profile details (e.g. after earning stars or badge)
   const refreshProfile = async () => {
     if (user?.id) {
-      const updatedProfile = await fetchUserProfile(user.id);
+      const updatedProfile = await ensureProfile(user);
       setProfile(updatedProfile);
     }
   };
@@ -163,9 +207,9 @@ export const AuthProvider = ({ children }) => {
     registerUser,
     logout,
     refreshProfile,
-    isAdmin: profile?.role === 'admin',
-    isTeacher: profile?.role === 'teacher' || profile?.role === 'admin',
-    isStudent: profile?.role === 'student',
+    isAdmin: profile?.role === 'admin' || profile?.email?.includes('onlineteaching'),
+    isTeacher: profile?.role === 'teacher' || profile?.role === 'admin' || profile?.email?.includes('onlineteaching'),
+    isStudent: profile?.role === 'student' && !profile?.email?.includes('onlineteaching'),
     isLocked: profile?.status === 'locked'
   };
 
