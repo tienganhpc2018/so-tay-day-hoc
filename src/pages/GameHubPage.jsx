@@ -1,39 +1,44 @@
-import React, { useState } from 'react';
-import { Gamepad2, BookOpen, Layers, Dices, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Gamepad2, BookOpen, Layers, Dices, ExternalLink, Sparkles, CheckCircle2, Rocket } from 'lucide-react';
 import { FlashcardGame } from '../components/games/FlashcardGame';
 import { MatchingPairsGame } from '../components/games/MatchingPairsGame';
 import { WordScrambleGame } from '../components/games/WordScrambleGame';
 import { IFrameGameViewer } from '../components/games/iFrameGameViewer';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 
 export const GameHubPage = () => {
-  const [activeTab, setActiveTab] = useState('flashcard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const typeParam = searchParams.get('type') || 'flashcard';
+
+  const [activeTab, setActiveTab] = useState(typeParam);
+
+  useEffect(() => {
+    if (typeParam) setActiveTab(typeParam);
+  }, [typeParam]);
 
   const tabs = [
-    { id: 'flashcard', label: 'Flashcard Từ Vựng', icon: BookOpen },
-    { id: 'matching', label: 'Nối Từ Đồng Nghĩa', icon: Layers },
-    { id: 'scramble', label: 'Sắp Xếp Câu', icon: Dices },
-    { id: 'iframe', label: 'Game Nhúng iFrame', icon: ExternalLink },
+    { id: 'flashcard', label: '1. Flashcard Từ Vựng', icon: BookOpen },
+    { id: 'matching', label: '2. Trò Chơi Ghép Cặp', icon: Layers },
+    { id: 'racing', label: '3. Đua Xe Từ Vựng (Word Scramble)', icon: Dices },
+    { id: 'iframe', label: '4. iFrame Game Project', icon: ExternalLink },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* Top Banner */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-brand-500/30">
-        <div>
-          <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
-            <Gamepad2 className="w-7 h-7 text-amber-400" />
-            Kho Trò Chơi Tiếng Anh Tương Tác (English Game Hub)
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Vừa học vừa chơi! Học từ vựng, ghép câu và tích lũy Sao thưởng danh giá.
-          </p>
-        </div>
-      </div>
+      {/* HERO BANNER MATCHING SCREENSHOT 2 */}
+      <PageHeroBanner
+        title="Sân Trường Tương Tác 🎮"
+        subtitle="Bộ sưu tập các trò chơi giáo dục công nghệ cao giúp giờ học sinh động và thú vị hơn. Giáo viên có thể quản lý câu hỏi riêng tư và đồng bộ trực tiếp vào game!"
+        badge="SÂN TRƯỜNG TƯƠNG TÁC • HỌC LIỆU SỐ THCS"
+        bgGradient="from-slate-900 via-indigo-950 to-slate-900"
+        showVipBadge={true}
+      />
 
-      {/* Game Mode Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800">
+      {/* 4 MENU CON CORRESPONDING TO 4 GAME MODES */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -43,25 +48,27 @@ export const GameHubPage = () => {
               onClick={() => {
                 soundFX.playClick();
                 setActiveTab(tab.id);
+                setSearchParams({ type: tab.id });
               }}
-              className={`p-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+              className={`p-3.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${
                 isActive
-                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/30 scale-102 border border-brand-500/50'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
               }`}
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
+              {isActive && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
             </button>
           );
         })}
       </div>
 
       {/* Game Content View */}
-      <div className="py-4">
+      <div className="py-2">
         {activeTab === 'flashcard' && <FlashcardGame />}
         {activeTab === 'matching' && <MatchingPairsGame />}
-        {activeTab === 'scramble' && <WordScrambleGame />}
+        {activeTab === 'racing' && <WordScrambleGame />}
         {activeTab === 'iframe' && <IFrameGameViewer />}
       </div>
 

@@ -15,14 +15,7 @@ import {
   GraduationCap,
   Home,
   FileCheck,
-  ChevronDown,
-  Layers,
-  Sparkles,
-  Mic,
-  FileText,
-  Headphones,
-  CheckCircle2,
-  Calendar
+  ChevronDown
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -50,6 +43,17 @@ export const Navbar = () => {
       path: '/', 
       label: 'Trang chủ', 
       icon: Home 
+    },
+    { 
+      path: '/games', 
+      label: 'Sân trường', 
+      icon: Gamepad2,
+      subMenus: [
+        { label: '1. Flashcard Từ Vựng', path: '/games?type=flashcard' },
+        { label: '2. Trò Chơi Ghép Cặp', path: '/games?type=matching' },
+        { label: '3. Đua Xe Từ Vựng', path: '/games?type=racing' },
+        { label: '4. iFrame Game Project', path: '/games?type=iframe' }
+      ]
     },
     { 
       path: '/materials', 
@@ -85,11 +89,6 @@ export const Navbar = () => {
       ]
     },
     { 
-      path: '/games', 
-      label: 'Kho Trò Chơi', 
-      icon: Gamepad2 
-    },
-    { 
       path: '/behavior', 
       label: 'Sổ Nề Nếp', 
       icon: Users,
@@ -110,7 +109,7 @@ export const Navbar = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
+    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl font-sans">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
