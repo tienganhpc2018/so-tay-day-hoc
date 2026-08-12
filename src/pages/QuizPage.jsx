@@ -16,7 +16,7 @@ export const QuizPage = () => {
   const gradeParam = searchParams.get('grade');
 
   const [activeTab, setActiveTab] = useState('bank');
-  const [selectedGrade, setSelectedGrade] = useState(gradeParam ? parseInt(gradeParam, 10) : 8);
+  const [selectedGrade, setSelectedGrade] = useState(gradeParam ? parseInt(gradeParam, 10) : 7);
   const [quizzes, setQuizzes] = useState([]);
   const [resultsMap, setResultsMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -38,14 +38,31 @@ export const QuizPage = () => {
   const fetchQuizzesAndResults = async () => {
     setLoading(true);
     try {
-      const { data: qData, error: qError } = await supabase
-        .from('quizzes')
-        .select('*')
-        .eq('grade_level', selectedGrade)
-        .order('created_at', { ascending: false });
+      // 1. READ SAVED LOCALSTORAGE EXAMS CREATED IN WORKSHEETPAGE
+      const localExams = JSON.parse(localStorage.getItem('saved_quizzes_local') || '[]');
+      const filteredLocal = localExams.filter(q => q.grade_level === selectedGrade);
 
-      if (qError) throw qError;
-      setQuizzes(qData || []);
+      // 2. READ SUPABASE EXAMS DB
+      let dbQuizzes = [];
+      try {
+        const { data: qData, error: qError } = await supabase
+          .from('quizzes')
+          .select('*')
+          .eq('grade_level', selectedGrade)
+          .order('created_at', { ascending: false });
+
+        if (!qError && qData) {
+          dbQuizzes = qData;
+        }
+      } catch (e) {
+        console.log('Supabase read error (using local storage):', e);
+      }
+
+      // Merge Local & Supabase Quizzes (Deduplicate by ID or Title)
+      const allQuizzes = [...filteredLocal, ...dbQuizzes];
+      const uniqueQuizzes = Array.from(new Map(allQuizzes.map(item => [item.id || item.title, item])).values());
+
+      setQuizzes(uniqueQuizzes);
 
       if (profile?.id) {
         const { data: rData } = await supabase
@@ -61,7 +78,7 @@ export const QuizPage = () => {
       }
     } catch (err) {
       console.error('Error fetching quizzes:', err);
-    } finally {
+    } fontFinally: {
       setLoading(false);
     }
   };
@@ -132,7 +149,7 @@ export const QuizPage = () => {
               <HelpCircle className="w-12 h-12 text-slate-600 mx-auto" />
               <div>
                 <p className="font-extrabold text-white text-base">Chưa có bài kiểm tra nào trong Khối {selectedGrade}.</p>
-                <p className="text-xs text-slate-400 mt-1">Giáo viên có thể nhấp nút "Soạn Đề Thi Chuẩn AI ⚡" để tự động tạo đề ngay!</p>
+                <p className="text-xs text-slate-400 mt-1">Giáo viên có thể nhấp nút "Soạn Đề Thi Chuẩn AI ⚡" hoặc tạo đề tại menu Kiểm tra & Đánh giá để nạp bài ngay!</p>
               </div>
 
               {isTeacher && (
@@ -149,12 +166,15 @@ export const QuizPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {quizzes.map((q) => (
+              {quizzes.map((quiz) => (
                 <QuizCard
-                  key={q.id}
-                  quiz={q}
-                  userResult={resultsMap[q.id]}
-                  onTakeQuiz={(quizToTake) => setActiveQuiz(quizToTake)}
+                  key={quiz.id}
+                  quiz={quiz}
+                  result={resultsMap[quiz.id]}
+                  onStart={() => {
+                    soundFX.playClick();
+                    setActiveQuiz(quiz);
+                  }}
                 />
               ))}
             </div>
@@ -162,12 +182,16 @@ export const QuizPage = () => {
         </div>
       )}
 
-      <QuizTakeModal
-        isOpen={!!activeQuiz}
-        onClose={() => setActiveQuiz(null)}
-        quiz={activeQuiz}
-        onQuizSubmitted={fetchQuizzesAndResults}
-      />
+      {/* Quiz Modal */}
+      {activeQuiz && (
+        <QuizTakeModal
+          quiz={activeQuiz}
+          onClose={() => setActiveQuiz(null)}
+          onSubmitted={() => {
+            fetchQuizzesAndResults();
+          }}
+        />
+      )}
 
     </div>
   );
