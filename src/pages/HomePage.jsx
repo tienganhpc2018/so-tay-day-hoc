@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { soundFX } from '../utils/soundEffects';
+import { supabase } from '../lib/supabase';
 import { 
   Sparkles, 
   Crown, 
@@ -25,11 +26,81 @@ import {
 export const HomePage = () => {
   const { profile } = useAuth();
   const authorName = profile?.full_name || 'Nguyễn Văn Hải';
+  const currentDateStr = new Date().toLocaleDateString('vi-VN');
+
+  // Real Database Articles State
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    fetchHomeArticles();
+  }, []);
+
+  const fetchHomeArticles = async () => {
+    try {
+      const { data } = await supabase
+        .from('learning_materials')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (data && data.length > 0) {
+        setArticles(data);
+      }
+    } catch (err) {
+      console.error('Error fetching home articles:', err);
+    }
+  };
+
+  // Sample 5 initial articles if DB is empty
+  const defaultArticles = [
+    {
+      id: 1,
+      title: 'Mẹo & Từ Vựng Cốt Lõi Khối 6 • 7 • 8 • 9 Global Success',
+      category: 'VOCABULARY',
+      date: currentDateStr,
+      description: 'Tổng hợp trọn bộ Từ vựng Word Bank kèm phát âm audio bám sát sách giáo khoa.',
+      author: authorName
+    },
+    {
+      id: 2,
+      title: 'Chủ Điểm Ngữ Pháp Trọng Tâm 12 Units Tiếng Anh THCS',
+      category: 'GRAMMAR',
+      date: currentDateStr,
+      description: 'Tổng hợp công thức, ví dụ loại trừ đáp án sai và ma trận ngữ pháp kiểm tra định kỳ.',
+      author: authorName
+    },
+    {
+      id: 3,
+      title: 'Hướng Dẫn Thiết Kế Bài Giảng Điện Tử & iFrame Game Tương Tác',
+      category: 'VOCABULARY',
+      date: currentDateStr,
+      description: 'Tích hợp các trò chơi ghép cặp, trắc nghiệm và flashcards vào tiết dạy trên lớp.',
+      author: authorName
+    },
+    {
+      id: 4,
+      title: 'Ma Trận Đề Thi CV7991 Theo Định Hướng Năng Lực Học Sinh',
+      category: 'GRAMMAR',
+      date: currentDateStr,
+      description: 'Phân tích ma trận đề thi 15 phút, 45 phút và học kỳ bám sát chương trình mới.',
+      author: authorName
+    },
+    {
+      id: 5,
+      title: 'Tuyển Tập Infographic Kiến Thức Tiếng Anh THCS Trực Quan',
+      category: 'VOCABULARY',
+      date: currentDateStr,
+      description: 'Hình ảnh Infographic tóm tắt ngữ pháp giúp học sinh dễ nhớ bài học.',
+      author: authorName
+    }
+  ];
+
+  const displayArticles = articles.length > 0 ? articles : defaultArticles;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 font-sans animate-fadeIn">
       
-      {/* 1. TOP HERO BANNER (CURVED CORNERS MATCHING SCREENSHOT 1) */}
+      {/* 1. TOP HERO BANNER */}
       <div className="relative rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-brand-500/40 p-8 sm:p-12 shadow-2xl">
         <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-400 via-indigo-500 to-transparent" />
         
@@ -75,120 +146,118 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* 2. VIP BẢNG VÀNG CARDS (CHÍNH XÁC NGUYỄN VĂN HẢI) */}
+      {/* 2. VIP BẢNG VÀNG CARDS (SỬA LỖI BỊ KHUẤT VÀ ĐỔI THÀNH HỌC LIỆU INFOGRAPHIC) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* CARD 1: BẢNG VÀNG 01 - ĐỐI TÁC VÀNG GIÁO DỤC */}
-        <div className="rounded-[28px] bg-slate-900/90 border-2 border-amber-400 p-6 space-y-6 shadow-xl relative overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300 font-black text-lg">
-                👑
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-extrabold text-white">{authorName}</h3>
-                  <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[10px]">VIP</span>
+        <div className="rounded-[28px] bg-slate-900/90 border-2 border-amber-400 p-6 space-y-6 shadow-xl relative flex flex-col justify-between">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300 font-black text-lg">
+                  👑
                 </div>
-                <p className="text-xs text-amber-400 font-bold uppercase tracking-wider">ĐỐI TÁC VÀNG GIÁO DỤC</p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-extrabold text-white">{authorName}</h3>
+                    <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[10px]">VIP</span>
+                  </div>
+                  <p className="text-xs text-amber-400 font-bold uppercase tracking-wider">ĐỐI TÁC VÀNG GIÁO DỤC</p>
+                </div>
               </div>
+
+              <span className="px-3 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 text-xs font-black">
+                BẢNG VÀNG 01
+              </span>
             </div>
 
-            <span className="px-3 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 text-xs font-black">
-              BẢNG VÀNG 01
-            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { title: 'Bộ 100 TRÒ CHƠI PowerPoint MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-400' },
+                { title: 'BỘ 155 SLIDE PPT CÁC LOẠI MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-400' },
+                { title: 'Bộ 65 slide PowerPoint nhiều chủ đề cực hay...', tag: 'Miễn phí', color: 'text-emerald-400' },
+                { title: 'BỘ 30 SLIDE POWERPOINT ĐẸP - Nhiều mẫu đ...', tag: 'Miễn phí', color: 'text-emerald-400' }
+              ].map((sub, sIdx) => (
+                <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3 hover:border-amber-400/50 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-amber-400">
+                    <Gamepad2 className="w-5 h-5" />
+                  </div>
+                  <div className="overflow-hidden">
+                    <h4 className="text-xs font-extrabold text-slate-200 truncate">{sub.title}</h4>
+                    <span className={`text-[10px] font-bold ${sub.color}`}>{sub.tag}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { title: 'Bộ 100 TRÒ CHƠI PowerPoint MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-400' },
-              { title: 'BỘ 155 SLIDE PPT CÁC LOẠI MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-400' },
-              { title: 'Bộ 65 slide PowerPoint nhiều chủ đề cực hay...', tag: 'Miễn phí', color: 'text-emerald-400' },
-              { title: 'BỘ 30 SLIDE POWERPOINT ĐẸP - Nhiều mẫu đ...', tag: 'Miễn phí', color: 'text-emerald-400' }
-            ].map((sub, sIdx) => (
-              <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3 hover:border-amber-400/50 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-amber-400">
-                  <Gamepad2 className="w-5 h-5" />
-                </div>
-                <div className="overflow-hidden">
-                  <h4 className="text-xs font-extrabold text-slate-200 truncate">{sub.title}</h4>
-                  <span className={`text-[10px] font-bold ${sub.color}`}>{sub.tag}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
-            <span className="text-[11px] text-slate-400 italic">★ Quảng cáo đối tác VIP nổi bật</span>
-            <Link to="/materials" className="px-5 py-2 rounded-xl bg-slate-950 text-white font-extrabold text-xs border border-slate-700 flex items-center gap-2 hover:bg-slate-800">
-              <span>🎥 Đăng ký vị trí VIP</span>
-            </Link>
-          </div>
-
-          <div className="absolute -bottom-3 -left-3">
-            <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-xs shadow-lg">
+          {/* Footer Bar Inside Padding - No Overflow */}
+          <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs">
               ✨ Hiển thị thương hiệu của bạn tại đây!
             </span>
+            <Link to="/materials" className="px-4 py-2 rounded-xl bg-slate-950 text-white font-extrabold text-xs border border-slate-700 hover:bg-slate-800">
+              🎥 Đăng ký vị trí VIP
+            </Link>
           </div>
         </div>
 
-        {/* CARD 2: BẢNG VÀNG 02 - GIÁO TRÌNH STEM ĐỀ CỬ VIP */}
-        <div className="rounded-[28px] bg-slate-900/90 border-2 border-amber-400 p-6 space-y-6 shadow-xl relative overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-300 font-black text-lg">
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-extrabold text-white">Học liệu STEM trọn gói</h3>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-black text-[10px]">HOT</span>
+        {/* CARD 2: BẢNG VÀNG 02 - HỌC LIỆU INFOGRAPHIC (ĐÃ ĐỔI TÊN HỌC LIỆU INFOGRAPHIC) */}
+        <div className="rounded-[28px] bg-slate-900/90 border-2 border-amber-400 p-6 space-y-6 shadow-xl relative flex flex-col justify-between">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-300 font-black text-lg">
+                  <BookOpen className="w-6 h-6" />
                 </div>
-                <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">GIÁO TRÌNH STEM ĐỀ CỬ VIP</p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-extrabold text-white">Học Liệu Infographic</h3>
+                    <span className="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-black text-[10px]">HOT</span>
+                  </div>
+                  <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">GIÁO TRÌNH STEM & INFOGRAPHIC VIP</p>
+                </div>
               </div>
+
+              <span className="px-3 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 text-xs font-black">
+                BẢNG VÀNG 02
+              </span>
             </div>
 
-            <span className="px-3 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 text-xs font-black">
-              BẢNG VÀNG 02
-            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { title: 'INFOGRAPHIC TIẾNG ANH 7 - BÀI 4', price: '50.000đ' },
+                { title: 'INFOGRAPHIC TIẾNG ANH 7 - BÀI 3', price: '50.000đ' },
+                { title: 'INFOGRAPHIC TIẾNG ANH 7 - BÀI 2', price: '50.000đ' },
+                { title: 'INFOGRAPHIC TIẾNG ANH 7 - BÀI 1', price: '50.000đ' }
+              ].map((sub, sIdx) => (
+                <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3 hover:border-emerald-400/50 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-emerald-400">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="overflow-hidden">
+                    <h4 className="text-xs font-extrabold text-slate-200 truncate">{sub.title}</h4>
+                    <span className="text-[11px] font-extrabold text-rose-400">{sub.price}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { title: 'GIÁO ÁN TA 7(GLOBAL) - BÀI 4', price: '50.000đ' },
-              { title: 'GIÁO ÁN TA 7(GLOBAL) - BÀI 3', price: '50.000đ' },
-              { title: 'GIÁO ÁN TA 7(GLOBAL) - BÀI 2', price: '50.000đ' },
-              { title: 'GIÁO ÁN TA 7(GLOBAL) - BÀI 1', price: '50.000đ' }
-            ].map((sub, sIdx) => (
-              <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3 hover:border-emerald-400/50 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-emerald-400">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div className="overflow-hidden">
-                  <h4 className="text-xs font-extrabold text-slate-200 truncate">{sub.title}</h4>
-                  <span className="text-[11px] font-extrabold text-rose-400">{sub.price}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
-            <span className="text-[11px] text-slate-400 italic">★ Quảng cáo sản phẩm VIP nổi bật</span>
-            <Link to="/materials" className="px-5 py-2 rounded-xl bg-slate-950 text-white font-extrabold text-xs border border-slate-700 flex items-center gap-2 hover:bg-slate-800">
-              <span>🎥 Đăng ký vị trí VIP</span>
-            </Link>
-          </div>
-
-          <div className="absolute -bottom-3 -left-3">
-            <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-black text-xs shadow-lg">
+          {/* Footer Bar Inside Padding */}
+          <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-xs">
               ✨ Hiển thị sản phẩm của bạn tại đây!
             </span>
+            <Link to="/materials" className="px-4 py-2 rounded-xl bg-slate-950 text-white font-extrabold text-xs border border-slate-700 hover:bg-slate-800">
+              🎥 Đăng ký vị trí VIP
+            </Link>
           </div>
         </div>
 
       </div>
 
-      {/* 3. HỌC LIỆU GLOBAL SUCCESS 📰 (ĐỔI TỪ "BẢNG TIN TRƯỜNG HỌC MỚI NHẤT") */}
+      {/* 3. HỌC LIỆU GLOBAL SUCCESS 📰 (HIỂN THỊ ÍT NHẤT 5 BÀI VIẾT + KHUNG TRONG SUỐT) */}
       <div className="space-y-6 pt-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <h2 className="text-xl font-black text-white flex items-center gap-2 border-l-4 border-indigo-500 pl-3">
@@ -201,70 +270,46 @@ export const HomePage = () => {
           </Link>
         </div>
 
-        {/* 2 Big Cards: VOCABULARY & GRAMMAR */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Card 1: VOCABULARY */}
-          <Link to="/materials" className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden hover:border-indigo-500/50 transition-all group shadow-xl block">
-            <div className="h-44 bg-gradient-to-r from-indigo-700 via-brand-700 to-slate-900 flex items-center justify-center relative p-6">
-              <span className="text-2xl font-black text-white tracking-widest text-center uppercase">
-                VOCABULARY GLOBAL SUCCESS
-              </span>
-            </div>
-            <div className="p-6 space-y-3">
+        {/* 5 ARTICLES LIST (KHUNG TRONG SUỐT TỰ NHÀY THEO SỐ NĂM NÀY MỚI) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayArticles.map((art, aIdx) => (
+            <Link 
+              key={aIdx} 
+              to="/materials" 
+              className="rounded-3xl bg-slate-900/60 border border-slate-800/80 hover:border-indigo-500/50 p-6 space-y-4 transition-all group shadow-xl backdrop-blur-sm block"
+            >
               <div className="flex items-center justify-between text-xs">
-                <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-black border border-indigo-500/30 uppercase">
-                  VOCABULARY
+                <span className={`px-3 py-1 rounded-full font-black text-[11px] border uppercase ${
+                  art.category === 'GRAMMAR' 
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                }`}>
+                  {art.category || 'VOCABULARY'}
                 </span>
-                <span className="text-slate-400">28/8/2026</span>
+                <span className="text-slate-400 font-semibold">{art.date || currentDateStr}</span>
               </div>
-              <h3 className="text-base font-extrabold text-white group-hover:text-brand-300">
-                Mẹo & Từ Vựng Cốt Lõi Khối 6 • 7 • 8 • 9 Global Success
+
+              <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
+                {art.title}
               </h3>
-              <p className="text-xs text-slate-400 line-clamp-2">
-                Tổng hợp trọn bộ Từ vựng Word Bank kèm phát âm audio bám sát sách giáo khoa.
+
+              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                {art.description || art.content || 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.'}
               </p>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-400 pt-2 border-t border-slate-800">
+
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 pt-3 border-t border-slate-800/80">
                 <span>Tác giả: {authorName}</span>
                 <span className="text-indigo-400 group-hover:underline">Đọc tiếp →</span>
               </div>
-            </div>
-          </Link>
-
-          {/* Card 2: GRAMMAR */}
-          <Link to="/materials" className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden hover:border-indigo-500/50 transition-all group shadow-xl block">
-            <div className="h-44 bg-gradient-to-r from-red-600 via-amber-700 to-slate-900 flex items-center justify-center relative p-6">
-              <span className="text-2xl font-black text-white tracking-widest text-center uppercase">
-                GRAMMAR FOCUS CV7991
-              </span>
-            </div>
-            <div className="p-6 space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-black border border-amber-500/30 uppercase">
-                  GRAMMAR
-                </span>
-                <span className="text-slate-400">26/8/2026</span>
-              </div>
-              <h3 className="text-base font-extrabold text-white group-hover:text-brand-300">
-                Chủ Điểm Ngữ Pháp Trọng Tâm 12 Units Tiếng Anh THCS
-              </h3>
-              <p className="text-xs text-slate-400 line-clamp-2">
-                Tổng hợp công thức, ví dụ loại trừ đáp án sai và ma trận ngữ pháp kiểm tra định kỳ.
-              </p>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-400 pt-2 border-t border-slate-800">
-                <span>Tác giả: {authorName}</span>
-                <span className="text-indigo-400 group-hover:underline">Đọc tiếp →</span>
-              </div>
-            </div>
-          </Link>
-
+            </Link>
+          ))}
         </div>
       </div>
 
       {/* 4. THƯ VIỆN HỌC LIỆU MỚI NHẤT & HỘI CHỢ PROJECT NỔI BẬT 🚀 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
         
-        {/* LEFT COLUMN: Thư viện Học liệu mới nhất (Link đến Menu Thư Mục Học Liệu) */}
+        {/* LEFT COLUMN: Thư viện Học liệu mới nhất */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-brand-500 pl-3">
@@ -302,7 +347,7 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Hội chợ Project nổi bật 🚀 (Link đến Menu Kho Trò Chơi & Project) */}
+        {/* RIGHT COLUMN: Hội chợ Project nổi bật 🚀 */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-rose-500 pl-3">
