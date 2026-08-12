@@ -52,35 +52,108 @@ import { GlobalSuccessKnowledgeBase } from '../data/globalSuccessData';
 
 export const WorksheetPage = () => {
   const { profile } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const secParam = searchParams.get('sec') || 'listening';
+  const [searchParams] = useSearchParams();
+  const secParam = searchParams.get('sec') || 'all';
 
-  const [activeTab, setActiveTab] = useState(secParam);
-
-  // Authoring Controls for Listening & Test Creation
+  // Grade Level State (6, 7, 8, 9)
   const [gradeLevel, setGradeLevel] = useState(8);
-  const [selectedUnit, setSelectedUnit] = useState('Unit 1: Leisure Time');
   const [lessonSection, setLessonSection] = useState('A closer look 1');
 
-  // Audio Source Type ('drive_link', 'file_upload', 'ai_speech')
+  // Dynamic Units Map per Grade (STRICTLY ACCORDING TO GLOBAL SUCCESS CURRICULUM)
+  const gradeUnitsDictionary = {
+    6: [
+      'Unit 1: My New School',
+      'Unit 2: My House',
+      'Unit 3: My Friends',
+      'Unit 4: My Neighbourhood',
+      'Unit 5: Natural Wonders of Viet Nam',
+      'Unit 6: Our Tet Holiday',
+      'Unit 7: Television',
+      'Unit 8: Sports and Games',
+      'Unit 9: Cities of the World',
+      'Unit 10: Our Houses in the Future',
+      'Unit 11: Our Greener World',
+      'Unit 12: Robots'
+    ],
+    7: [
+      'Unit 1: Hobbies',
+      'Unit 2: Healthy Living',
+      'Unit 3: Community Service',
+      'Unit 4: Music and Arts',
+      'Unit 5: Food and Drink',
+      'Unit 6: A Visit to School',
+      'Unit 7: Traffic',
+      'Unit 8: Films',
+      'Unit 9: Festivals Around the World',
+      'Unit 10: Energy Sources',
+      'Unit 11: Travelling in the Future',
+      'Unit 12: English-Speaking Countries'
+    ],
+    8: [
+      'Unit 1: Leisure Time',
+      'Unit 2: Life in the Countryside',
+      'Unit 3: Teenagers',
+      'Unit 4: Ethnic Groups of Viet Nam',
+      'Unit 5: Our Customs and Traditions',
+      'Unit 6: Lifestyles',
+      'Unit 7: Environmental Protection',
+      'Unit 8: Shopping',
+      'Unit 9: Natural Disasters',
+      'Unit 10: Communication in Future',
+      'Unit 11: Science and Technology',
+      'Unit 12: Life on Other Planets'
+    ],
+    9: [
+      'Unit 1: Local Community',
+      'Unit 2: City Life',
+      'Unit 3: Healthy Living for Teens',
+      'Unit 4: Remembering the Past',
+      'Unit 5: Our Experiences',
+      'Unit 6: Vietnamese Lifestyles Then and Now',
+      'Unit 7: Natural Wonders of the World',
+      'Unit 8: Tourism',
+      'Unit 9: World Englishes',
+      'Unit 10: Planet Earth',
+      'Unit 11: Electronic Devices',
+      'Unit 12: Career Paths'
+    ]
+  };
+
+  const [selectedUnit, setSelectedUnit] = useState(gradeUnitsDictionary[8][0]);
+
+  // Update Units whenever Grade switches
+  useEffect(() => {
+    const currentUnits = gradeUnitsDictionary[gradeLevel] || gradeUnitsDictionary[8];
+    setSelectedUnit(currentUnits[0]);
+  }, [gradeLevel]);
+
+  // Audio Source Controls
   const [audioType, setAudioType] = useState('drive_link');
   const [driveAudioUrl, setDriveAudioUrl] = useState('');
   const [uploadedAudioFile, setUploadedAudioFile] = useState(null);
   const [audioStreamUrl, setAudioStreamUrl] = useState('');
   const [customTapescript, setCustomTapescript] = useState('');
 
-  // Manual Creation via Word (.docx) or JSON file
-  const [uploadedWordFile, setUploadedWordFile] = useState(null);
+  // Checklist for Exam Sections (Matching Screenshot 2)
+  const [activeSections, setActiveSections] = useState({
+    listening: true,
+    knowledge: true,
+    reading: true,
+    communication: true,
+    writing: true,
+    speaking: true
+  });
 
+  const [promptNotes, setPromptNotes] = useState('');
+
+  // Mode Answer (GV vs Student)
   const [modeAnswer, setModeAnswer] = useState('gv');
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [showTapescript, setShowTapescript] = useState(false);
 
-  // Interactive Student Answers State for live interaction
+  // Interactive Student Answers
   const [studentAnswers, setStudentAnswers] = useState({});
   const [quizScore, setQuizScore] = useState(null);
 
-  // Student AI Submission & Grading State (Speaking & Writing)
+  // Student AI Submission & Grading State
   const [studentSubmissionType, setStudentSubmissionType] = useState('text');
   const [studentSubmissionContent, setStudentSubmissionContent] = useState('');
   const [uploadedSubmissionFile, setUploadedSubmissionFile] = useState(null);
@@ -89,15 +162,10 @@ export const WorksheetPage = () => {
 
   const [dynamicWorksheet, setDynamicWorksheet] = useState(null);
 
-  useEffect(() => {
-    if (secParam) setActiveTab(secParam);
-  }, [secParam]);
-
-  // Convert Google Drive share link or custom URL into direct Audio Stream
+  // Convert Google Drive share link into direct Audio Stream
   const convertDriveUrlToDirectAudio = (urlStr) => {
     if (!urlStr) return '';
     try {
-      // If Google Drive link: https://drive.google.com/file/d/FILE_ID/view...
       const driveMatch = urlStr.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if (driveMatch && driveMatch[1]) {
         return `https://docs.google.com/uc?export=open&id=${driveMatch[1]}`;
@@ -122,13 +190,18 @@ export const WorksheetPage = () => {
     setAudioStreamUrl(localUrl);
   };
 
+  const toggleSectionCheckbox = (key) => {
+    soundFX.playClick();
+    setActiveSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   useEffect(() => {
     try {
       generateDynamicWorksheetContent(gradeLevel, [selectedUnit], lessonSection);
     } catch (err) {
       console.error('Worksheet state sync error:', err);
     }
-  }, [gradeLevel, selectedUnit, lessonSection]);
+  }, [gradeLevel, selectedUnit, lessonSection, activeSections]);
 
   const generateDynamicWorksheetContent = (grade, unitsArr, section) => {
     const vocabList = GlobalSuccessKnowledgeBase.getVocabForUnits(grade, unitsArr);
@@ -137,31 +210,40 @@ export const WorksheetPage = () => {
 
     const defaultTapescriptText = `Speaker 1: Welcome to Grade ${grade} English! Today in ${unitTitleStr}, we discuss leisure activities and healthy living. Key vocabulary includes: ${vocabList.slice(0, 3).join(', ')}. Pay attention to grammar rule: ${grammarList[0] || 'Present Simple'}.`;
 
+    // 2 Parts for Listening as requested by Thầy
     const listeningTasks = [
       {
-        task_title: 'TASK 1: LISTEN AND CHOOSE THE BEST ANSWER (MULTIPLE CHOICE)',
-        task_desc: `Listen to the audio recording for Grade ${grade} ${unitsArr[0]} (~80-120 seconds) and choose A, B, C, or D.`,
+        task_title: 'PART 1: LISTEN AND CHOOSE THE BEST ANSWER (MULTIPLE CHOICE)',
+        task_desc: `Listen to audio part 1 for Grade ${grade} ${unitsArr[0]} (~60-90s) and choose A, B, C, or D.`,
         questions: [
-          { id: 'l1', num: 1, qText: `What is the main topic of the conversation?`, options: [`A. ${vocabList[0] || 'Leisure Time'}`, `B. ${vocabList[1] || 'Environment'}`, 'C. Science fiction', 'D. Space travel'], correct: `A. ${vocabList[0] || 'Leisure Time'}` },
-          { id: 'l2', num: 2, qText: `Which Grade ${grade} grammar structure is mentioned in the dialogue?`, options: [`A. ${grammarList[0] || 'Present Simple'}`, 'B. Past Perfect', 'C. Future Continuous', 'D. Passive Voice'], correct: `A. ${grammarList[0] || 'Present Simple'}` },
-          { id: 'l3', num: 3, qText: `How often do the students practice English?`, options: ['A. Every day', 'B. Once a week', 'C. Twice a month', 'D. Rarely'], correct: 'A. Every day' }
+          { id: 'l1', num: 1, qText: `What is the main topic of the conversation?`, options: [`A. ${vocabList[0] || 'Activities'}`, `B. ${vocabList[1] || 'Environment'}`, 'C. Science fiction', 'D. Space travel'], correct: `A. ${vocabList[0] || 'Activities'}` },
+          { id: 'l2', num: 2, qText: `Which Grade ${grade} grammar structure is mentioned?`, options: [`A. ${grammarList[0] || 'Present Simple'}`, 'B. Past Perfect', 'C. Future Continuous', 'D. Passive Voice'], correct: `A. ${grammarList[0] || 'Present Simple'}` }
+        ]
+      },
+      {
+        task_title: 'PART 2: LISTEN AND DECIDE TRUE (T) OR FALSE (F)',
+        task_desc: `Listen to audio part 2 and decide whether statements are True (T) or False (F).`,
+        questions: [
+          { id: 'l3', num: 3, qText: `Students practice Grade ${grade} vocabulary every day.`, options: ['A. True', 'B. False'], correct: 'A. True' },
+          { id: 'l4', num: 4, qText: `The recording is played in noisy background.`, options: ['A. True', 'B. False'], correct: 'B. False' }
         ]
       }
     ];
 
-    const speakingTasks = [
+    const knowledgeTasks = [
       {
-        task_title: 'TASK 1: SPEAKING & PRONUNCIATION ASSESSMENT (AI POWERED)',
-        task_desc: `Read the Grade ${grade} passage aloud or record your speaking answer. AI will analyze your pronunciation, fluency, and grammar errors in real time.`,
+        task_title: `PART 1: KNOWLEDGE OF LANGUAGE (${grammarList[0] || 'Grammar Focus'})`,
+        task_desc: 'Choose the best word or phrase to complete each sentence.',
         questions: [
-          { id: 'spk1', num: 1, qText: `Talk about your hobbies or daily routine in Grade ${grade} (${unitsArr[0]}). Upload MP3 or paste text below.`, options: null, correct: 'AI Evaluation Required' }
+          { id: 'k1', num: 1, qText: `Minh enjoys ________ English vocabulary after school.`, options: [`A. learning`, `B. learn`, `C. learned`, `D. to learning`], correct: `A. learning` },
+          { id: 'k2', num: 2, qText: `Choose the word with different stress pattern.`, options: [`A. ${vocabList[0] || 'happy'}`, `B. ${vocabList[1] || 'enjoy'}`, `C. relax`, `D. create`], correct: `A. ${vocabList[0] || 'happy'}` }
         ]
       }
     ];
 
     const readingTasks = [
       {
-        task_title: 'TASK 1: READING COMPREHENSION PASSAGE',
+        task_title: 'PART 1: READING COMPREHENSION PASSAGE',
         task_desc: 'Read the passage carefully and answer the questions below.',
         passage: `English is an essential global language for Grade ${grade} students. In ${unitsArr[0]}, students explore vocabulary related to ${vocabList.slice(0, 2).join(' and ')}. Mastering grammar rules such as ${grammarList[0] || 'structures'} helps students express ideas clearly in daily communication.`,
         questions: [
@@ -171,12 +253,32 @@ export const WorksheetPage = () => {
       }
     ];
 
+    const communicationTasks = [
+      {
+        task_title: 'PART 1: EVERYDAY COMMUNICATION',
+        task_desc: 'Choose the most suitable response to complete each exchange.',
+        questions: [
+          { id: 'c1', num: 1, qText: `Nam: "Would you like to join our English club this Sunday?" - Mai: "________"`, options: ['A. Yes, I\'d love to!', 'B. No, thanks.', 'C. Never mind.', 'D. You are welcome.'], correct: 'A. Yes, I\'d love to!' }
+        ]
+      }
+    ];
+
     const writingTasks = [
       {
-        task_title: 'TASK 1: CREATIVE WRITING & AI ERROR CHECKING',
+        task_title: 'PART 1: CREATIVE WRITING & AI ERROR CHECKING',
         task_desc: `Write a short paragraph (80-100 words) about ${unitsArr[0]}. Paste your essay below for AI to check spelling, grammar, and sentence structure.`,
         questions: [
           { id: 'wrt1', num: 1, qText: `Write paragraph about ${unitsArr[0]}. (Paste essay text below to analyze errors)`, options: null, correct: 'AI Evaluation Required' }
+        ]
+      }
+    ];
+
+    const speakingTasks = [
+      {
+        task_title: 'PART 1: SPEAKING & PRONUNCIATION ASSESSMENT (AI POWERED)',
+        task_desc: `Read the Grade ${grade} passage aloud or record your speaking answer. AI will analyze your pronunciation, fluency, and grammar errors in real time.`,
+        questions: [
+          { id: 'spk1', num: 1, qText: `Talk about your hobbies or daily routine in Grade ${grade} (${unitsArr[0]}). Upload MP3 or paste text below.`, options: null, correct: 'AI Evaluation Required' }
         ]
       }
     ];
@@ -186,27 +288,38 @@ export const WorksheetPage = () => {
       subtitle: `Getting Started & ${section} – Interactive Assessment Studio`,
       contact: `English with Mr Hai – 0384635199`,
       tapescript: customTapescript || defaultTapescriptText,
-      listening: listeningTasks,
-      speaking: speakingTasks,
-      reading: readingTasks,
-      writing: writingTasks
+      sections: [
+        { id: 'listening', title: '1  LISTENING (NGHE HIỂU)', enabled: activeSections.listening, tasks: listeningTasks },
+        { id: 'knowledge', title: '2  KNOWLEDGE OF LANGUAGE', enabled: activeSections.knowledge, tasks: knowledgeTasks },
+        { id: 'reading', title: '3  READING (ĐỌC HIỂU)', enabled: activeSections.reading, tasks: readingTasks },
+        { id: 'communication', title: '4  COMMUNICATION (GIAO TIẾP)', enabled: activeSections.communication, tasks: communicationTasks },
+        { id: 'writing', title: '5  WRITING (VIẾT SÁNG TẠO)', enabled: activeSections.writing, tasks: writingTasks },
+        { id: 'speaking', title: '6  SPEAKING (NÓI & CHẤM AI)', enabled: activeSections.speaking, tasks: speakingTasks }
+      ]
     });
   };
 
-  // Student Choice Click for Live Interaction
   const handleSelectOption = (qId, optionVal) => {
     soundFX.playClick();
     setStudentAnswers(prev => ({ ...prev, [qId]: optionVal }));
   };
 
-  const handleCheckAnswers = (questionsArr) => {
+  const handleCheckAnswers = (allTasks) => {
     soundFX.playClick();
+    let totalQuestions = 0;
     let correctCount = 0;
-    questionsArr.forEach(q => {
-      if (studentAnswers[q.id] === q.correct) correctCount++;
+
+    allTasks.forEach(task => {
+      task.questions.forEach(q => {
+        if (q.correct && q.correct !== 'AI Evaluation Required') {
+          totalQuestions++;
+          if (studentAnswers[q.id] === q.correct) correctCount++;
+        }
+      });
     });
 
-    const scorePct = Math.round((correctCount / questionsArr.length) * 10);
+    if (totalQuestions === 0) return;
+    const scorePct = Math.round((correctCount / totalQuestions) * 10);
     setQuizScore(scorePct);
 
     if (scorePct >= 8) {
@@ -246,60 +359,13 @@ export const WorksheetPage = () => {
     }, 1500);
   };
 
-  const handlePlayAudio = (text) => {
-    if (!('speechSynthesis' in window)) {
-      alert('Trình duyệt không hỗ trợ Web Speech API');
-      return;
-    }
-
-    if (isPlayingAudio) {
-      window.speechSynthesis.cancel();
-      setIsPlayingAudio(false);
-      return;
-    }
-
-    soundFX.playClick();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.88;
-    utterance.onend = () => setIsPlayingAudio(false);
-    utterance.onerror = () => setIsPlayingAudio(false);
-
-    setIsPlayingAudio(true);
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const availableUnits = [
-    'Unit 1: Leisure Time',
-    'Unit 2: Life in Countryside',
-    'Unit 3: Teenagers',
-    'Unit 4: Ethnic Groups of Viet Nam',
-    'Unit 5: Our Customs and Traditions',
-    'Unit 6: Lifestyles',
-    'Unit 7: Environmental Protection',
-    'Unit 8: Shopping',
-    'Unit 9: Natural Disasters',
-    'Unit 10: Communication in Future',
-    'Unit 11: Science and Technology',
-    'Unit 12: Life on Other Planets'
-  ];
-
-  const tabs = [
-    { id: 'listening', label: '1. Listening (Nghe hiểu)', icon: Volume2 },
-    { id: 'speaking', label: '2. Speaking (Chấm AI)', icon: Mic },
-    { id: 'reading', label: '3. Reading (Đọc hiểu)', icon: BookOpen },
-    { id: 'writing', label: '4. Writing (Chấm AI)', icon: Edit3 },
-    { id: 'generator', label: '5. Sinh Đề AI & Mẫu JSON', icon: Zap },
-    { id: 'guide', label: '6. Hướng Dẫn Nhúng AI Studio', icon: Code }
-  ];
-
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
       {/* 1. HERO BANNER */}
       <PageHeroBanner
-        title="Kiểm Tra & Đánh Giá Tương Tác (Khung Soạn Đề) 📝"
-        subtitle="Soạn đề thi bài nghe Listening, tải file Google Drive / MP3 chạy trực tiếp audio player, sinh đề AI và nạp file Word (.docx) hoặc mẫu .json tương tác."
+        title="Kiểm Tra & Đánh Giá Tương Tác 📝"
+        subtitle="Soạn đề thi bài nghe Listening, nạp file Google Drive tự động phát audio, tùy chọn dạng bài tập và làm bài tương tác trực tiếp."
         badge="STUDIO SOẠN ĐỀ • THỜI GIAN THỰC"
         bgImage="/images/hero_playground_bg.jpg"
         showVipBadge={true}
@@ -331,656 +397,327 @@ export const WorksheetPage = () => {
         }
       />
 
-      {/* 2. HORIZONTAL TAB NAVIGATION MENU */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                soundFX.playClick();
-                setActiveTab(tab.id);
-                setSearchParams({ sec: tab.id });
-              }}
-              className={`p-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all ${
-                isActive
-                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/30 scale-102 border border-brand-500/50'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="truncate">{tab.label}</span>
-              {isActive && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 3. TAB CONTENT DISPLAY */}
-      <div className="py-2 space-y-6">
-
-        {/* TAB 1: LISTENING WITH AUTHORING PANEL (KHUNG SOẠN BÀI NGHE THẦY YÊU CẦU) */}
-        {activeTab === 'listening' && dynamicWorksheet && (
-          <div className="space-y-6 animate-fadeIn">
+      {/* 2. MAIN 2-COLUMN LAYOUT: LEFT SIDEBAR CONTROLS (4 COLS) & RIGHT PREVIEW CANVAS (8 COLS) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* LEFT SIDEBAR CONTROLS (4 COLS) - COMPACT & COMPLETE MATCHING SCREENSHOT 2 */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* SECTION 1: KHỐI LỚP & UNIT CHUẨN CỦA TỪNG KHỐI */}
+          <div className="glass-panel p-6 space-y-4 border-indigo-500/40 bg-slate-900/95 shadow-xl">
             
-            {/* AUTHORING STUDIO PANEL FOR TEACHER (KHUNG BẢNG SOẠN THẢO LISTENING) */}
-            <div className="glass-panel p-6 sm:p-8 space-y-6 border-indigo-500/50 bg-slate-900/95 shadow-2xl">
-              
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black shrink-0 shadow-lg">
-                    <Volume2 className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-black text-white flex items-center gap-2">
-                      KHUNG SOẠN THẢO BÀI NGHE (LISTENING AUTHORING STUDIO)
-                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold">
-                        ĐÍNH KÈM AUDIO GOOGLE DRIVE / FILE / WORD
-                      </span>
-                    </h2>
-                    <p className="text-xs text-slate-400">
-                      Chọn Khối, Unit, dán link Google Drive (chuyển trực tiếp thành trình phát Audio) hoặc nạp file Word / .json.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* CONTROLS GRID: KHỐI LỚP & UNIT */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">1. CHỌN KHỐI LỚP:</label>
-                  <div className="grid grid-cols-4 gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-xs font-extrabold">
-                    {[6, 7, 8, 9].map((g) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => {
-                          soundFX.playClick();
-                          setGradeLevel(g);
-                        }}
-                        className={`py-2 rounded-xl transition-all ${
-                          gradeLevel === g ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Khối {g}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">2. CHỌN UNIT BÀI HỌC:</label>
-                  <select
-                    value={selectedUnit}
-                    onChange={(e) => {
-                      soundFX.playClick();
-                      setSelectedUnit(e.target.value);
-                    }}
-                    className="w-full glass-input text-xs font-bold py-2.5"
-                  >
-                    {availableUnits.map((u, uIdx) => (
-                      <option key={uIdx} value={u} className="bg-slate-900">
-                        {u}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">3. NGUỒN FILE ÂM THANH AUDIO:</label>
-                  <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-[10px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => setAudioType('drive_link')}
-                      className={`py-2 rounded-xl transition-all ${audioType === 'drive_link' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                    >
-                      Drive / Link
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAudioType('file_upload')}
-                      className={`py-2 rounded-xl transition-all ${audioType === 'file_upload' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                    >
-                      Tải File MP3
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAudioType('ai_speech')}
-                      className={`py-2 rounded-xl transition-all ${audioType === 'ai_speech' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                    >
-                      AI Reader
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* AUDIO SOURCE INPUT BOX (CONVERTS GOOGLE DRIVE LINK TO DIRECT RUNNING AUDIO PLAYER) */}
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                {audioType === 'drive_link' && (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-300 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-indigo-300">
-                        <LinkIcon className="w-4 h-4 text-indigo-400" /> DÁN LINK GOOGLE DRIVE HOẶC LINK FILE AUDIO MP3:
-                      </span>
-                      <span className="text-[10px] text-emerald-400 font-bold">
-                        (Tự động chuyển link Drive thành trình phát Audio trực tiếp)
-                      </span>
-                    </label>
-                    <input
-                      type="url"
-                      value={driveAudioUrl}
-                      onChange={(e) => handleDriveUrlChange(e.target.value)}
-                      placeholder="Dán link Drive (ví dụ: https://drive.google.com/file/d/1A2B3C.../view?usp=sharing)..."
-                      className="w-full glass-input text-xs"
-                    />
-                  </div>
-                )}
-
-                {audioType === 'file_upload' && (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-300 flex items-center gap-1.5 text-purple-300">
-                      <Music className="w-4 h-4 text-purple-400" /> TẢI FILE AUDIO MP3 TỪ MÁY TÍNH:
-                    </label>
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => handleAudioFileUpload(e.target.files?.[0])}
-                      className="w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
-                    />
-                  </div>
-                )}
-
-                {/* LIVE HTML5 AUDIO PLAYER RUNNING DIRECTLY ON PAGE (CHẠY TRỰC TIẾP KHÔNG HIỆN LINK CỨNG) */}
-                {audioStreamUrl && (
-                  <div className="pt-2 space-y-1.5 animate-fadeIn">
-                    <span className="text-[11px] font-extrabold text-emerald-400 flex items-center gap-1.5">
-                      <Volume2 className="w-4 h-4 text-emerald-400" />
-                      TRÌNH PHÁT AUDIO BÀI NGHE ĐANG CHẠY TRỰC TIẾP TRÊN WEB:
-                    </span>
-                    <audio 
-                      controls 
-                      src={audioStreamUrl} 
-                      className="w-full rounded-xl bg-slate-900 border border-slate-700" 
-                      controlsList="nodownload"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* TAPESCRIPT & WORD / JSON FILE UPLOAD */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
-                    <span>SOẠN TAPESCRIPT / KỊCH BẢN NỘI DUNG BÀI NGHE</span>
-                    <span className="text-[10px] text-slate-400 font-semibold">(Tùy chỉnh tapescript của Thầy)</span>
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={customTapescript}
-                    onChange={(e) => setCustomTapescript(e.target.value)}
-                    placeholder="Dán hoặc gõ kịch bản tapescript bài nghe vào đây..."
-                    className="w-full glass-input text-xs font-mono leading-relaxed"
-                  />
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 flex flex-col justify-between">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-                      <FileUp className="w-4 h-4 text-brand-400" /> SOẠN ĐỀ BẰNG FILE WORD (.DOCX) HOẶC FILE MẪU .JSON
-                    </label>
-                    <p className="text-[11px] text-slate-400">
-                      Nạp file Word bài thi hoặc file JSON để hệ thống tự động bóc tách thành câu hỏi tương tác.
-                    </p>
-                  </div>
-
-                  <input
-                    type="file"
-                    accept=".docx,.json,.txt"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        soundFX.playClick();
-                        setUploadedWordFile(file);
-                        alert(`✨ Đã nạp file: ${file.name}. Hệ thống đã chuyển đổi thành bài làm tương tác!`);
-                      }
-                    }}
-                    className="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer"
-                  />
-                </div>
-
-              </div>
-
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+              <BookOpen className="w-5 h-5 text-indigo-400" />
+              <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                1. CHỌN KHỐI LỚP & UNIT CHUẨN SGK
+              </h3>
             </div>
 
-            {/* INTERACTIVE TEST PAPER SHEET (NGƯỜI HỌC BẤM LÀM BÀI VÀ CHẤM ĐIỂM TƯƠNG TÁC) */}
-            <div className="bg-white text-slate-950 p-8 sm:p-12 rounded-3xl shadow-2xl space-y-6 border border-slate-200">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-2">KHỐI LỚP (6 • 7 • 8 • 9):</label>
+              <div className="grid grid-cols-4 gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-xs font-extrabold">
+                {[6, 7, 8, 9].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => {
+                      soundFX.playClick();
+                      setGradeLevel(g);
+                    }}
+                    className={`py-2 rounded-xl transition-all ${
+                      gradeLevel === g ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Lớp {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1.5 flex items-center justify-between">
+                <span>UNIT BÀI HỌC DÀNH CHO KHỐI {gradeLevel}:</span>
+                <span className="text-[10px] text-indigo-400 font-bold">(Tự động đổi theo Khối)</span>
+              </label>
+              <select
+                value={selectedUnit}
+                onChange={(e) => {
+                  soundFX.playClick();
+                  setSelectedUnit(e.target.value);
+                }}
+                className="w-full glass-input text-xs font-bold py-2.5"
+              >
+                {(gradeUnitsDictionary[gradeLevel] || []).map((u, uIdx) => (
+                  <option key={uIdx} value={u} className="bg-slate-900">
+                    {u}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+          </div>
+
+          {/* SECTION 2: CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN MATCHING SCREENSHOT 2 */}
+          <div className="glass-panel p-6 space-y-4 border-slate-800 bg-slate-900/95 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider">
+                CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN:
+              </h3>
+            </div>
+
+            <div className="space-y-2.5">
+              {[
+                { key: 'listening', num: 1, name: 'LISTENING (Nghe hiểu)', bg: 'bg-purple-500/20 text-purple-300' },
+                { key: 'knowledge', num: 2, name: 'KNOWLEDGE OF LANGUAGE', bg: 'bg-indigo-500/20 text-indigo-300' },
+                { key: 'reading', num: 3, name: 'READING (Đọc hiểu)', bg: 'bg-emerald-500/20 text-emerald-300' },
+                { key: 'communication', num: 4, name: 'COMMUNICATION (Giao tiếp)', bg: 'bg-teal-500/20 text-teal-300' },
+                { key: 'writing', num: 5, name: 'WRITING (Viết sáng tạo)', bg: 'bg-rose-500/20 text-rose-300' },
+                { key: 'speaking', num: 6, name: 'SPEAKING (Nói & Chấm AI)', bg: 'bg-amber-500/20 text-amber-300' }
+              ].map((secItem) => {
+                const isChecked = activeSections[secItem.key];
+
+                return (
+                  <div key={secItem.key} className="flex items-center justify-between p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold hover:border-slate-700 transition-all">
+                    <label className="flex items-center gap-3 cursor-pointer flex-1">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSectionCheckbox(secItem.key)}
+                        className="accent-indigo-500 w-4.5 h-4.5 rounded"
+                      />
+                      <span className="w-5 h-5 rounded-md bg-slate-900 border border-slate-700 text-[10px] flex items-center justify-center text-indigo-400 font-extrabold">
+                        {secItem.num}
+                      </span>
+                      <span className="text-slate-200">{secItem.name}</span>
+                    </label>
+                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* PROMPT NOTES MATCHING SCREENSHOT 2 */}
+            <div className="pt-2">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Ý TƯỞNG TỰ SOẠN CỦA THẦY CÔ (PROMPT NOTES)
+              </label>
+              <textarea
+                rows={3}
+                value={promptNotes}
+                onChange={(e) => setPromptNotes(e.target.value)}
+                placeholder="Ví dụ: Thiết kế thêm câu hỏi phủ định; bám sát từ vựng trang 12 SGK; biên soạn câu hỏi phù hợp cho học sinh khá giỏi..."
+                className="w-full glass-input text-xs leading-relaxed"
+              />
+            </div>
+
+          </div>
+
+          {/* SECTION 3: AUDIO GOOGLE DRIVE & FILE INPUT */}
+          <div className="glass-panel p-6 space-y-4 border-indigo-500/40 bg-slate-900/95 shadow-xl">
+            <h3 className="text-xs font-extrabold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Volume2 className="w-4 h-4 text-indigo-400" />
+              NGUỒN ÂM THANH BÀI NGHE LISTENING
+            </h3>
+
+            <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl text-[10px] font-bold">
+              <button
+                type="button"
+                onClick={() => setAudioType('drive_link')}
+                className={`py-1.5 rounded-lg ${audioType === 'drive_link' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              >
+                Drive Link
+              </button>
+              <button
+                type="button"
+                onClick={() => setAudioType('file_upload')}
+                className={`py-1.5 rounded-lg ${audioType === 'file_upload' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              >
+                Tải MP3
+              </button>
+              <button
+                type="button"
+                onClick={() => setAudioType('ai_speech')}
+                className={`py-1.5 rounded-lg ${audioType === 'ai_speech' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              >
+                AI Reader
+              </button>
+            </div>
+
+            {audioType === 'drive_link' && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-300 block">DÁN LINK GOOGLE DRIVE FILE NGHE:</span>
+                <input
+                  type="url"
+                  value={driveAudioUrl}
+                  onChange={(e) => handleDriveUrlChange(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/1A2B3C.../view..."
+                  className="w-full glass-input text-xs"
+                />
+              </div>
+            )}
+
+            {audioType === 'file_upload' && (
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => handleAudioFileUpload(e.target.files?.[0])}
+                className="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
+              />
+            )}
+
+            {audioStreamUrl && (
+              <div className="pt-1">
+                <span className="text-[10px] font-bold text-emerald-400 block mb-1">TRÌNH PHÁT AUDIO TRỰC TIẾP:</span>
+                <audio controls src={audioStreamUrl} className="w-full rounded-xl bg-slate-950" controlsList="nodownload" />
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 4: AI SPEAKING & WRITING SUBMISSION BOX */}
+          <div className="glass-panel p-6 space-y-4 border-amber-500/40 bg-slate-900/95 shadow-xl">
+            <h3 className="text-xs font-extrabold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              CHẤM BÀI SPEAKING / WRITING BẰNG AI
+            </h3>
+
+            <textarea
+              rows={4}
+              value={studentSubmissionContent}
+              onChange={(e) => setStudentSubmissionContent(e.target.value)}
+              placeholder="Dán đoạn văn viết hoặc bài nói của học sinh để AI chấm điểm..."
+              className="w-full glass-input text-xs"
+            />
+
+            <button
+              onClick={() => handleRunAIEvaluation('Speaking / Writing')}
+              disabled={isAnalyzingAI}
+              className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-2"
+            >
+              <BrainCircuit className="w-4 h-4" />
+              {isAnalyzingAI ? 'AI Đang Phân Tích...' : '🤖 Nộp Bài ĐỂ AI Chấm Điểm & Sửa Lỗi'}
+            </button>
+
+            {aiEvaluationResult && (
+              <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/50 text-xs space-y-2 animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="font-black text-emerald-400">KẾT QUẢ ĐÁNH GIÁ AI</span>
+                  <span className="px-2.5 py-1 rounded bg-emerald-500 text-slate-950 font-black">
+                    {aiEvaluationResult.score}
+                  </span>
+                </div>
+                <p className="text-slate-300 font-semibold">{aiEvaluationResult.feedback}</p>
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* RIGHT MAIN PAPER DISPLAY CANVAS (8 COLS) - WIDE & CLEAN */}
+        <div className="lg:col-span-8">
+          {dynamicWorksheet ? (
+            <div className="bg-white text-slate-950 p-8 sm:p-12 rounded-3xl shadow-2xl space-y-8 font-sans border border-slate-200">
               
-              <div className="text-center space-y-1 border-b border-slate-200 pb-4">
-                <h2 className="text-xl font-black text-indigo-950 uppercase">{dynamicWorksheet.title}</h2>
-                <p className="text-xs font-bold text-indigo-600">SECTION 1: LISTENING COMPREHENSION (KHỐI {gradeLevel} • {selectedUnit.toUpperCase()})</p>
+              <div className="text-center space-y-2 border-b border-slate-200 pb-6">
+                <h1 className="text-2xl font-black text-indigo-950 uppercase">{dynamicWorksheet.title}</h1>
+                <p className="text-xs font-bold text-indigo-600">{dynamicWorksheet.subtitle}</p>
+                <p className="text-[11px] font-semibold text-slate-500">📞 Contact: {dynamicWorksheet.contact}</p>
               </div>
 
-              {/* EMBEDDED AUDIO PLAYER INSIDE TEST SHEET */}
-              {audioStreamUrl && (
+              {/* EMBEDDED AUDIO PLAYER INSIDE PAPER */}
+              {activeSections.listening && audioStreamUrl && (
                 <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 space-y-2">
                   <span className="text-xs font-black text-indigo-900 flex items-center gap-1.5">
                     <Volume2 className="w-4 h-4 text-indigo-600" />
-                    🔊 NGHE FILE ÂM THANH BÀI NGHE (AUDIO PLAYER):
+                    🔊 TRÌNH PHÁT FILE ÂM THANH BÀI NGHE (AUDIO PLAYER):
                   </span>
                   <audio controls src={audioStreamUrl} className="w-full rounded-xl" />
                 </div>
               )}
 
-              {/* LISTENING QUESTIONS WITH LIVE INTERACTION FOR STUDENTS */}
-              {dynamicWorksheet.listening.map((task, tIdx) => (
-                <div key={tIdx} className="space-y-4 border-l-4 border-indigo-600 pl-4">
-                  <h3 className="text-sm font-black text-indigo-950">{task.task_title}</h3>
-                  <p className="text-xs italic text-slate-500">{task.task_desc}</p>
-                  
-                  <div className="space-y-3">
-                    {task.questions.map((q) => (
-                      <div key={q.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
-                        <p className="font-extrabold text-slate-900">{q.num}. {q.qText}</p>
-                        
-                        {/* INTERACTIVE OPTIONS CHOICE */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
-                          {q.options.map((opt, oIdx) => {
-                            const isSelected = studentAnswers[q.id] === opt;
-                            const isCorrectGV = modeAnswer === 'gv' && opt === q.correct;
-
-                            return (
-                              <button
-                                key={oIdx}
-                                type="button"
-                                onClick={() => handleSelectOption(q.id, opt)}
-                                className={`px-4 py-3 rounded-2xl border text-xs font-bold text-left transition-all ${
-                                  isCorrectGV
-                                    ? 'bg-purple-600 text-white border-purple-600 shadow-md'
-                                    : isSelected
-                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                                    : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
-                                }`}
-                              >
-                                {opt}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* CHECK SCORE BUTTON FOR INTERACTIVE STUDENTS */}
-                  <div className="pt-2 flex items-center justify-between">
-                    <button
-                      onClick={() => handleCheckAnswers(task.questions)}
-                      className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg flex items-center gap-2"
-                    >
-                      <CheckCircle2 className="w-4 h-4" /> Nộp Bài & Nộp Đáp Án Tương Tác
-                    </button>
-
-                    {quizScore !== null && (
-                      <span className="px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300">
-                        🎯 Kết Quả: {quizScore} / 10 Điểm
-                      </span>
-                    )}
-                  </div>
-
-                </div>
-              ))}
-            </div>
-
-          </div>
-        )}
-
-        {/* TAB 2: SPEAKING (NÓI & CHẤM AI) */}
-        {activeTab === 'speaking' && dynamicWorksheet && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
-            
-            {/* Left AI Submission Panel */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="glass-panel p-6 space-y-4 border-amber-500/40 bg-slate-900/95 shadow-xl">
-                <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-                    <Mic className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-extrabold text-white">Chấm Bài Speaking Khối {gradeLevel} Bằng AI</h3>
-                    <p className="text-xs text-slate-400">Nộp audio MP3 hoặc dán văn bản bài nói để AI phát hiện lỗi sai.</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl text-[10px] font-bold">
-                  <button
-                    onClick={() => setStudentSubmissionType('text')}
-                    className={`py-1.5 rounded-lg ${studentSubmissionType === 'text' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                  >
-                    Dán bài nói
-                  </button>
-                  <button
-                    onClick={() => setStudentSubmissionType('link')}
-                    className={`py-1.5 rounded-lg ${studentSubmissionType === 'link' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                  >
-                    Dán Link
-                  </button>
-                  <button
-                    onClick={() => setStudentSubmissionType('audio')}
-                    className={`py-1.5 rounded-lg ${studentSubmissionType === 'audio' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                  >
-                    Tải Audio MP3
-                  </button>
-                </div>
-
-                {studentSubmissionType === 'audio' ? (
-                  <div className="border-2 border-dashed border-slate-700 rounded-xl p-5 text-center bg-slate-950">
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => setUploadedSubmissionFile(e.target.files?.[0] || null)}
-                      className="hidden"
-                      id="spk-file"
-                    />
-                    <label htmlFor="spk-file" className="cursor-pointer space-y-1 block">
-                      <Mic className="w-7 h-7 text-amber-400 mx-auto" />
-                      <span className="text-xs font-bold text-slate-300 block">
-                        {uploadedSubmissionFile ? uploadedSubmissionFile.name : 'Chọn File Ghi Âm MP3 / M4A của HS'}
-                      </span>
-                    </label>
-                  </div>
-                ) : (
-                  <textarea
-                    rows={5}
-                    value={studentSubmissionContent}
-                    onChange={(e) => setStudentSubmissionContent(e.target.value)}
-                    placeholder="Dán bài phát biểu nói Tiếng Anh của học sinh vào đây..."
-                    className="w-full glass-input text-xs"
-                  />
-                )}
-
-                <button
-                  onClick={() => handleRunAIEvaluation('Speaking')}
-                  disabled={isAnalyzingAI}
-                  className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-2"
-                >
-                  <BrainCircuit className="w-4 h-4" />
-                  {isAnalyzingAI ? 'AI Đang Phân Tích Bài Nói...' : '🤖 Nộp Bài ĐỂ AI Chấm Điểm & Nhắc Lỗi Sai'}
-                </button>
-
-                {aiEvaluationResult && (
-                  <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/50 text-xs space-y-3 animate-fadeIn">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <span className="font-black text-emerald-400">KẾT QUẢ CHẤM SPEAKING</span>
-                      <span className="px-2.5 py-1 rounded bg-emerald-500 text-slate-950 font-black">
-                        {aiEvaluationResult.score}
-                      </span>
-                    </div>
-                    <p className="text-slate-300 font-semibold">{aiEvaluationResult.feedback}</p>
-
-                    <div className="space-y-1.5">
-                      <span className="font-extrabold text-amber-400 text-[11px] block">NHẮC LỖI SAI NỐI ÂM & PHÁT ÂM:</span>
-                      {aiEvaluationResult.errors.map((err, errIdx) => (
-                        <div key={errIdx} className="p-2 rounded bg-slate-900 text-[11px] border border-slate-800 flex items-start gap-2">
-                          <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
-                          <span><strong>[{err.type}]:</strong> {err.detail}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            </div>
-
-            {/* Right Sheet Preview */}
-            <div className="lg:col-span-7 bg-white text-slate-950 p-8 rounded-3xl shadow-2xl space-y-6 border border-slate-200">
-              <div className="text-center space-y-1">
-                <h2 className="text-lg font-black text-indigo-950 uppercase">{dynamicWorksheet.title}</h2>
-                <p className="text-xs font-bold text-indigo-600">SECTION 2: SPEAKING PRACTICE (KHỐI {gradeLevel})</p>
-              </div>
-
-              {dynamicWorksheet.speaking.map((task, tIdx) => (
-                <div key={tIdx} className="space-y-4 border-l-4 border-amber-500 pl-4">
-                  <h3 className="text-sm font-black text-indigo-950">{task.task_title}</h3>
-                  <p className="text-xs italic text-slate-500">{task.task_desc}</p>
-                  
-                  {task.questions.map((q) => (
-                    <div key={q.id} className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs space-y-2">
-                      <p className="font-extrabold text-slate-900">{q.num}. {q.qText}</p>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-          </div>
-        )}
-
-        {/* TAB 3: READING (ĐỌC HIỂU) */}
-        {activeTab === 'reading' && dynamicWorksheet && (
-          <div className="bg-white text-slate-950 p-8 sm:p-12 rounded-3xl shadow-2xl space-y-6 border border-slate-200 animate-fadeIn">
-            <div className="text-center space-y-1 border-b border-slate-200 pb-4">
-              <h2 className="text-xl font-black text-indigo-950 uppercase">{dynamicWorksheet.title}</h2>
-              <p className="text-xs font-bold text-indigo-600">SECTION 3: READING COMPREHENSION (KHỐI {gradeLevel})</p>
-            </div>
-
-            {dynamicWorksheet.reading.map((task, tIdx) => (
-              <div key={tIdx} className="space-y-4 border-l-4 border-emerald-600 pl-4">
-                <h3 className="text-sm font-black text-indigo-950">{task.task_title}</h3>
-                <p className="text-xs italic text-slate-500">{task.task_desc}</p>
-
-                {task.passage && (
-                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-xs leading-relaxed font-serif text-slate-800">
-                    <span className="font-bold text-indigo-900 block mb-1">📖 READING PASSAGE:</span>
-                    {task.passage}
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  {task.questions.map((q) => (
-                    <div key={q.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
-                      <p className="font-extrabold text-slate-900">{q.num}. {q.qText}</p>
+              {/* SECTIONS RENDERING ACCORDING TO CHECKBOXES */}
+              <div className="space-y-8">
+                {dynamicWorksheet.sections.map((sec) => {
+                  if (!sec.enabled) return null;
+                  return (
+                    <div key={sec.id} className="space-y-4 border-l-4 border-indigo-600 pl-4">
+                      <h3 className="text-base font-black text-indigo-950 uppercase">{sec.title}</h3>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
-                        {q.options.map((opt, oIdx) => {
-                          const isSelected = studentAnswers[q.id] === opt;
-                          const isCorrectGV = modeAnswer === 'gv' && opt === q.correct;
+                      {sec.tasks.map((task, tIdx) => (
+                        <div key={tIdx} className="space-y-3">
+                          <h4 className="text-xs font-black text-indigo-900">{task.task_title}</h4>
+                          <p className="text-xs italic text-slate-500">{task.task_desc}</p>
+                          
+                          {task.passage && (
+                            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs leading-relaxed font-serif text-slate-800">
+                              <span className="font-bold text-indigo-900 block mb-1">📖 READING PASSAGE:</span>
+                              {task.passage}
+                            </div>
+                          )}
 
-                          return (
-                            <button
-                              key={oIdx}
-                              type="button"
-                              onClick={() => handleSelectOption(q.id, opt)}
-                              className={`px-4 py-3 rounded-2xl border text-xs font-bold text-left transition-all ${
-                                isCorrectGV
-                                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                                  : isSelected
-                                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                                  : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
-                              }`}
-                            >
-                              {opt}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                          <div className="space-y-3">
+                            {task.questions.map((q) => (
+                              <div key={q.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                                <p className="font-extrabold text-slate-900">{q.num}. {q.qText}</p>
+                                
+                                {q.options && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
+                                    {q.options.map((opt, oIdx) => {
+                                      const isSelected = studentAnswers[q.id] === opt;
+                                      const isCorrectGV = modeAnswer === 'gv' && opt === q.correct;
 
-                <div className="pt-2 flex items-center justify-between">
-                  <button
-                    onClick={() => handleCheckAnswers(task.questions)}
-                    className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg flex items-center gap-2"
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> Nộp Bài Đọc Hiểu & Chấm Điểm
-                  </button>
-
-                  {quizScore !== null && (
-                    <span className="px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300">
-                      🎯 Kết Quả: {quizScore} / 10 Điểm
-                    </span>
-                  )}
-                </div>
-
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 4: WRITING (VIẾT & CHẤM AI) */}
-        {activeTab === 'writing' && dynamicWorksheet && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
-            
-            {/* Left AI Submission Panel */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="glass-panel p-6 space-y-4 border-rose-500/40 bg-slate-900/95 shadow-xl">
-                <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-                  <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold">
-                    <Edit3 className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-extrabold text-white">Chấm Bài Writing Khối {gradeLevel} Bằng AI</h3>
-                    <p className="text-xs text-slate-400">Dán đoạn văn viết Tiếng Anh để AI sửa lỗi chính tả & ngữ pháp.</p>
-                  </div>
-                </div>
-
-                <textarea
-                  rows={6}
-                  value={studentSubmissionContent}
-                  onChange={(e) => setStudentSubmissionContent(e.target.value)}
-                  placeholder="Dán bài viết đoạn văn (80-100 từ) của học sinh vào đây..."
-                  className="w-full glass-input text-xs leading-relaxed"
-                />
-
-                <button
-                  onClick={() => handleRunAIEvaluation('Writing')}
-                  disabled={isAnalyzingAI}
-                  className="w-full py-3.5 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2"
-                >
-                  <BrainCircuit className="w-4 h-4" />
-                  {isAnalyzingAI ? 'AI Đang Phân Tích Bài Viết...' : '🤖 Nộp Bài ĐỂ AI Chấm Điểm & Sửa Lỗi Sai'}
-                </button>
-
-                {aiEvaluationResult && (
-                  <div className="p-4 rounded-2xl bg-slate-950 border border-rose-500/50 text-xs space-y-3 animate-fadeIn">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <span className="font-black text-rose-400">KẾT QUẢ CHẤM WRITING</span>
-                      <span className="px-2.5 py-1 rounded bg-rose-500 text-white font-black">
-                        {aiEvaluationResult.score}
-                      </span>
-                    </div>
-                    <p className="text-slate-300 font-semibold">{aiEvaluationResult.feedback}</p>
-
-                    <div className="space-y-1.5">
-                      <span className="font-extrabold text-amber-400 text-[11px] block">CÁC LỖI CHÍNH TẢ & NGỮ PHÁP ĐÃ SỬA:</span>
-                      {aiEvaluationResult.errors.map((err, errIdx) => (
-                        <div key={errIdx} className="p-2 rounded bg-slate-900 text-[11px] border border-slate-800 flex items-start gap-2">
-                          <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
-                          <span><strong>[{err.type}]:</strong> {err.detail}</span>
+                                      return (
+                                        <button
+                                          key={oIdx}
+                                          type="button"
+                                          onClick={() => handleSelectOption(q.id, opt)}
+                                          className={`px-4 py-3 rounded-2xl border text-xs font-bold text-left transition-all ${
+                                            isCorrectGV
+                                              ? 'bg-purple-600 text-white border-purple-600 shadow-md'
+                                              : isSelected
+                                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                              : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
+                                          }`}
+                                        >
+                                          {opt}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+
+              {/* SUBMIT ANSWERS & CHECK SCORE BUTTON */}
+              <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    const allTasks = dynamicWorksheet.sections.filter(s => s.enabled).flatMap(s => s.tasks);
+                    handleCheckAnswers(allTasks);
+                  }}
+                  className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg flex items-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Nộp Bài & Chấm Điểm Tương Tác
+                </button>
+
+                {quizScore !== null && (
+                  <span className="px-5 py-2.5 rounded-2xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300">
+                    🎯 Kết Quả Tương Tác: {quizScore} / 10 Điểm
+                  </span>
                 )}
-
               </div>
+
             </div>
-
-            {/* Right Sheet Preview */}
-            <div className="lg:col-span-7 bg-white text-slate-950 p-8 rounded-3xl shadow-2xl space-y-6 border border-slate-200">
-              <div className="text-center space-y-1">
-                <h2 className="text-lg font-black text-indigo-950 uppercase">{dynamicWorksheet.title}</h2>
-                <p className="text-xs font-bold text-indigo-600">SECTION 4: WRITING ESSAY (KHỐI {gradeLevel})</p>
-              </div>
-
-              {dynamicWorksheet.writing.map((task, tIdx) => (
-                <div key={tIdx} className="space-y-4 border-l-4 border-rose-500 pl-4">
-                  <h3 className="text-sm font-black text-indigo-950">{task.task_title}</h3>
-                  <p className="text-xs italic text-slate-500">{task.task_desc}</p>
-                  
-                  {task.questions.map((q) => (
-                    <div key={q.id} className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs space-y-2">
-                      <p className="font-extrabold text-slate-900">{q.num}. {q.qText}</p>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-          </div>
-        )}
-
-        {/* TAB 5: SINH ĐỀ AI & MẪU JSON */}
-        {activeTab === 'generator' && (
-          <div className="animate-fadeIn">
-            <AIExamGenerator onExamSaved={() => {
-              alert('✨ Đã lưu bài kiểm tra thành công vào Ngân hàng đề thi!');
-              setActiveTab('listening');
-            }} />
-          </div>
-        )}
-
-        {/* TAB 6: HƯỚNG DẪN NHÚNG GOOGLE AI STUDIO */}
-        {activeTab === 'guide' && (
-          <div className="glass-panel p-8 space-y-6 border-indigo-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shrink-0">
-                <Code className="w-7 h-7" />
-              </div>
-              <div>
-                <h2 className="text-xl font-black text-white">Hướng Dẫn Tạo Đề Trực Tiếp Trên AI Studio & Gửi Link Cho HS Làm Bài</h2>
-                <p className="text-xs text-slate-400">Thực hiện 3 bước đơn giản để tạo và chia sẻ bài kiểm tra tương tác cho học sinh trên website.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-3">
-                <span className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black text-sm flex items-center justify-center">1</span>
-                <h3 className="text-base font-extrabold text-white">Tạo Đề Trên Google AI Studio</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Thầy mở Google AI Studio / Gemini Canvas, nhập câu lệnh tạo đề trắc nghiệm Tiếng Anh THCS. Nhấn <strong>Run</strong> để sinh ra Web App kiểm tra tương tác.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-3">
-                <span className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black text-sm flex items-center justify-center">2</span>
-                <h3 className="text-base font-extrabold text-white">Copy Link Share / Nhúng Web App</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Nhấn nút <strong>Share</strong> (hoặc Get URL / iFrame) trên AI Studio ➔ Sao chép đường link Web App vừa tạo.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-3">
-                <span className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black text-sm flex items-center justify-center">3</span>
-                <h3 className="text-base font-extrabold text-white">Đăng Lên Website & Gửi Cho HS</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Vào menu <strong>Sân trường ➔ Tiện Ích Giảng Dạy</strong> ➔ Nhấn <strong>+ Thêm App Gemini Canvas</strong> ➔ Dán link và nhấn Đăng. Thầy copy link gửi học sinh làm bài tương tác!
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <a
-                href="https://aistudio.google.com/"
-                target="_blank"
-                rel="noreferrer"
-                className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" /> Mở Trực Tiếp Google AI Studio Để Tạo Đề
-              </a>
-
-              <span className="text-xs text-amber-400 font-bold flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                Học sinh truy cập link có thể bấm nút "Chơi ngay" để làm bài thời gian thực trên mọi thiết bị.
-              </span>
-            </div>
-          </div>
-        )}
+          ) : (
+            <div className="glass-panel p-12 text-center text-slate-400">Đang nạp bài kiểm tra...</div>
+          )}
+        </div>
 
       </div>
 
