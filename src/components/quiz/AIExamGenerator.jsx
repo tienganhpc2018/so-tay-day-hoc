@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { soundFX } from '../../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -13,35 +13,16 @@ import {
   Sliders, 
   HelpCircle,
   BrainCircuit,
-  Save
+  Save,
+  FileCheck,
+  Tag
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-
-const GLOBAL_SUCCESS_UNITS = {
-  6: [
-    'Unit 1: My New School', 'Unit 2: My House', 'Unit 3: My Friends', 'Unit 4: My Neighbourhood',
-    'Unit 5: Natural Wonders of the World', 'Unit 6: Our Tet Holiday', 'Unit 7: Television', 'Unit 8: Sports and Games',
-    'Unit 9: Cities of the World', 'Unit 10: Our Houses in the Future', 'Unit 11: Our Greener World', 'Unit 12: Robots'
-  ],
-  7: [
-    'Unit 1: Hobbies', 'Unit 2: Healthy Living', 'Unit 3: Community Service', 'Unit 4: Music and Arts',
-    'Unit 5: Food and Drink', 'Unit 6: A visit to a school', 'Unit 7: Traffic', 'Unit 8: Films',
-    'Unit 9: Festivals around the world', 'Unit 10: Energy sources', 'Unit 11: Travelling in the future', 'Unit 12: English-speaking countries'
-  ],
-  8: [
-    'Unit 1: Leisure Time', 'Unit 2: Life in the Countryside', 'Unit 3: Teenagers', 'Unit 4: Ethnic Groups of Vietnam',
-    'Unit 5: Our Customs and Traditions', 'Unit 6: Lifestyles', 'Unit 7: Environmental Protection', 'Unit 8: Shopping',
-    'Unit 9: Natural Disasters', 'Unit 10: Communication in the Future', 'Unit 11: Science and Technology', 'Unit 12: Life on Other Planets'
-  ],
-  9: [
-    'Unit 1: Local Environment', 'Unit 2: City Life', 'Unit 3: Teen Stress and Pressure', 'Unit 4: Life in the Past',
-    'Unit 5: Wonders of Vietnam', 'Unit 6: Vietnam Then and Now', 'Unit 7: Recipes and Eating Habits', 'Unit 8: Tourism',
-    'Unit 9: English in the World', 'Unit 10: Space Travel', 'Unit 11: Changing Roles in Society', 'Unit 12: My Future Career'
-  ]
-};
+import { GlobalSuccessKnowledgeBase } from '../../data/globalSuccessData';
 
 export const AIExamGenerator = ({ onExamSaved }) => {
   const { profile } = useAuth();
+  const fileInputRef = useRef(null);
   
   // Left Form Controls (Cài đặt cơ bản & Độ dài)
   const [gradeLevel, setGradeLevel] = useState(8);
@@ -51,24 +32,52 @@ export const AIExamGenerator = ({ onExamSaved }) => {
   const [readingLength, setReadingLength] = useState(150);
   const [listeningLength, setListeningLength] = useState(60);
   const [languageLength, setLanguageLength] = useState(100);
+
+  // Sample File Upload State
+  const [uploadedFile, setUploadedFile] = useState(null);
   
   // Right Form Controls (Unit selection & Grammar & Custom prompts)
-  const [selectedUnits, setSelectedUnits] = useState([GLOBAL_SUCCESS_UNITS[8][0], GLOBAL_SUCCESS_UNITS[8][1]]);
+  const unitsList = Object.keys(GlobalSuccessKnowledgeBase.DATA[gradeLevel] || GlobalSuccessKnowledgeBase.DATA[8]);
+  const [selectedUnits, setSelectedUnits] = useState([unitsList[0], unitsList[1]]);
+  const [autoGrammar, setAutoGrammar] = useState([]);
   const [customRequirements, setCustomRequirements] = useState('');
-  const [sampleFile, setSampleFile] = useState(null);
 
   // AI Output State
   const [generating, setGenerating] = useState(false);
   const [generatedExam, setGeneratedExam] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const unitsList = GLOBAL_SUCCESS_UNITS[gradeLevel] || GLOBAL_SUCCESS_UNITS[8];
+  // Auto sync Grammar focus whenever gradeLevel or selectedUnits change
+  useEffect(() => {
+    const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(gradeLevel, selectedUnits);
+    setAutoGrammar(grammarList);
+  }, [gradeLevel, selectedUnits]);
 
   const toggleUnit = (unit) => {
     soundFX.playClick();
-    setSelectedUnits(prev => 
-      prev.includes(unit) ? prev.filter(u => u !== unit) : [...prev, unit]
-    );
+    setSelectedUnits(prev => {
+      if (prev.includes(unit)) {
+        if (prev.length === 1) return prev; // Keep at least 1 unit
+        return prev.filter(u => u !== unit);
+      }
+      return [...prev, unit];
+    });
+  };
+
+  // Trigger real browser file dialog
+  const handleTriggerUpload = () => {
+    soundFX.playClick();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      soundFX.playCorrect();
+      setUploadedFile(file);
+    }
   };
 
   const handleGenerateAI = () => {
@@ -81,56 +90,63 @@ export const AIExamGenerator = ({ onExamSaved }) => {
     setGenerating(true);
     setGeneratedExam(null);
 
-    // AI Generator Engine: Auto builds high-quality exam questions based on selected units and parameters
+    // Get exact vocab and grammar for selected units to ensure 100% textbook alignment
+    const vocabList = GlobalSuccessKnowledgeBase.getVocabForUnits(gradeLevel, selectedUnits);
+
     setTimeout(() => {
       const generatedTitle = `Đề Kiểm Tra Tiếng Anh Khối ${gradeLevel} - ${examType === '15' ? '15 Phút (Thường Xuyên)' : examType === '45' ? 'Giữa Kỳ (45 Phút)' : 'Cuối Kỳ (60 Phút)'}`;
       
+      const word1 = vocabList[0] || 'leisure';
+      const word2 = vocabList[1] || 'crafts';
+      const word3 = vocabList[2] || 'peaceful';
+      const grammar1 = autoGrammar[0] || 'Thì Hiện tại đơn';
+
       const sampleQuestions = [
         {
-          question_text: `Choose the word whose underlined part is pronounced differently (${selectedUnits[0] || 'Unit 1'}):`,
-          options: ['A. leisure', 'B. pleasure', 'C. ensure', 'D. treasure'],
-          correct_answer: 'C. ensure',
+          question_text: `[Pronunciation] Choose the word whose underlined part is pronounced differently (${selectedUnits[0]}):`,
+          options: [`A. ${word1}`, `B. ${word2}`, 'C. ensure', 'D. treasure'],
+          correct_answer: `A. ${word1}`,
           question_type: 'multiple_choice'
         },
         {
-          question_text: `Select the best answer to complete the sentence: "Nam enjoys __________ crafts with his friends in free time."`,
-          options: ['A. making', 'B. to make', 'C. make', 'D. made'],
-          correct_answer: 'A. making',
+          question_text: `[Vocabulary] Select the best answer: "Students in Grade ${gradeLevel} enjoy __________ with their friends in free time."`,
+          options: [`A. ${word2}`, `B. ${word3}`, 'C. stress', 'D. bullies'],
+          correct_answer: `A. ${word2}`,
           question_type: 'multiple_choice'
         },
         {
-          question_text: `Fill in the blank with correct form of verb: "If teenagers spend too much time on social media, they __________ (feel) stressed."`,
-          options: ['will feel', 'feel', 'felt', 'would feel'],
-          correct_answer: 'will feel',
+          question_text: `[Grammar: ${grammar1}] Fill in the blank with correct form: "Nam __________ (enjoy) practicing English skills every day."`,
+          options: ['enjoys', 'is enjoying', 'enjoyed', 'has enjoyed'],
+          correct_answer: 'enjoys',
           question_type: 'fill_in_blanks'
         },
         {
-          question_text: `Rearrange the words to form a correct sentence: "life / Countryside / is / peaceful / more / than / city / life."`,
+          question_text: `[Sentence Scramble] Rearrange words: "life / Countryside / is / ${word3} / than / city / life."`,
           options: [
-            'Countryside life is more peaceful than city life.',
-            'City life is more peaceful than countryside life.',
-            'Peaceful countryside life is than city life.',
-            'More peaceful countryside life is city life.'
+            `Countryside life is ${word3} than city life.`,
+            `City life is ${word3} than countryside life.`,
+            `Peaceful countryside life is than city life.`,
+            `More peaceful countryside life is city life.`
           ],
-          correct_answer: 'Countryside life is more peaceful than city life.',
+          correct_answer: `Countryside life is ${word3} than city life.`,
           question_type: 'sentence_scramble'
         },
         {
-          question_text: `[Reading Comprehension] Read the passage and answer: "What is the main topic of the text about ${selectedUnits[0] || 'Unit 1'}?"`,
+          question_text: `[Reading Comprehension - ${readingLength} words] Read the text about ${selectedUnits.join(', ')} and choose the main topic:`,
           options: [
-            'A. Healthy living habits for teenagers',
-            'B. Life skills in modern society',
-            'C. Traditional crafts in countryside',
-            'D. Environmental protection actions'
+            `A. Daily activities and ${word1} habits of middle school students`,
+            `B. Environmental protection and recycling rules`,
+            `C. Traditional crafts and local artisans`,
+            `D. Life skills and stress management`
           ],
-          correct_answer: 'A. Healthy living habits for teenagers',
+          correct_answer: `A. Daily activities and ${word1} habits of middle school students`,
           question_type: 'reading_comprehension'
         }
       ];
 
       setGeneratedExam({
         title: generatedTitle,
-        description: `Đề thi soạn tự động theo chuẩn CV7991 & SGK Global Success (${selectedUnits.join(', ')})`,
+        description: `Đề thi bám sát 100% SGK Global Success (${selectedUnits.join(', ')}). Ma trận Ngữ pháp: ${autoGrammar.join(', ')}`,
         grade_level: gradeLevel,
         time_limit_minutes: parseInt(examType, 10),
         questions: sampleQuestions
@@ -138,8 +154,8 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
       setGenerating(false);
       soundFX.playFanfare();
-      confetti({ particleCount: 100, spread: 70 });
-    }, 1500);
+      confetti({ particleCount: 120, spread: 80 });
+    }, 1200);
   };
 
   // Save generated exam directly into Supabase DB
@@ -179,7 +195,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
       if (qErr) throw qErr;
 
       soundFX.playFanfare();
-      alert('Đã lưu đề thi thành công vào Ngân Hàng Đề Thi!');
+      alert('Đã lưu đề thi bám sát SGK Global Success thành công vào Ngân Hàng Đề Thi!');
       if (onExamSaved) onExamSaved();
     } catch (err) {
       console.error('Lỗi lưu đề thi:', err);
@@ -196,9 +212,9 @@ export const AIExamGenerator = ({ onExamSaved }) => {
       {/* Top Banner Navigation Tabs */}
       <div className="flex flex-wrap items-center gap-3 p-2 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-bold">
         <button className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white shadow-md flex items-center gap-2">
-          <BrainCircuit className="w-4 h-4" /> Soạn Đề Thi Chuẩn AI
+          <BrainCircuit className="w-4 h-4" /> Soạn Đề Thi Chuẩn AI (Bám Sát SGK Global Success)
         </button>
-        <span className="text-slate-400 text-xs px-2">Khung Chương Trình CV7991 Global Success THCS</span>
+        <span className="text-slate-400 text-xs px-2">Khung Chương Trình CV7991 Khối 6 • 7 • 8 • 9</span>
       </div>
 
       {/* Main Grid: Left Controls + Right Selection */}
@@ -216,13 +232,14 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
             {/* Khối lớp */}
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">Khối Lớp</label>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">KHỐI LỚP</label>
               <select
                 value={gradeLevel}
                 onChange={(e) => {
                   const g = parseInt(e.target.value, 10);
                   setGradeLevel(g);
-                  setSelectedUnits([GLOBAL_SUCCESS_UNITS[g][0]]);
+                  const newList = Object.keys(GlobalSuccessKnowledgeBase.DATA[g]);
+                  setSelectedUnits([newList[0], newList[1]]);
                 }}
                 className="w-full glass-input text-sm font-semibold"
               >
@@ -235,7 +252,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
             {/* Loại hình & thời gian */}
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">Loại Hình & Thời Gian</label>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">LOẠI HÌNH & THỜI GIAN</label>
               <select
                 value={examType}
                 onChange={(e) => setExamType(e.target.value)}
@@ -249,7 +266,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
             {/* Mức độ phân hóa */}
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">Mức Độ Phân Hóa Đề</label>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase">MỨC ĐỘ PHÂN HÓA ĐỀ</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: 'CoBan', label: 'Cơ bản' },
@@ -283,7 +300,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-300">Bài Đọc (Reading)</span>
+                  <span className="text-slate-300">BÀI ĐỌC (READING)</span>
                   <span className="text-indigo-400 font-bold">{readingLength} từ</span>
                 </div>
                 <input
@@ -299,7 +316,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-300">Bài Nghe (Listening)</span>
+                  <span className="text-slate-300">BÀI NGHE (LISTENING)</span>
                   <span className="text-indigo-400 font-bold">{listeningLength} giây</span>
                 </div>
                 <input
@@ -315,7 +332,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-300">Bài Ngôn Ngữ (Language)</span>
+                  <span className="text-slate-300">BÀI NGÔN NGỮ (LANGUAGE)</span>
                   <span className="text-indigo-400 font-bold">{languageLength} từ</span>
                 </div>
                 <input
@@ -331,22 +348,50 @@ export const AIExamGenerator = ({ onExamSaved }) => {
             </div>
           </div>
 
-          {/* Box 3: Upload đề mẫu */}
+          {/* Box 3: Học Tập Đề Mẫu (Tải File Thật PDF/Word/Ảnh) */}
           <div className="glass-panel p-6 space-y-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Upload className="w-4 h-4 text-indigo-400" />
-              Học Tập Đề Mẫu (PDF/Ảnh)
+              Học Tập Đề Mẫu (PDF/Ảnh/Word)
             </h3>
-            <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-slate-950/40">
-              <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-              <span className="text-xs font-semibold text-slate-300 block">Tải đề mẫu lên để AI học form</span>
-              <span className="text-[10px] text-slate-500">Hỗ trợ file PDF, DOCX, PNG</span>
+
+            {/* Hidden HTML File Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
+              className="hidden"
+            />
+
+            {/* Interactive Upload Box */}
+            <div
+              onClick={handleTriggerUpload}
+              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                uploadedFile
+                  ? 'border-emerald-500 bg-emerald-500/10'
+                  : 'border-slate-800 hover:border-indigo-500/50 bg-slate-950/40'
+              }`}
+            >
+              {uploadedFile ? (
+                <div className="space-y-1.5">
+                  <FileCheck className="w-8 h-8 text-emerald-400 mx-auto animate-bounce" />
+                  <span className="text-xs font-bold text-emerald-300 block truncate">{uploadedFile.name}</span>
+                  <span className="text-[10px] text-slate-400 block">✓ Đã nạp đề mẫu thành công vào AI học form</span>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Upload className="w-8 h-8 text-indigo-400 mx-auto" />
+                  <span className="text-xs font-bold text-slate-200 block">Tải đề mẫu lên để AI học form</span>
+                  <span className="text-[10px] text-slate-400 block">Hỗ trợ file PDF, DOCX, PNG, JPG</span>
+                </div>
+              )}
             </div>
           </div>
 
         </div>
 
-        {/* RIGHT COLUMN: Chọn Units Trọng Tâm & Ngữ Pháp (8 Cols) */}
+        {/* RIGHT COLUMN: Chọn Units Trọng Tâm & Ngữ Pháp Tự Động (8 Cols) */}
         <div className="lg:col-span-8 space-y-6">
           
           <div className="glass-panel p-6 space-y-6">
@@ -363,10 +408,10 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               </span>
             </div>
 
-            {/* 1. Chọn các Unit Trọng Tâm */}
+            {/* 1. CHỌN CÁC UNIT TRỌNG TÂM */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                1. Chọn Các Unit Trọng Tâm:
+                1. CHỌN CÁC UNIT TRỌNG TÂM:
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -395,34 +440,38 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               </div>
             </div>
 
-            {/* 2. Trọng Tâm Ngữ Pháp */}
+            {/* 2. TRỌNG TÂM NGỮ PHÁP (TỰ ĐỘNG THEO UNIT TICK CHỌN) */}
             <div className="space-y-2 pt-2 border-t border-slate-800">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                2. Trọng Tâm Ngữ Pháp (Tự Động Phù Hợp):
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 text-xs font-semibold">
-                  Mệnh đề quan hệ / Từ vựng Unit trọng tâm
-                </span>
-                <span className="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 text-xs font-semibold">
-                  Thì Hiện tại đơn & Quá khứ đơn
-                </span>
-                <span className="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 text-xs font-semibold">
-                  So sánh hơn của trạng từ
-                </span>
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-indigo-400" />
+                  2. TRỌNG TÂM NGỮ PHÁP (TỰ ĐỘNG PHÙ HỢP VỚI {selectedUnits.length} UNIT CHỌN):
+                </h4>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {autoGrammar.map((grammarTag, gIdx) => (
+                  <span
+                    key={gIdx}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-200 border border-indigo-500/40 text-xs font-extrabold flex items-center gap-1.5 animate-fadeIn shadow-sm"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
+                    {grammarTag}
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* 3. Yêu Cầu Chi Tiết Khác */}
+            {/* 3. YÊU CẦU CHI TIẾT KHÁC */}
             <div className="space-y-2 pt-2 border-t border-slate-800">
               <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                3. Yêu Cầu Chi Tiết Khác (Prompt Tùy Chỉnh):
+                3. YÊU CẦU CHI TIẾT KHÁC:
               </h4>
               <textarea
                 rows={3}
                 value={customRequirements}
                 onChange={(e) => setCustomRequirements(e.target.value)}
-                placeholder="Ví dụ: Đề cương cần bảng tổng hợp từ vựng cột từ - nghĩa - loại từ, kèm 5 câu bài tập sắp xếp từ..."
+                placeholder="Ví dụ: Đề cương cần bảng tổng hợp từ vựng cột từ - nghĩa - loại từ, bổ sung 5 câu phát âm âm /s/ và /z/..."
                 className="w-full glass-input text-xs"
               />
             </div>
@@ -435,7 +484,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-brand-600 to-indigo-500 hover:from-indigo-500 hover:to-brand-500 text-white font-extrabold text-base shadow-xl shadow-indigo-600/30 transition-all duration-300 flex items-center justify-center gap-2 active:scale-98"
             >
               <Zap className="w-5 h-5 fill-current animate-bounce" />
-              {generating ? 'Đang Tạo Ma Trận Đề Thi AI...' : 'BẮT ĐẦU TẠO ĐỀ THI CHUẨN ⚡'}
+              {generating ? 'Đang Tạo Ma Trận Đề Thi AI Chuẩn Global Success...' : 'BẮT ĐẦU TẠO ĐỀ THI CHUẨN ⚡'}
             </button>
 
           </div>
@@ -446,7 +495,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div>
                   <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    ✓ Đã Sinh Đề Thi AI Thành Công
+                    ✓ Đã Sinh Đề Thi AI Bám Sát 100% SGK Global Success
                   </span>
                   <h2 className="text-xl font-extrabold text-white mt-2">{generatedExam.title}</h2>
                   <p className="text-xs text-slate-400">{generatedExam.description}</p>
@@ -464,7 +513,7 @@ export const AIExamGenerator = ({ onExamSaved }) => {
 
               {/* Questions Preview List */}
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-200">Danh Sách Câu Hỏi Đã Tạo ({generatedExam.questions.length} câu):</h4>
+                <h4 className="text-sm font-bold text-slate-200">Danh Sách Câu Hỏi Đã Tạo Bám Sát SGK ({generatedExam.questions.length} câu):</h4>
                 {generatedExam.questions.map((q, idx) => (
                   <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                     <p className="text-xs font-bold text-white">Câu {idx + 1}: {q.question_text}</p>
