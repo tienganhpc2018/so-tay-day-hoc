@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { MaterialTree } from '../components/material/MaterialTree';
@@ -24,13 +24,17 @@ import {
   Image,
   Lightbulb,
   BookMarked,
-  Brain
+  Brain,
+  Volume2,
+  Gamepad2,
+  Edit3
 } from 'lucide-react';
 
 export const MaterialPage = () => {
   const { profile, isTeacher } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTypeParam = searchParams.get('type') || 'grammar';
+  const activeTypeParam = searchParams.get('type') || 'vocabulary';
 
   const [selectedGrade, setSelectedGrade] = useState(8);
   const [categories, setCategories] = useState([]);
@@ -121,72 +125,64 @@ export const MaterialPage = () => {
     }
   };
 
-  const availableUnits = [
-    'Unit 1: My New School / Leisure Time',
-    'Unit 2: Life in Countryside / Healthy Living',
-    'Unit 3: Teenagers / Community Service',
-    'Unit 4: Ethnic Groups / Music and Arts',
-    'Unit 5: Food and Drink / Vietnamese Food',
-    'Unit 6: Lifestyles / Wonders of Vietnam',
-    'Unit 7: Environmental Protection',
-    'Unit 8: Shopping / Tourism',
-    'Unit 9: Natural Disasters',
-    'Unit 10: Communication in Future',
-    'Unit 11: Science and Technology',
-    'Unit 12: Life on Other Planets'
-  ];
-
-  const availableLessons = [
-    'Getting started',
-    'A closer look 1',
-    'A closer look 2',
-    'Communication',
-    'Skills 1',
-    'Skills 2',
-    'Looking back',
-    'Project'
+  // 6 DEDICATED SUB-PAGE TABS CORRESPONDING TO 6 CARDS ON HOMEPAGE
+  const subPageTabs = [
+    { id: 'vocabulary', label: '1. Từ Vựng (Vocabulary)', icon: BookMarked, badgeColor: 'bg-indigo-500/20 text-indigo-300' },
+    { id: 'grammar', label: '2. Ngữ Pháp (Grammar)', icon: Brain, badgeColor: 'bg-amber-500/20 text-amber-300' },
+    { id: 'audio', label: '3. Audio & Tapescript', icon: Volume2, badgeColor: 'bg-purple-500/20 text-purple-300' },
+    { id: 'infographic', label: '4. Infographic Trực Quan', icon: Image, badgeColor: 'bg-emerald-500/20 text-emerald-300' },
+    { id: 'project', label: '5. iFrame Game & Project', icon: Gamepad2, badgeColor: 'bg-rose-500/20 text-rose-300' },
+    { id: 'worksheet', label: '6. Phiếu Bài Tập 4 Kỹ Năng', icon: Edit3, badgeColor: 'bg-teal-500/20 text-teal-300' }
   ];
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* HERO BANNER WITH AI LIBRARY BACKGROUND */}
+      {/* HERO BANNER WITH AI LIBRARY BACKDROP */}
       <PageHeroBanner
-        title="Cây Thư Mục Học Liệu Tiếng Anh THCS 📚"
-        subtitle="4 Ngăn Soạn Riêng Biệt: Grammar, Vocabulary, Infographic và Ý tưởng dạy học. Tra cứu giáo án, bài giảng điện tử và tệp PDF theo từng Khối lớp & Bài học."
-        badge="CÂY HỌC LIỆU SỐ • THƯ VIỆN ĐỔI MỚI"
+        title="Thư Mục Học Liệu Tiếng Anh THCS 📚"
+        subtitle="Cây thư mục bài học 6 Trang con chuyên biệt: Từ vựng, Ngữ pháp, Audio Tapescript, Infographic, Game Project và Phiếu bài tập tích hợp AI."
+        badge="HỌC LIỆU SỐ • KHỐI 6 - 7 - 8 - 9 GLOBAL SUCCESS"
         bgImage="/images/hero_library_bg.jpg"
         actions={
-          <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 w-fit backdrop-blur-md">
-            {[6, 7, 8, 9].map((g) => (
+          <div className="flex flex-wrap items-center gap-3">
+            {isTeacher && (
               <button
-                key={g}
                 onClick={() => {
                   soundFX.playClick();
-                  setSelectedGrade(g);
-                  setFormGrade(g);
+                  setIsUploadOpen(true);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                  selectedGrade === g
-                    ? 'bg-brand-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className="glass-button-primary text-xs px-4 py-2.5"
               >
-                Khối {g}
+                <UploadCloud className="w-4 h-4" /> Tải Lên Thư Mục Mới
               </button>
-            ))}
+            )}
+
+            <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 backdrop-blur-md">
+              {[6, 7, 8, 9].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => {
+                    soundFX.playClick();
+                    setSelectedGrade(g);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                    selectedGrade === g
+                      ? 'bg-brand-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Khối {g}
+                </button>
+              ))}
+            </div>
           </div>
         }
       />
 
-      {/* 4 HORIZONTAL NAVIGATION TABS CORRESPONDING TO 4 DEDICATED EDITOR BOXES */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { id: 'grammar', title: '1. GRAMMAR (NGỮ PHÁP)', icon: BookMarked, color: 'text-amber-400 border-amber-500/40 bg-amber-500/10' },
-          { id: 'vocabulary', title: '2. VOCABULARY (TỪ VỰNG)', icon: Tag, color: 'text-indigo-400 border-indigo-500/40 bg-indigo-500/10' },
-          { id: 'infographic', title: '3. INFOGRAPHIC (TRỰC QUAN)', icon: Image, color: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10' },
-          { id: 'ideas', title: '4. Ý TƯỞNG DẠY HỌC', icon: Lightbulb, color: 'text-purple-400 border-purple-500/40 bg-purple-500/10' }
-        ].map((tab) => {
+      {/* 6 SUB-PAGE TABS NAVIGATION BAR (EXACTLY CORRESPONDING TO HOMEPAGE CARDS) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
+        {subPageTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeBoxTab === tab.id;
           return (
@@ -194,168 +190,169 @@ export const MaterialPage = () => {
               key={tab.id}
               onClick={() => {
                 soundFX.playClick();
-                setActiveBoxTab(tab.id);
-                setSearchParams({ type: tab.id });
+                if (tab.id === 'worksheet') {
+                  navigate('/worksheet');
+                } else if (tab.id === 'project') {
+                  navigate('/games');
+                } else {
+                  setActiveBoxTab(tab.id);
+                  setSearchParams({ type: tab.id });
+                }
               }}
-              className={`p-4 rounded-2xl border font-black text-xs transition-all flex items-center justify-between shadow-lg ${
+              className={`p-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all ${
                 isActive
-                  ? 'bg-slate-900 border-brand-500 text-white shadow-brand-500/20 scale-102'
-                  : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/30 scale-102 border border-brand-500/50'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Icon className={`w-4 h-4 ${tab.color.split(' ')[0]}`} />
-                <span>{tab.title}</span>
-              </div>
-              {isActive && <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />}
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+              {isActive && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
             </button>
           );
         })}
       </div>
 
-      {/* DEDICATED BOX EDITOR ACCORDING TO SELECTED TAB */}
-      <div className="glass-panel p-8 space-y-6 border-brand-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-          <h2 className="text-lg font-black text-white uppercase flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-brand-400" />
-            KHUNG SOẠN NỘI DUNG: {activeBoxTab.toUpperCase()} (KHỐI {formGrade})
-          </h2>
-          <span className="px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 font-extrabold text-xs">
-            TRỰC TIẾP TRANG CHỦ & HỌC LIỆU
-          </span>
-        </div>
+      {/* CONTENT AREA FOR THE ACTIVE SUB-PAGE TAB */}
+      <div className="space-y-6">
+        
+        {/* SUB-PAGE 1: VOCABULARY */}
+        {activeBoxTab === 'vocabulary' && (
+          <div className="glass-panel p-8 space-y-6 border-indigo-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black">
+                <BookMarked className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">Trang Con: Mẹo & Từ Vựng Cốt Lõi Khối {selectedGrade} Global Success</h2>
+                <p className="text-xs text-slate-400">Tổng hợp trọn bộ Word Bank từ vựng kèm âm thanh audio phát âm bám sát 12 Units SGK.</p>
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">1. KHỐI LỚP:</label>
-            <select
-              value={formGrade}
-              onChange={(e) => {
-                setFormGrade(Number(e.target.value));
-                setSelectedGrade(Number(e.target.value));
+            <MaterialTree
+              grade={selectedGrade}
+              categories={categories}
+              materials={materials}
+              searchQuery={searchQuery}
+              onSelectMaterial={(mat) => {
+                soundFX.playClick();
+                setActiveMaterial(mat);
               }}
-              className="w-full glass-input text-xs font-bold"
-            >
-              <option value={6} className="bg-slate-900">Khối 6</option>
-              <option value={7} className="bg-slate-900">Khối 7</option>
-              <option value={8} className="bg-slate-900">Khối 8</option>
-              <option value={9} className="bg-slate-900">Khối 9</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">2. UNIT BÀI HỌC:</label>
-            <select
-              value={formUnit}
-              onChange={(e) => setFormUnit(e.target.value)}
-              className="w-full glass-input text-xs font-bold"
-            >
-              {availableUnits.map((u, uIdx) => (
-                <option key={uIdx} value={`Unit ${uIdx + 1}`} className="bg-slate-900">
-                  Unit {uIdx + 1}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">3. PHẦN HỌC (LESSON):</label>
-            <select
-              value={formLesson}
-              onChange={(e) => setFormLesson(e.target.value)}
-              className="w-full glass-input text-xs font-bold"
-            >
-              {availableLessons.map((les, lIdx) => (
-                <option key={lIdx} value={les} className="bg-slate-900">
-                  {les}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-300 mb-1.5">TIÊU ĐỀ NỘI DUNG {activeBoxTab.toUpperCase()} *</label>
-          <input
-            type="text"
-            value={formTitle}
-            onChange={(e) => setFormTitle(e.target.value)}
-            placeholder={`Ví dụ: Mẹo học ${activeBoxTab} Unit 1 - Khối ${formGrade}...`}
-            className="w-full glass-input text-xs font-bold"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
-            <span>DÁN VĂN BẢN / HƯỚNG DẪN CHI TIẾT VÀO ĐÂY *</span>
-            <span className="text-[10px] text-brand-400 font-semibold">(Soạn nhanh bằng văn bản, tiện lợi)</span>
-          </label>
-          <textarea
-            rows={6}
-            value={formContent}
-            onChange={(e) => setFormContent(e.target.value)}
-            placeholder={`Dán nội dung ${activeBoxTab}, ví dụ công thức, bảng từ vựng, hình ảnh infographic hoặc ý tưởng bài giảng vào đây...`}
-            className="w-full glass-input text-xs font-mono leading-relaxed"
-          />
-        </div>
-
-        <button
-          onClick={() => handlePublishBoxContent(activeBoxTab)}
-          disabled={isPublishing}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl flex items-center justify-center gap-2"
-        >
-          <Send className="w-4 h-4" />
-          {isPublishing ? 'Đang Đăng Nguồn...' : `✨ ĐĂNG NỘI DUNG ${activeBoxTab.toUpperCase()} NÀY VÀO HỆ THỐNG`}
-        </button>
-      </div>
-
-      {/* FULL MATERIAL TREE FOR FILE DOWNLOADS */}
-      <div className="space-y-4 pt-4 border-t border-slate-800">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-black text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-brand-400" />
-            Danh Sách Tệp Tải Về & Cây Thư Mục Khối {selectedGrade}
-          </h3>
-
-          <div className="relative w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm tài liệu file..."
-              className="w-full glass-input pl-9 text-xs py-1.5"
             />
           </div>
-        </div>
-
-        {loading ? (
-          <TableSkeleton rows={3} />
-        ) : (
-          <MaterialTree
-            categories={categories}
-            materials={materials.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()))}
-            selectedGrade={selectedGrade}
-            onSelectMaterial={(mat) => setActiveMaterial(mat)}
-            onAddMaterial={() => setIsUploadOpen(true)}
-            isTeacher={isTeacher}
-          />
         )}
+
+        {/* SUB-PAGE 2: GRAMMAR */}
+        {activeBoxTab === 'grammar' && (
+          <div className="glass-panel p-8 space-y-6 border-amber-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500 flex items-center justify-center text-slate-950 font-black">
+                <Brain className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">Trang Con: Chủ Điểm Ngữ Pháp Trọng Tâm Khối {selectedGrade}</h2>
+                <p className="text-xs text-slate-400">Tổng hợp công thức ngữ pháp, ví dụ minh họa và ma trận kiểm tra định kỳ 12 Units.</p>
+              </div>
+            </div>
+
+            <MaterialTree
+              grade={selectedGrade}
+              categories={categories}
+              materials={materials}
+              searchQuery={searchQuery}
+              onSelectMaterial={(mat) => {
+                soundFX.playClick();
+                setActiveMaterial(mat);
+              }}
+            />
+          </div>
+        )}
+
+        {/* SUB-PAGE 3: AUDIO & TAPESCRIPT */}
+        {activeBoxTab === 'audio' && (
+          <div className="glass-panel p-8 space-y-6 border-purple-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-purple-600 flex items-center justify-center text-white font-black">
+                <Volume2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">Trang Con: Trọn Bộ Tapescript & File Audio Luyện Nghe Khối {selectedGrade}</h2>
+                <p className="text-xs text-slate-400">File âm thanh chuẩn mono tích hợp icon cái loa cho từng phần nghe chuẩn thời lượng.</p>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 text-xs space-y-4">
+              <span className="font-extrabold text-purple-400 text-sm block">🎧 DANH SÁCH AUDIO BÀI NGHE KHỐI {selectedGrade}:</span>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((u) => (
+                  <div key={u} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Volume2 className="w-5 h-5 text-purple-400 shrink-0" />
+                      <div>
+                        <h4 className="font-extrabold text-white">Audio Unit {u}: Global Success Grade {selectedGrade}</h4>
+                        <span className="text-[11px] text-slate-400">Thời lượng chuẩn: 60 - 80 Giây</span>
+                      </div>
+                    </div>
+                    <audio controls src="https://actions.google.com/sounds/v1/speech/person_speaking.ogg" className="w-48 sm:w-64" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SUB-PAGE 4: INFOGRAPHIC */}
+        {activeBoxTab === 'infographic' && (
+          <div className="glass-panel p-8 space-y-6 border-emerald-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black">
+                <Image className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">Trang Con: Tuyển Tập Infographic Kiến Thức Khối {selectedGrade} Trực Quan</h2>
+                <p className="text-xs text-slate-400">Hình ảnh Infographic tóm tắt ngữ pháp giúp học sinh dễ nhớ bài học trực quan.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((infoIdx) => (
+                <div key={infoIdx} className="bg-slate-950 border border-slate-800 rounded-3xl p-4 space-y-3">
+                  <div className="h-48 rounded-2xl bg-slate-900 overflow-hidden border border-slate-800">
+                    <img 
+                      src={`https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop`}
+                      alt="Infographic" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h4 className="font-extrabold text-white text-xs">Infographic Unit {infoIdx}: Kiến Thức Trọng Tâm Khối {selectedGrade}</h4>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
 
-      <MaterialUploadModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        categories={categories}
-        selectedGrade={selectedGrade}
-        onUploadSuccess={fetchMaterialsData}
-      />
+      {/* Upload Modal */}
+      {isUploadOpen && (
+        <MaterialUploadModal
+          grade={selectedGrade}
+          categories={categories}
+          onClose={() => setIsUploadOpen(false)}
+          onUploaded={() => {
+            fetchMaterialsData();
+            setIsUploadOpen(false);
+          }}
+        />
+      )}
 
-      <MaterialViewer
-        isOpen={!!activeMaterial}
-        onClose={() => setActiveMaterial(null)}
-        material={activeMaterial}
-      />
+      {/* Material Viewer Modal */}
+      {activeMaterial && (
+        <MaterialViewer
+          material={activeMaterial}
+          onClose={() => setActiveMaterial(null)}
+        />
+      )}
 
     </div>
   );

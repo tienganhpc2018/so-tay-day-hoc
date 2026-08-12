@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -53,6 +53,7 @@ import { GlobalSuccessKnowledgeBase } from '../data/globalSuccessData';
 
 export const WorksheetPage = () => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   // Mode Selection: 'authoring' vs 'submission'
@@ -380,8 +381,10 @@ export const WorksheetPage = () => {
       `- Khối: ${gradeLevel}\n` +
       `- Các Unit: ${selectedUnits.join(', ')}\n` +
       `- Mã đề: ${examCode}\n\n` +
-      `Thầy mở trang "Ngân Hàng Đề Thi" chọn Khối ${gradeLevel} sẽ thấy ngay đề vừa lưu!`
+      `Đang tự động chuyển hướng Thầy sang trang Ngân Hàng Đề Thi Khối ${gradeLevel}...`
     );
+
+    navigate(`/quizzes?grade=${gradeLevel}`);
   };
 
   const handleRunAIEvaluation = (skillName) => {
