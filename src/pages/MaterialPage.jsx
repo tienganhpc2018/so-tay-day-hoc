@@ -6,6 +6,7 @@ import { MaterialTree } from '../components/material/MaterialTree';
 import { MaterialUploadModal } from '../components/material/MaterialUploadModal';
 import { MaterialViewer } from '../components/material/MaterialViewer';
 import { TableSkeleton } from '../components/common/Skeleton';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { 
@@ -29,7 +30,7 @@ import {
 export const MaterialPage = () => {
   const { profile, isTeacher } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTypeParam = searchParams.get('type') || 'grammar'; // 'grammar', 'vocabulary', 'infographic', 'ideas'
+  const activeTypeParam = searchParams.get('type') || 'grammar';
 
   const [selectedGrade, setSelectedGrade] = useState(8);
   const [categories, setCategories] = useState([]);
@@ -37,14 +38,12 @@ export const MaterialPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Active Editor Box Tab State ('grammar' | 'vocabulary' | 'infographic' | 'ideas')
   const [activeBoxTab, setActiveBoxTab] = useState(activeTypeParam);
 
   useEffect(() => {
     if (activeTypeParam) setActiveBoxTab(activeTypeParam);
   }, [activeTypeParam]);
 
-  // Editor State for the 4 Boxes
   const [formGrade, setFormGrade] = useState(8);
   const [formUnit, setFormUnit] = useState('Unit 1');
   const [formLesson, setFormLesson] = useState('A closer look 1');
@@ -99,7 +98,6 @@ export const MaterialPage = () => {
     setIsPublishing(true);
 
     try {
-      // 1. Save to Supabase materials & learning_materials for Home page display
       await supabase.from('learning_materials').insert([{
         title: `[${boxCategory.toUpperCase()}] K${formGrade} ${formUnit} (${formLesson}): ${formTitle}`,
         category: boxCategory.toUpperCase(),
@@ -150,41 +148,36 @@ export const MaterialPage = () => {
   ];
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* Top Banner */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 glass-panel p-6 border-brand-500/30">
-        <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-3">
-            <BookOpen className="w-7 h-7 text-brand-400" />
-            Cây Thư Mục Học Liệu Tiếng Anh THCS
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            4 Ngăn Soạn Riêng Biệt: Grammar, Vocabulary, Infographic và Ý tưởng dạy học theo Khối & Unit.
-          </p>
-        </div>
-
-        {/* Grade Level Selector */}
-        <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
-          {[6, 7, 8, 9].map((g) => (
-            <button
-              key={g}
-              onClick={() => {
-                soundFX.playClick();
-                setSelectedGrade(g);
-                setFormGrade(g);
-              }}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                selectedGrade === g
-                  ? 'bg-brand-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Khối {g}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* HERO BANNER WITH AI LIBRARY BACKGROUND */}
+      <PageHeroBanner
+        title="Cây Thư Mục Học Liệu Tiếng Anh THCS 📚"
+        subtitle="4 Ngăn Soạn Riêng Biệt: Grammar, Vocabulary, Infographic và Ý tưởng dạy học. Tra cứu giáo án, bài giảng điện tử và tệp PDF theo từng Khối lớp & Bài học."
+        badge="CÂY HỌC LIỆU SỐ • THƯ VIỆN ĐỔI MỚI"
+        bgImage="/images/hero_library_bg.jpg"
+        actions={
+          <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 w-fit backdrop-blur-md">
+            {[6, 7, 8, 9].map((g) => (
+              <button
+                key={g}
+                onClick={() => {
+                  soundFX.playClick();
+                  setSelectedGrade(g);
+                  setFormGrade(g);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                  selectedGrade === g
+                    ? 'bg-brand-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Khối {g}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       {/* 4 HORIZONTAL NAVIGATION TABS CORRESPONDING TO 4 DEDICATED EDITOR BOXES */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -222,8 +215,6 @@ export const MaterialPage = () => {
 
       {/* DEDICATED BOX EDITOR ACCORDING TO SELECTED TAB */}
       <div className="glass-panel p-8 space-y-6 border-brand-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
-        
-        {/* Box Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <h2 className="text-lg font-black text-white uppercase flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-brand-400" />
@@ -234,9 +225,7 @@ export const MaterialPage = () => {
           </span>
         </div>
 
-        {/* 3 MENU NGANG CÙNG HÀNG SỔ XUỐNG (KHỐI - UNIT - LESSON) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
           <div>
             <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">1. KHỐI LỚP:</label>
             <select
@@ -283,10 +272,8 @@ export const MaterialPage = () => {
               ))}
             </select>
           </div>
-
         </div>
 
-        {/* Title Input */}
         <div>
           <label className="block text-xs font-bold text-slate-300 mb-1.5">TIÊU ĐỀ NỘI DUNG {activeBoxTab.toUpperCase()} *</label>
           <input
@@ -298,7 +285,6 @@ export const MaterialPage = () => {
           />
         </div>
 
-        {/* Text Area Input */}
         <div>
           <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
             <span>DÁN VĂN BẢN / HƯỚNG DẪN CHI TIẾT VÀO ĐÂY *</span>
@@ -313,7 +299,6 @@ export const MaterialPage = () => {
           />
         </div>
 
-        {/* Publish Action Button */}
         <button
           onClick={() => handlePublishBoxContent(activeBoxTab)}
           disabled={isPublishing}
@@ -322,7 +307,6 @@ export const MaterialPage = () => {
           <Send className="w-4 h-4" />
           {isPublishing ? 'Đang Đăng Nguồn...' : `✨ ĐĂNG NỘI DUNG ${activeBoxTab.toUpperCase()} NÀY VÀO HỆ THỐNG`}
         </button>
-
       </div>
 
       {/* FULL MATERIAL TREE FOR FILE DOWNLOADS */}
@@ -359,7 +343,6 @@ export const MaterialPage = () => {
         )}
       </div>
 
-      {/* Upload Modal */}
       <MaterialUploadModal
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
@@ -368,7 +351,6 @@ export const MaterialPage = () => {
         onUploadSuccess={fetchMaterialsData}
       />
 
-      {/* Viewer Modal */}
       <MaterialViewer
         isOpen={!!activeMaterial}
         onClose={() => setActiveMaterial(null)}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { soundFX } from '../utils/soundEffects';
 import { supabase } from '../lib/supabase';
+import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { 
   Sparkles, 
   Crown, 
@@ -28,7 +29,6 @@ export const HomePage = () => {
   const authorName = profile?.full_name || 'Nguyễn Văn Hải';
   const currentDateStr = new Date().toLocaleDateString('vi-VN');
 
-  // Real Database Articles State
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
@@ -51,7 +51,6 @@ export const HomePage = () => {
     }
   };
 
-  // Sample 5 initial articles if DB is empty
   const defaultArticles = [
     {
       id: 1,
@@ -100,53 +99,34 @@ export const HomePage = () => {
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 font-sans animate-fadeIn">
       
-      {/* 1. TOP HERO BANNER */}
-      <div className="relative rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-brand-500/40 p-8 sm:p-12 shadow-2xl">
-        <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-400 via-indigo-500 to-transparent" />
-        
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-          <div className="space-y-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-black uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-brand-400" />
-              SỔ TAY DẠY HỌC THCS • GLOBAL SUCCESS
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
-              Chào mừng trở lại, <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 via-indigo-200 to-amber-300">{authorName}</span>! 👋
-            </h1>
-
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-medium">
-              Khám phá nền tảng giáo dục thông minh với đầy đủ công cụ quản lý chuyên môn, trò chơi tương tác, ngân hàng đề thi bám sát ma trận CV7991 và thư viện tài liệu phong phú.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                to="/materials"
-                onClick={() => soundFX.playClick()}
-                className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 flex items-center gap-2"
-              >
-                <BookOpen className="w-4 h-4" /> Khám Phá Học Liệu
-              </Link>
-              <Link
-                to="/quizzes"
-                onClick={() => soundFX.playClick()}
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs border border-slate-700 flex items-center gap-2"
-              >
-                <HelpCircle className="w-4 h-4 text-amber-400" /> Soạn Đề AI ⚡
-              </Link>
-            </div>
+      {/* 1. TOP HERO BANNER WITH AI CLASSROOM BACKGROUND IMAGE */}
+      <PageHeroBanner
+        title={`Chào mừng trở lại, ${authorName}! 👋`}
+        subtitle="Khám phá nền tảng giáo dục thông minh với đầy đủ công cụ quản lý chuyên môn, trò chơi tương tác, ngân hàng đề thi bám sát ma trận CV7991 và thư viện tài liệu phong phú."
+        badge="SỔ TAY DẠY HỌC THCS • GLOBAL SUCCESS"
+        bgImage="/images/hero_school_bg.jpg"
+        showVipBadge={true}
+        actions={
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <Link
+              to="/materials"
+              onClick={() => soundFX.playClick()}
+              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" /> Khám Phá Học Liệu
+            </Link>
+            <Link
+              to="/quizzes"
+              onClick={() => soundFX.playClick()}
+              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs border border-slate-700 flex items-center gap-2"
+            >
+              <HelpCircle className="w-4 h-4 text-amber-400" /> Soạn Đề AI ⚡
+            </Link>
           </div>
+        }
+      />
 
-          <div className="shrink-0">
-            <div className="px-6 py-3.5 rounded-2xl bg-amber-500/20 border-2 border-amber-400/50 text-amber-300 font-black text-sm flex items-center gap-2.5 shadow-xl backdrop-blur-md animate-pulse">
-              <Crown className="w-5 h-5 fill-amber-400 text-amber-400" />
-              <span>👑 Đặc quyền VIP Giáo Viên</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. VIP BẢNG VÀNG CARDS (SỬA LỖI BỊ KHUẤT VÀ ĐỔI THÀNH HỌC LIỆU INFOGRAPHIC) */}
+      {/* 2. VIP BẢNG VÀNG CARDS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* CARD 1: BẢNG VÀNG 01 - ĐỐI TÁC VÀNG GIÁO DỤC */}
@@ -191,7 +171,6 @@ export const HomePage = () => {
             </div>
           </div>
 
-          {/* Footer Bar Inside Padding - No Overflow */}
           <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <span className="px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs">
               ✨ Hiển thị thương hiệu của bạn tại đây!
@@ -202,7 +181,7 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* CARD 2: BẢNG VÀNG 02 - HỌC LIỆU INFOGRAPHIC (ĐÃ ĐỔI TÊN HỌC LIỆU INFOGRAPHIC) */}
+        {/* CARD 2: BẢNG VÀNG 02 - HỌC LIỆU INFOGRAPHIC */}
         <div className="rounded-[28px] bg-slate-900/90 border-2 border-amber-400 p-6 space-y-6 shadow-xl relative flex flex-col justify-between">
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -244,7 +223,6 @@ export const HomePage = () => {
             </div>
           </div>
 
-          {/* Footer Bar Inside Padding */}
           <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <span className="px-3 py-1 rounded-full bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-xs">
               ✨ Hiển thị sản phẩm của bạn tại đây!
@@ -257,7 +235,7 @@ export const HomePage = () => {
 
       </div>
 
-      {/* 3. HỌC LIỆU GLOBAL SUCCESS 📰 (HIỂN THỊ ÍT NHẤT 5 BÀI VIẾT + KHUNG TRONG SUỐT) */}
+      {/* 3. HỌC LIỆU GLOBAL SUCCESS 📰 */}
       <div className="space-y-6 pt-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <h2 className="text-xl font-black text-white flex items-center gap-2 border-l-4 border-indigo-500 pl-3">
@@ -270,7 +248,6 @@ export const HomePage = () => {
           </Link>
         </div>
 
-        {/* 5 ARTICLES LIST (KHUNG TRONG SUỐT TỰ NHÀY THEO SỐ NĂM NÀY MỚI) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayArticles.map((art, aIdx) => (
             <Link 
@@ -309,7 +286,6 @@ export const HomePage = () => {
       {/* 4. THƯ VIỆN HỌC LIỆU MỚI NHẤT & HỘI CHỢ PROJECT NỔI BẬT 🚀 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
         
-        {/* LEFT COLUMN: Thư viện Học liệu mới nhất */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-brand-500 pl-3">
@@ -347,7 +323,6 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Hội chợ Project nổi bật 🚀 */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-rose-500 pl-3">
@@ -355,7 +330,7 @@ export const HomePage = () => {
               Hội chợ Project nổi bật 🚀
             </h3>
             <Link to="/games" className="text-xs font-bold text-rose-400 hover:underline">
-              Xem tất cả (Menu Kho Trò Chơi & Project) →
+              Xem tất cả (Menu Sân Trường Tương Tác) →
             </Link>
           </div>
 
