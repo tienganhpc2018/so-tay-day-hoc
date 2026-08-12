@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -27,10 +27,10 @@ import {
   Download,
   GraduationCap,
   Eye,
-  FileSpreadsheet,
   Settings,
   ChevronDown,
   ExternalLink,
+  Star,
   Award
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -44,8 +44,8 @@ export const WorksheetPage = () => {
   const [lessonSection, setLessonSection] = useState('A closer look 1');
   const [selectedUnits, setSelectedUnits] = useState(['Unit 1: My New School']);
   const [selectedGrammar, setSelectedGrammar] = useState([
-    'The present simple',
-    'Adverbs of frequency'
+    'Present Simple (Thì Hiện tại đơn)',
+    'Adverbs of frequency (Trạng từ chỉ tần suất)'
   ]);
 
   // Section Checkboxes (1 Listening, 2 Knowledge, 3 Reading, 4 Communication, 5 Writing)
@@ -58,9 +58,8 @@ export const WorksheetPage = () => {
   });
 
   // Top Mode Controls
-  const [modeAnswer, setModeAnswer] = useState('gv'); // 'gv' (Hiện đáp án) | 'student' (Phiếu học sinh)
+  const [modeAnswer, setModeAnswer] = useState('gv'); // 'gv' (Hiện đáp án màu tím) | 'student' (Phiếu học sinh)
   const [showConfigSummary, setShowConfigSummary] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [showAIStudioEmbed, setShowAIStudioEmbed] = useState(false);
   const [aiStudioUrl, setAiStudioUrl] = useState('https://aistudio.google.com/');
 
@@ -73,15 +72,20 @@ export const WorksheetPage = () => {
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [scoreResult, setScoreResult] = useState(null);
 
-  // Update grammar checklist dynamically when gradeLevel or selectedUnits change
+  // Update grammar checklist dynamically when gradeLevel changes safely
   useEffect(() => {
-    const availableUnits = Object.keys(GlobalSuccessKnowledgeBase.DATA[gradeLevel] || GlobalSuccessKnowledgeBase.DATA[6]);
-    const validUnits = selectedUnits.filter(u => availableUnits.includes(u));
-    const activeUnits = validUnits.length > 0 ? validUnits : [availableUnits[0]];
-    setSelectedUnits(activeUnits);
+    try {
+      const gradeData = GlobalSuccessKnowledgeBase?.DATA?.[gradeLevel] || GlobalSuccessKnowledgeBase?.DATA?.[6] || {};
+      const availableUnits = Object.keys(gradeData);
+      const validUnits = selectedUnits.filter(u => availableUnits.includes(u));
+      const activeUnits = validUnits.length > 0 ? validUnits : [availableUnits[0] || 'Unit 1: My New School'];
+      setSelectedUnits(activeUnits);
 
-    const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(gradeLevel, activeUnits);
-    setSelectedGrammar(grammarList);
+      const grammarList = GlobalSuccessKnowledgeBase.getGrammarForUnits(gradeLevel, activeUnits);
+      setSelectedGrammar(grammarList.length > 0 ? grammarList : ['Present Simple (Thì Hiện tại đơn)']);
+    } catch (err) {
+      console.error('Worksheet state sync error:', err);
+    }
   }, [gradeLevel]);
 
   const toggleSectionCheckbox = (key) => {
@@ -112,9 +116,9 @@ export const WorksheetPage = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Worksheet Mock Data Structure matching Screenshots 1, 2, 3, 4, 5
+  // Worksheet Data Structure matching Screenshots 1, 2, 3, 4, 5
   const worksheetData = {
-    title: `TRUNG TÂM HOA MAI MR HAI – ENGLISH GRADE ${gradeLevel} – ${selectedUnits.join(' & ').toUpperCase()}`,
+    title: `TRUNG TÂM HOA MAI MR HAI – ENGLISH GRADE ${gradeLevel} – ${(selectedUnits || []).join(' & ').toUpperCase()}`,
     subtitle: `Getting Started & A Closer Look – Vocabulary & Skills Practice`,
     contact: `English with Mr Hai – 0384635199`,
     tapescript: `Teacher: Good morning class! Welcome to Grade ${gradeLevel}. Let me tell you some class rules. First, you must wear your neat uniform on Mondays. Second, please bring your dictionary to our English class. Third, do your homework carefully before coming. Fourth, remember to keep our classroom clean. Finally, be friendly to your new classmates. Let's study hard!`,
@@ -293,13 +297,11 @@ export const WorksheetPage = () => {
     ]
   };
 
-  // Student answer selection handler
   const handleStudentSelectOption = (qId, optionText) => {
     soundFX.playClick();
     setStudentAnswers(prev => ({ ...prev, [qId]: optionText }));
   };
 
-  // Grade student test online
   const handleSubmitStudentTest = () => {
     soundFX.playClick();
     let total = 0;
@@ -326,13 +328,11 @@ export const WorksheetPage = () => {
     confetti({ particleCount: 150, spread: 90 });
   };
 
-  // Print worksheet
   const handlePrint = () => {
     soundFX.playClick();
     window.print();
   };
 
-  // Copy Word Tab Formatted
   const handleCopyWordTab = () => {
     soundFX.playClick();
     let text = `${worksheetData.title}\n${worksheetData.subtitle}\n${worksheetData.contact}\n\n`;
@@ -358,7 +358,7 @@ export const WorksheetPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 space-y-6">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 space-y-6 animate-fadeIn">
       
       {/* 1. TOP HEADER BAR (Trung Tâm Hoa Mai Mr Hai - Worksheet Maker V4.0) */}
       <div className="glass-panel p-4 sm:p-6 border-indigo-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -645,8 +645,8 @@ export const WorksheetPage = () => {
             {/* Config Summary Pill Box */}
             {showConfigSummary && (
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-600 text-center space-y-1">
-                <div>⚙️ Cấu hình ôn tập: &nbsp; <strong>Lớp: Grade {gradeLevel}</strong> &nbsp;|&nbsp; <strong>Units chọn: {selectedUnits.join(', ')}</strong> &nbsp;|&nbsp; <strong>Phần học: {lessonSection}</strong></div>
-                <div className="text-indigo-600">Chủ điểm đã chọn: {selectedGrammar.join(', ')}</div>
+                <div>⚙️ Cấu hình ôn tập: &nbsp; <strong>Lớp: Grade {gradeLevel}</strong> &nbsp;|&nbsp; <strong>Units chọn: {(selectedUnits || []).join(', ')}</strong> &nbsp;|&nbsp; <strong>Phần học: {lessonSection}</strong></div>
+                <div className="text-indigo-600">Chủ điểm đã chọn: {(selectedGrammar || []).join(', ')}</div>
               </div>
             )}
 
