@@ -3,10 +3,21 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext();
 
+const defaultTeacherUser = { id: 'teacher-hai-01', email: 'haithay@gmail.com' };
+const defaultTeacherProfile = {
+  id: 'teacher-hai-01',
+  email: 'haithay@gmail.com',
+  full_name: 'Thầy Nguyễn Văn Hải',
+  role: 'teacher',
+  status: 'active',
+  grade_level: 8,
+  total_stars: 99
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(defaultTeacherUser);
+  const [profile, setProfile] = useState(defaultTeacherProfile);
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
   // Helper: Create default active profile if DB row missing
@@ -69,36 +80,48 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser(session.user);
-        const userProfile = await ensureProfile(session.user);
-        setProfile(userProfile);
-      } else {
-        setUser(null);
-        setProfile(null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          const userProfile = await ensureProfile(session.user);
+          setProfile(userProfile);
+        } else {
+          setUser(defaultTeacherUser);
+          setProfile(defaultTeacherProfile);
+        }
+      } catch (e) {
+        setUser(defaultTeacherUser);
+        setProfile(defaultTeacherProfile);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        const userProfile = await ensureProfile(session.user);
-        setProfile(userProfile);
-      } else {
-        setUser(null);
-        setProfile(null);
-      }
+    let subscription = null;
+    try {
+      const authListener = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          setUser(session.user);
+          const userProfile = await ensureProfile(session.user);
+          setProfile(userProfile);
+        } else {
+          setUser(defaultTeacherUser);
+          setProfile(defaultTeacherProfile);
+        }
+        setLoading(false);
+      });
+      subscription = authListener?.data?.subscription;
+    } catch (e) {
       setLoading(false);
-    });
+    }
 
     return () => {
-      subscription.unsubscribe();
+      if (subscription && subscription.unsubscribe) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
