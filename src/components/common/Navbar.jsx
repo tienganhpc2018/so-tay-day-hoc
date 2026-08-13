@@ -48,13 +48,7 @@ export const Navbar = () => {
     { 
       path: '/games', 
       label: 'Sân trường', 
-      icon: Gamepad2,
-      subMenus: [
-        { label: '1. Flashcard Từ Vựng', path: '/games?type=flashcard' },
-        { label: '2. Trò Chơi Ghép Cặp', path: '/games?type=matching' },
-        { label: '3. Đua Xe Từ Vựng', path: '/games?type=racing' },
-        { label: '4. iFrame Game Project', path: '/games?type=iframe' }
-      ]
+      icon: Gamepad2
     },
     { 
       path: '/materials', 
