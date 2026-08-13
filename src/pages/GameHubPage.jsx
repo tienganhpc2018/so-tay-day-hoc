@@ -30,23 +30,36 @@ import {
   ShoppingBag,
   BookOpen,
   PenTool,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Camera,
+  Layers,
+  Puzzle,
+  Type
 } from 'lucide-react';
 import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { XpShopModal } from '../components/gamification/XpShopModal';
 
+// IMPORT THẦY NGUYỄN VĂN HẢI'S CUSTOM CANVAS & INTERACTIVE GAMES FROM src/components/games/
+import { TugOfWarGameCanvas } from '../components/games/TugOfWarGameCanvas';
+import { HeadTiltGameCanvas } from '../components/games/HeadTiltGameCanvas';
+import { LuckyWheelGameCanvas } from '../components/games/LuckyWheelGameCanvas';
+import { FlashcardGame } from '../components/games/FlashcardGame';
+import { MatchingPairsGame } from '../components/games/MatchingPairsGame';
+import { WordScrambleGame } from '../components/games/WordScrambleGame';
+
 export const GameHubPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTabParam = searchParams.get('tab') || 'class_stories';
 
-  // 5 MAIN TABS FOR SÂN TRƯỜNG TƯƠNG TÁC & GAMIFICATION HTML5:
+  // MAIN TABS (6 TABS TOTAL):
   // Tab 1: 'class_stories' (📖 Chuyện của lớp)
   // Tab 2: 'memoirs' (✍️ Lưu bút)
   // Tab 3: 'youth' (🌸 Tuổi học trò)
   // Tab 4: 'photos' (🖼️ Ảnh hoạt động)
-  // Tab 5: 'gamification' (🎮 Gamification HTML5)
+  // Tab 5: 'teacher_games' (🎮 Kho Game Thầy Hải: Kéo Co, Nghiêng Đầu, Vòng Xoay, Flashcard, Ghép Cặp, Xáo Trộn)
+  // Tab 6: 'gamification' (⚡ Gamification HTML5: XP Shop, Sandbox, PVP)
   const [activeTab, setActiveTab] = useState(activeTabParam);
 
   useEffect(() => {
@@ -55,7 +68,11 @@ export const GameHubPage = () => {
     }
   }, [activeTabParam]);
 
-  // Sub-Tab inside Tab 5 'gamification': 'mini_games' | 'embedded' | 'pvp'
+  // Selected Active Game Component inside Tab 5 'teacher_games'
+  // 'tug_of_war' | 'head_tilt' | 'lucky_wheel' | 'flashcard' | 'matching' | 'scramble' | null
+  const [activeTeacherGame, setActiveTeacherGame] = useState(null);
+
+  // Sub-Tab inside Tab 6 'gamification': 'mini_games' | 'embedded' | 'pvp'
   const [activeGameSubTab, setActiveGameSubTab] = useState('mini_games');
 
   // ARTICLES / MEMORIES LIST FOR TABS 1-4
@@ -107,25 +124,7 @@ export const GameHubPage = () => {
   const [newMemCategory, setNewMemCategory] = useState('class_stories');
   const [newMemContent, setNewMemContent] = useState('');
 
-  // GAMIFICATION & GAME STATE (TAB 5)
-  // Mini-Game 1: Flip Cards
-  const [flipCards, setFlipCards] = useState([
-    { id: 1, word: 'Hospitable', mean: 'Hiếu khách', flipped: false, matched: false },
-    { id: 2, word: 'Leisure time', mean: 'Thời gian rảnh', flipped: false, matched: false },
-    { id: 3, word: 'Craft', mean: 'Đồ thủ công', flipped: false, matched: false },
-    { id: 4, word: 'Countryside', mean: 'Nông thôn', flipped: false, matched: false }
-  ]);
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [flipScore, setFlipScore] = useState(0);
-  const [gameTimerSeconds, setGameTimerSeconds] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-
-  // Mini-Game 2: Lucky Wheel
-  const [wheelAngle, setWheelAngle] = useState(0);
-  const [wheelResult, setWheelResult] = useState(null);
-  const [isSpinning, setIsSpinning] = useState(false);
-
-  // External Games (Wordwall, Quizizz, Kahoot)
+  // GAMIFICATION HTML5 STATE (TAB 6)
   const [externalGames, setExternalGames] = useState([
     {
       id: 'g1',
@@ -167,76 +166,6 @@ export const GameHubPage = () => {
     { rank: 3, name: 'Vũ Mai Phương', score: 950, time: '48 giây', xp: 1850, badge: '🥉 Chuyên Gia Trắc Nghiệm' }
   ];
 
-  // Timer Effect
-  useEffect(() => {
-    let interval = null;
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setGameTimerSeconds(prev => prev + 1);
-      }, 1000);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning]);
-
-  // Flip Card Logic
-  const handleCardClick = (card) => {
-    if (card.matched || card.flipped || isSpinning) return;
-    soundFX.playClick();
-    if (!isTimerRunning) setIsTimerRunning(true);
-
-    const updated = flipCards.map(c => c.id === card.id ? { ...c, flipped: true } : c);
-    setFlipCards(updated);
-
-    if (!selectedCard) {
-      setSelectedCard(card);
-    } else {
-      if (
-        (selectedCard.word === 'Hospitable' && card.mean === 'Hiếu khách') ||
-        (selectedCard.word === 'Leisure time' && card.mean === 'Thời gian rảnh') ||
-        (selectedCard.word === 'Craft' && card.mean === 'Đồ thủ công') ||
-        (selectedCard.word === 'Countryside' && card.mean === 'Nông thôn')
-      ) {
-        soundFX.playFanfare();
-        setFlipScore(prev => prev + 250);
-        setFlipCards(updated.map(c => (c.id === card.id || c.id === selectedCard.id) ? { ...c, matched: true } : c));
-        setSelectedCard(null);
-
-        if (updated.filter(c => c.matched).length + 2 === flipCards.length) {
-          setIsTimerRunning(false);
-          confetti({ particleCount: 150, spread: 90 });
-          alert(`🎉 XUẤT SẮC! BẠN ĐÃ HOÀN THÀNH GAME VỚI ${flipScore + 250} ĐIỂM TRONG ${gameTimerSeconds} GIÂY!`);
-        }
-      } else {
-        setTimeout(() => {
-          setFlipCards(updated.map(c => (c.id === card.id || c.id === selectedCard.id) ? { ...c, flipped: false } : c));
-          setSelectedCard(null);
-        }, 800);
-      }
-    }
-  };
-
-  // Spin Wheel Logic
-  const handleSpinWheel = () => {
-    if (isSpinning) return;
-    soundFX.playClick();
-    setIsSpinning(true);
-    setWheelResult(null);
-
-    const randomDegrees = 1440 + Math.floor(Math.random() * 360);
-    setWheelAngle(wheelAngle + randomDegrees);
-
-    setTimeout(() => {
-      setIsSpinning(false);
-      const prizes = ['+200 XP', '+500 XP Bonus', 'Thẻ Khung Rồng Vàng', '+100 Điểm Thưởng'];
-      const prize = prizes[Math.floor(Math.random() * prizes.length)];
-      setWheelResult(prize);
-      try { soundFX.playFanfare(); } catch (err) {}
-      confetti({ particleCount: 120, spread: 80 });
-    }, 3000);
-  };
-
   // Create New Memory Article (Tabs 1-4)
   const handleCreateMemory = (e) => {
     e.preventDefault();
@@ -268,14 +197,14 @@ export const GameHubPage = () => {
       
       {/* 1. HERO BANNER */}
       <PageHeroBanner
-        title="Sân Trường Tương Tác & Gamification HTML5 🏫🎮"
-        subtitle="Góc Kỷ niệm, Lưu bút tuổi học trò, Ảnh hoạt động và Kho trò chơi giáo dục Gamification HTML5 4.0."
-        badge="SÂN TRƯỜNG TƯƠNG TÁC & GAMIFICATION 4.0"
+        title="Sân Trường Tương Tác & Trung Tâm Game Giáo Dục 🏫🎮"
+        subtitle="Kho Games Kéo Co, Nghiêng Đầu, Vòng Xoay của Thầy Hải + Gamification HTML5 4.0 và Nhật Ký Sân Trường."
+        badge="TRUNG TÂM GAME GIÁO DỤC 4.0"
         bgImage="/images/hero_game_bg.jpg"
       />
 
-      {/* 2. 5 MAIN NAVIGATION TABS (RESTORED ALL 4 ORIGINAL SÂN TRƯỜNG TABS + TAB 5 GAMIFICATION HTML5 - DIRECTIVE) */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-1.5 rounded-3xl bg-slate-950 border border-slate-800 shadow-xl text-xs font-black">
+      {/* 2. MAIN NAVIGATION TABS (6 TABS INCLUDING THẦY HẢI'S CUSTOM CANVAS GAMES TAB) */}
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 p-1.5 rounded-3xl bg-slate-950 border border-slate-800 shadow-xl text-xs font-black">
         
         <button
           onClick={() => {
@@ -290,7 +219,7 @@ export const GameHubPage = () => {
           }`}
         >
           <BookOpen className="w-4 h-4 text-brand-400 shrink-0" />
-          <span className="truncate">📖 Chuyện của lớp</span>
+          <span className="truncate">📖 Chuyện lớp</span>
         </button>
 
         <button
@@ -341,6 +270,24 @@ export const GameHubPage = () => {
           <span className="truncate">🖼️ Ảnh hoạt động</span>
         </button>
 
+        {/* TAB 5: THẦY HẢI'S CUSTOM INTERACTIVE GAMES COLLECTION (DIRECTIVE) */}
+        <button
+          onClick={() => {
+            soundFX.playClick();
+            setActiveTab('teacher_games');
+            setSearchParams({ tab: 'teacher_games' });
+          }}
+          className={`p-3 rounded-2xl transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === 'teacher_games'
+              ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 text-slate-950 shadow-lg border border-amber-400 font-black animate-pulse'
+              : 'text-amber-400 hover:text-white hover:bg-slate-900 border border-amber-500/30'
+          }`}
+        >
+          <Gamepad2 className="w-4 h-4 text-amber-300 shrink-0" />
+          <span className="truncate">🎮 KHO GAME THẦY HẢI</span>
+        </button>
+
+        {/* TAB 6: GAMIFICATION HTML5 & XP SHOP */}
         <button
           onClick={() => {
             soundFX.playClick();
@@ -349,18 +296,18 @@ export const GameHubPage = () => {
           }}
           className={`p-3 rounded-2xl transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'gamification'
-              ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 text-white shadow-lg border border-amber-400/60 animate-pulse'
-              : 'text-amber-300 hover:text-white hover:bg-slate-900 border border-amber-500/30'
+              ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 text-white shadow-lg border border-purple-400/60'
+              : 'text-purple-300 hover:text-white hover:bg-slate-900 border border-purple-500/30'
           }`}
         >
-          <Gamepad2 className="w-4 h-4 text-amber-300 shrink-0" />
-          <span className="truncate">🎮 Gamification HTML5</span>
+          <Zap className="w-4 h-4 text-purple-300 shrink-0" />
+          <span className="truncate">⚡ GAMIFICATION HTML5</span>
         </button>
 
       </div>
 
-      {/* CONTENT FOR TABS 1-4: SÂN TRƯỜNG TƯƠNG TÁC ARTICLES & MEMORIES */}
-      {activeTab !== 'gamification' && (
+      {/* CONTENT FOR TABS 1-4: SÂN TRƯỜNG TƯƠNG TÁC MEMORIES */}
+      {['class_stories', 'memoirs', 'youth', 'photos'].includes(activeTab) && (
         <div className="space-y-6">
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between flex-wrap gap-4 shadow-xl">
             <div>
@@ -414,11 +361,184 @@ export const GameHubPage = () => {
         </div>
       )}
 
-      {/* CONTENT FOR TAB 5: GAMIFICATION HTML5 4.0 */}
+      {/* CONTENT FOR TAB 5: THẦY HẢI'S CUSTOM CANVAS GAMES COLLECTION (DIRECTIVE) */}
+      {activeTab === 'teacher_games' && (
+        <div className="space-y-6">
+          
+          <div className="p-6 rounded-3xl bg-slate-900 border border-amber-500/40 flex items-center justify-between flex-wrap gap-4 shadow-xl">
+            <div>
+              <div className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-amber-400" />
+                <h2 className="text-xl font-black text-white">KHO TRÒ CHƠI INTERACTIVE CANVAS THẦY NGUYỄN VĂN HẢI 🏆</h2>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Toàn bộ 6 trò chơi Canvas tương tác độc quyền: Kéo co, Nghiêng đầu camera, Vòng xoay, Flashcard, Ghép cặp & Xáo trộn từ.</p>
+            </div>
+
+            {activeTeacherGame && (
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setActiveTeacherGame(null);
+                }}
+                className="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-xs flex items-center gap-2"
+              >
+                ← Quay Về Danh Sách Game Thầy Hải
+              </button>
+            )}
+          </div>
+
+          {/* GAME CANVAS RENDERER OR GAMES GRID SELECTOR */}
+          {activeTeacherGame === 'tug_of_war' ? (
+            <TugOfWarGameCanvas onClose={() => setActiveTeacherGame(null)} />
+          ) : activeTeacherGame === 'head_tilt' ? (
+            <HeadTiltGameCanvas onClose={() => setActiveTeacherGame(null)} />
+          ) : activeTeacherGame === 'lucky_wheel' ? (
+            <LuckyWheelGameCanvas onClose={() => setActiveTeacherGame(null)} />
+          ) : activeTeacherGame === 'flashcard' ? (
+            <FlashcardGame onClose={() => setActiveTeacherGame(null)} />
+          ) : activeTeacherGame === 'matching' ? (
+            <MatchingPairsGame onClose={() => setActiveTeacherGame(null)} />
+          ) : activeTeacherGame === 'scramble' ? (
+            <WordScrambleGame onClose={() => setActiveTeacherGame(null)} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* GAME 1: KÉO CO TIẾNG ANH */}
+              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-amber-500/50 transition-all">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black text-xl">
+                    🥊
+                  </div>
+                  <h3 className="text-base font-black text-white">1. TRÒ CHƠI KÉO CO (TUG OF WAR)</h3>
+                  <p className="text-xs text-slate-400">Thi đấu kéo co 2 Đội Xanh - Đỏ trả lời đúng từ vựng để kéo dây co về đội mình!</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    soundFX.playClick();
+                    setActiveTeacherGame('tug_of_war');
+                  }}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow flex items-center justify-center gap-2"
+                >
+                  <Play className="w-4 h-4" /> Mở Game Kéo Co Ngay
+                </button>
+              </div>
+
+              {/* GAME 2: NGHIÊNG ĐẦU CAMERA */}
+              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-indigo-500/50 transition-all">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 flex items-center justify-center font-black text-xl">
+                    🤳
+                  </div>
+                  <h3 className="text-base font-black text-white">2. NGHIÊNG ĐẦU CHỌN ĐÁP ÁN (AI CAMERA)</h3>
+                  <p className="text-xs text-slate-400">Nghiêng đầu Trái / Phải trước WebCam Camera để chọn đáp án từ vựng Tiếng Anh!</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    soundFX.playClick();
+                    setActiveTeacherGame('head_tilt');
+                  }}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-xs shadow flex items-center justify-center gap-2"
+                >
+                  <Camera className="w-4 h-4" /> Mở Game Nghiêng Đầu Camera
+                </button>
+              </div>
+
+              {/* GAME 3: VÒNG XOAY MAY MẮN */}
+              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-emerald-500/50 transition-all">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-black text-xl">
+                    🎡
+                  </div>
+                  <h3 className="text-base font-black text-white">3. VÒNG XOAY MAY MẮN THẦY HẢI</h3>
+                  <p className="text-xs text-slate-400">Vòng xoay quay số gọi tên học sinh hoặc nhận điểm thưởng ngẫu nhiên!</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    soundFX.playClick();
+                    setActiveTeacherGame('lucky_wheel');
+                  }}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs shadow flex items-center justify-center gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" /> Mở Vòng Xoay May Mắn
+                </button>
+              </div>
+
+              {/* GAME 4: FLASHCARD TỪ VỰNG */}
+              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-purple-500/50 transition-all">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/40 flex items-center justify-center font-black text-xl">
+                    🃏
+                  </div>
+                  <h3 className="text-base font-black text-white">4. BỘ GAME FLASHCARD TỪ VỰNG</h3>
+                  <p className="text-xs text-slate-400">Thẻ từ vựng flashcard 2 mặt kèm audio phát âm chuẩn và hình ảnh minh họa.</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    soundFX.playClick();
+                    setActiveTeacherGame('flashcard');
+                  }}
+                  className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-black text-xs shadow flex items-center justify-center gap-2"
+                >
+                  <Layers className="w-4 h-4" /> Mở Flashcard Từ Vựng
+                </button>
+              </div>
+
+              {/* GAME 5: GHÉP CẶP TỪ & NGHĨA */}
+              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-cyan-500/50 transition-all">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center font-black text-xl">
+                    🧩
+                  </div>
+                  <h3 className="text-base font-black text-white">5. TRÒ CHƠI GHÉP CẶP TỪ & NGHĨA</h3>
+                  <p className="text-xs text-slate-400">Ghép cặp tương ứng giữa từ Tiếng Anh và nghĩa Tiếng Việt bám sát SGK.</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    soundFX.playClick();
+                    setActiveTeacherGame('matching');
+                  }}
+                  className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-black text-xs shadow flex items-center justify-center gap-2"
+                >
+                  <Puzzle className="w-4 h-4" /> Mở Game Ghép Cặp
+                </button>
+              </div>
+
+              {/* GAME 6: XÁO TRỘN TỪ VỰNG */}
+              <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-rose-500/50 transition-all">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center font-black text-xl">
+                    🔤
+                  </div>
+                  <h3 className="text-base font-black text-white">6. XÁO TRỘN Ô CHỮ (WORD SCRAMBLE)</h3>
+                  <p className="text-xs text-slate-400">Sắp xếp các ký tự bị xáo trộn để tạo thành từ vựng đúng chính tả.</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    soundFX.playClick();
+                    setActiveTeacherGame('scramble');
+                  }}
+                  className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-black text-xs shadow flex items-center justify-center gap-2"
+                >
+                  <Type className="w-4 h-4" /> Mở Game Xáo Trộn Từ
+                </button>
+              </div>
+
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* CONTENT FOR TAB 6: GAMIFICATION HTML5 & XP SHOP */}
       {activeTab === 'gamification' && (
         <div className="space-y-6">
           
-          {/* XP SHOP ACTION BAR */}
           <div className="p-4 rounded-3xl bg-slate-900 border border-amber-500/40 shadow-xl flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black">
@@ -441,24 +561,15 @@ export const GameHubPage = () => {
             </button>
           </div>
 
-          {/* SUB-TABS INSIDE TAB 5 */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-1.5 rounded-3xl bg-slate-950 border border-slate-800 text-xs font-black">
-            <button
-              onClick={() => setActiveGameSubTab('mini_games')}
-              className={`p-3 rounded-2xl transition-all flex items-center justify-center gap-2 ${
-                activeGameSubTab === 'mini_games' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Gamepad2 className="w-4 h-4 text-emerald-400" /> 1. THƯ VIỆN GAME TÍCH HỢP
-            </button>
-
+          {/* SUB-TABS INSIDE TAB 6 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 rounded-3xl bg-slate-950 border border-slate-800 text-xs font-black">
             <button
               onClick={() => setActiveGameSubTab('embedded')}
               className={`p-3 rounded-2xl transition-all flex items-center justify-center gap-2 ${
                 activeGameSubTab === 'embedded' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Share2 className="w-4 h-4 text-purple-400" /> 2. GAME IFRAME / HTML5 ZIP
+              <Share2 className="w-4 h-4 text-purple-400" /> 1. GAME IFRAME (WORDWALL, QUIZIZZ, HTML5 ZIP)
             </button>
 
             <button
@@ -467,99 +578,11 @@ export const GameHubPage = () => {
                 activeGameSubTab === 'pvp' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Swords className="w-4 h-4 text-amber-400" /> 3. THÁCH ĐẤU PVP 1V1
+              <Swords className="w-4 h-4 text-amber-400" /> 2. THÁCH ĐẤU PVP 1V1 TRANH CƯỢC XP
             </button>
           </div>
 
-          {/* SUB-TAB 1: MINI-GAMES */}
-          {activeGameSubTab === 'mini_games' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8 p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-5 shadow-xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div>
-                    <h3 className="text-base font-black text-white flex items-center gap-2">
-                      🎯 TRÒ CHƠI LẬT THẺ NỐI TỪ VỰNG (VOCAB FLIP GAME)
-                    </h3>
-                    <p className="text-xs text-slate-400 font-bold mt-0.5">Lật thẻ tiếng Anh và khớp đúng nghĩa Tiếng Việt tương ứng.</p>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-xs font-black">
-                    <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
-                      <Star className="w-4 h-4 text-amber-400" /> {flipScore} Điểm
-                    </span>
-                    <span className="px-3 py-1.5 rounded-xl bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 flex items-center gap-1 font-mono">
-                      <Timer className="w-4 h-4 text-indigo-400" /> {gameTimerSeconds}s
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {flipCards.map((card) => (
-                    <button
-                      key={card.id}
-                      onClick={() => handleCardClick(card)}
-                      className={`h-32 rounded-2xl border-2 transition-all duration-300 font-black text-sm p-3 flex items-center justify-center text-center shadow-lg ${
-                        card.matched
-                          ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300 scale-95'
-                          : card.flipped
-                          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 border-brand-400 text-white shadow-brand-500/30'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-brand-500/50 hover:text-white'
-                      }`}
-                    >
-                      {card.flipped || card.matched ? card.word : '❓ Lật Thẻ'}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => {
-                      soundFX.playClick();
-                      setFlipCards(flipCards.map(c => ({ ...c, flipped: false, matched: false })));
-                      setFlipScore(0); setGameTimerSeconds(0); setIsTimerRunning(false);
-                    }}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5"
-                  >
-                    <RotateCcw className="w-4 h-4" /> Chơi Lại Từ Đầu
-                  </button>
-                </div>
-              </div>
-
-              <div className="lg:col-span-4 p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl text-center flex flex-col justify-between">
-                <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center justify-center gap-2">
-                    🎡 VÒNG QUAY MAY MẮN NHẬN XP
-                  </h3>
-                  <p className="text-xs text-slate-400 font-bold mt-1">Quay vòng quay hàng ngày để cơ hội nhận điểm thưởng XP!</p>
-                </div>
-
-                <div className="my-4 flex items-center justify-center">
-                  <div
-                    className="w-40 h-40 rounded-full border-4 border-amber-400 bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 flex items-center justify-center text-white font-black shadow-2xl transition-transform duration-[3000ms] ease-out"
-                    style={{ transform: `rotate(${wheelAngle}deg)` }}
-                  >
-                    🎁 WHEEL
-                  </div>
-                </div>
-
-                {wheelResult && (
-                  <div className="p-3 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-300 font-black text-xs animate-bounce">
-                    🎉 PHẦN THƯỞNG: {wheelResult}!
-                  </div>
-                )}
-
-                <button
-                  onClick={handleSpinWheel}
-                  disabled={isSpinning}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" /> {isSpinning ? 'Đang Quay...' : 'QUAY NGAY HÔM NAY'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* SUB-TAB 2: EMBEDDED */}
+          {/* SUB-TAB 1: EMBEDDED */}
           {activeGameSubTab === 'embedded' && (
             <div className="space-y-6">
               <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between flex-wrap gap-4 shadow-xl">
@@ -619,7 +642,7 @@ export const GameHubPage = () => {
             </div>
           )}
 
-          {/* SUB-TAB 3: PVP */}
+          {/* SUB-TAB 2: PVP */}
           {activeGameSubTab === 'pvp' && (
             <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-6 shadow-xl max-w-3xl mx-auto text-xs font-bold">
               <div className="text-center space-y-2 border-b border-slate-800 pb-4">
