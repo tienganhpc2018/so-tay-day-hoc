@@ -26,7 +26,10 @@ import {
   Link as LinkIcon,
   Eraser,
   RefreshCw,
-  Sun
+  Sun,
+  Moon,
+  Zap,
+  Check
 } from 'lucide-react';
 
 export const MaterialPage = () => {
@@ -52,6 +55,9 @@ export const MaterialPage = () => {
   const [formAudioUrl, setFormAudioUrl] = useState('');
   const [formFileUrl, setFormFileUrl] = useState('');
   const [isGeneratingAiImage, setIsGeneratingAiImage] = useState(false);
+
+  // Editor background mode toggle ('dark' vs 'paper')
+  const [editorBgMode, setEditorBgMode] = useState('dark');
 
   // Custom Image Insert input helper
   const [insertImageUrl, setInsertImageUrl] = useState('');
@@ -99,7 +105,7 @@ export const MaterialPage = () => {
     setArticlesList(categoryArticles);
   };
 
-  // SMART AI IMAGE GENERATOR (ANALYZES BOTH TITLE AND CONTENT KEYWORDS TO CREATE PERFECT MATCHING THUMBNAILS!)
+  // AI IMAGE GENERATOR FOR TITLE & CONTENT
   const handleAutoGenerateAiImageForTitle = () => {
     soundFX.playClick();
     setIsGeneratingAiImage(true);
@@ -131,7 +137,7 @@ export const MaterialPage = () => {
     }, 1200);
   };
 
-  // SMART PASTING SANITIZER: EXTRACT LAZY IMAGES & STRIP YELLOW/WHITE BACKGROUNDS
+  // SMART PASTING SANITIZER: FIX LAZY IMAGES & CONVERT ALL PASTED TEXT TO BRIGHT WHITE
   const handlePasteContent = (e) => {
     e.preventDefault();
     soundFX.playClick();
@@ -144,31 +150,38 @@ export const MaterialPage = () => {
       const div = document.createElement('div');
       div.innerHTML = html;
 
-      // Extract lazy load image src (data-src, data-original -> src)
+      // 1. Extract real image source for lazy load images (data-src, data-original, srcset, background-image)
       const imgs = div.querySelectorAll('img');
       imgs.forEach(img => {
-        const realSrc = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('data-lazy-src') || img.getAttribute('src');
-        if (realSrc) {
+        const realSrc = img.getAttribute('data-src') || 
+                        img.getAttribute('data-original') || 
+                        img.getAttribute('data-lazy-src') || 
+                        img.getAttribute('src');
+
+        if (realSrc && !realSrc.startsWith('data:image/svg')) {
           img.setAttribute('src', realSrc);
-          img.removeAttribute('data-src');
-          img.removeAttribute('data-original');
-          img.removeAttribute('data-lazy-src');
+        } else if (img.getAttribute('data-src')) {
+          img.setAttribute('src', img.getAttribute('data-src'));
         }
+
+        img.removeAttribute('data-src');
+        img.removeAttribute('data-original');
+        img.removeAttribute('data-lazy-src');
+
         img.style.maxWidth = '100%';
         img.style.borderRadius = '16px';
         img.style.margin = '12px 0';
-        img.style.border = '1px solid #334155';
+        img.style.border = '1px solid #475569';
         img.style.display = 'block';
       });
 
-      // Strip ugly yellow/white inline backgrounds & hardcoded black text colors
+      // 2. Strip hardcoded dark text colors & yellow/white background styles completely
       const allElements = div.querySelectorAll('*');
       allElements.forEach(el => {
+        el.removeAttribute('style'); // Strip ugly inline black styles
         el.style.backgroundColor = 'transparent';
         el.style.background = 'transparent';
-        if (el.style.color === 'black' || el.style.color === '#000' || el.style.color === '#000000' || el.style.color === 'rgb(0, 0, 0)') {
-          el.style.color = 'inherit';
-        }
+        el.style.color = 'inherit';
       });
 
       html = div.innerHTML;
@@ -182,7 +195,7 @@ export const MaterialPage = () => {
     }
   };
 
-  // CLEANUP BUTTON FOR EXISTING PASTED TEXT (STRIPS WHITE BACKGROUNDS & HARDCODED COLORS)
+  // CLEANUP & CONVERT ALL PASTED TEXT TO BRIGHT WHITE HIGH-CONTRAST COLOR
   const handleCleanPastedBackgrounds = () => {
     if (!formContent.trim()) return;
     soundFX.playClick();
@@ -192,11 +205,18 @@ export const MaterialPage = () => {
 
     const allEls = div.querySelectorAll('*');
     allEls.forEach(el => {
+      el.removeAttribute('style');
       el.style.backgroundColor = 'transparent';
-      el.style.background = 'transparent';
-      if (el.style.color === 'black' || el.style.color === '#000' || el.style.color === '#000000' || el.style.color === 'rgb(0, 0, 0)') {
-        el.style.color = 'inherit';
-      }
+      el.style.color = '#f8fafc';
+    });
+
+    // Fix images inside
+    const imgs = div.querySelectorAll('img');
+    imgs.forEach(img => {
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '16px';
+      img.style.margin = '12px 0';
+      img.style.display = 'block';
     });
 
     const cleanedHtml = div.innerHTML;
@@ -205,7 +225,7 @@ export const MaterialPage = () => {
       contentEditableRef.current.innerHTML = cleanedHtml;
     }
 
-    alert('✨ ĐÃ TỰ ĐỘNG CHUẨN HÓA LÀM SẠCH NỀN TRẮNG/VÀNG VÀ CHUYỂN THÀNH CHỮ NỔI CHẾ ĐỘ TỐI TRONG SUỐT!');
+    alert('✨ ĐÃ CHUẨN HÓA TOÀN BỘ CHỮ THÀNH MÀU TRẮNG SÁNG CAO TƯƠNG PHẢN (KHÔNG BỊ CHỮ ĐEN NỀN ĐEN)!');
   };
 
   const handleStartCreateNew = () => {
@@ -257,14 +277,13 @@ export const MaterialPage = () => {
     }
   };
 
-  // Insert Inline Image into Content
   const handleInsertInlineImage = () => {
     if (!insertImageUrl.trim()) {
       alert('Vui lòng dán link ảnh!');
       return;
     }
     soundFX.playClick();
-    const imgHtml = `<br/><img src="${insertImageUrl}" alt="Ảnh bài viết" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155; display: block;" /><br/>`;
+    const imgHtml = `<br/><img src="${insertImageUrl}" alt="Ảnh bài viết" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #475569; display: block;" /><br/>`;
     setFormContent(prev => prev + imgHtml);
     if (contentEditableRef.current) {
       contentEditableRef.current.innerHTML += imgHtml;
@@ -273,7 +292,6 @@ export const MaterialPage = () => {
     alert('✨ Đã chèn hình ảnh thành công vào nội dung bài viết!');
   };
 
-  // Upload Local Image File
   const handleFileUploadImage = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -281,7 +299,7 @@ export const MaterialPage = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64Img = event.target.result;
-        const imgHtml = `<br/><img src="${base64Img}" alt="Ảnh dán" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155; display: block;" /><br/>`;
+        const imgHtml = `<br/><img src="${base64Img}" alt="Ảnh dán" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #475569; display: block;" /><br/>`;
         setFormContent(prev => prev + imgHtml);
         if (contentEditableRef.current) {
           contentEditableRef.current.innerHTML += imgHtml;
@@ -344,7 +362,7 @@ export const MaterialPage = () => {
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* 1. HERO BANNER */}
+      {/* HERO BANNER */}
       <PageHeroBanner
         title="Thư Mục Học Liệu & Studio Soạn Bài Động 📚"
         subtitle="Quản lý, soạn mới, sửa bài, dán hình ảnh nguyên bản từ web và sinh ảnh AI 3D Pixar chuẩn tiêu đề & nội dung."
@@ -381,7 +399,7 @@ export const MaterialPage = () => {
         }
       />
 
-      {/* 2. 6 CATEGORY SUB-TABS */}
+      {/* 6 CATEGORY SUB-TABS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
         {subCategoryTabs.map((tab) => {
           const Icon = tab.icon;
@@ -414,7 +432,7 @@ export const MaterialPage = () => {
         })}
       </div>
 
-      {/* 3. INLINE EDITOR FORM PANEL WITH SMART PASTE & AI IMAGE GENERATOR */}
+      {/* INLINE EDITOR FORM PANEL WITH PASTE SANITIZER & COLOR HIGHLIGHTING */}
       {showEditorForm && (
         <div ref={editorRef} className="glass-panel p-6 sm:p-8 space-y-6 border-2 border-indigo-500/60 bg-slate-900/95 shadow-2xl animate-fadeIn">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -432,7 +450,7 @@ export const MaterialPage = () => {
 
           <form onSubmit={handleSaveArticleForm} className="space-y-5 text-xs font-bold">
             
-            {/* TITLE & TOPIC */}
+            {/* TITLE */}
             <div>
               <label className="block text-slate-300 mb-1">TIÊU ĐỀ BÀI VIẾT / BÀI HỌC *</label>
               <input
@@ -445,7 +463,7 @@ export const MaterialPage = () => {
               />
             </div>
 
-            {/* DYNAMIC TOPIC & CONTENT AI IMAGE GENERATOR */}
+            {/* AI THUMBNAIL GENERATOR */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div>
@@ -453,7 +471,7 @@ export const MaterialPage = () => {
                     <ImageIcon className="w-4 h-4 text-indigo-400" />
                     ẢNH BÌA AI 3D PIXAR CUTE PHÂN TÍCH TỰ ĐỘNG THEO NỘI DUNG BÀI VIẾT:
                   </label>
-                  <p className="text-[11px] text-slate-400 font-normal">AI sẽ tự động đọc cả Tiêu đề lẫn Nội dung Thầy vừa dán để tạo 1 bức ảnh 3D Pixar khớp nhất!</p>
+                  <p className="text-[11px] text-slate-400 font-normal">AI đọc cả Tiêu đề lẫn Nội dung Thầy vừa dán để vẽ 1 bức ảnh 3D Pixar khớp nhất!</p>
                 </div>
 
                 <button
@@ -527,7 +545,7 @@ export const MaterialPage = () => {
               />
             </div>
 
-            {/* SMART VISUAL RICH TEXT CONTENT EDITOR (WITH PASTE SANITIZER & CLEANUP BUTTON) */}
+            {/* SMART VISUAL RICH TEXT CONTENT EDITOR WITH LIGHT/DARK MODE TOGGLE */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
                 <div>
@@ -535,17 +553,36 @@ export const MaterialPage = () => {
                     <FileText className="w-4 h-4 text-indigo-400" />
                     KHUNG SOẠN THẢO TRỰC QUAN (HỖ TRỢ DÁN TRỰC TIẾP CHỮ + TẤT CẢ HÌNH ÁNH):
                   </label>
-                  <p className="text-[11px] text-slate-400 font-normal">Thầy bôi đen copy đoạn văn kèm ảnh trên web ➔ Nhấn <strong>Ctrl + V</strong> dán vào đây! Chữ và ảnh sẽ hiện ra nguyên bản.</p>
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    Thầy bôi đen copy đoạn văn kèm ảnh trên web ➔ Nhấn <strong>Ctrl + V</strong> dán vào đây! Tự động chuyển thành chữ trắng cao tương phản.
+                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {/* Editor BG Theme Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFX.playClick();
+                      setEditorBgMode(editorBgMode === 'dark' ? 'paper' : 'dark');
+                    }}
+                    className={`px-3 py-1.5 rounded-xl font-extrabold text-[11px] border flex items-center gap-1 transition-all ${
+                      editorBgMode === 'paper' 
+                        ? 'bg-amber-100 text-slate-900 border-amber-300' 
+                        : 'bg-slate-800 text-amber-300 border-slate-700'
+                    }`}
+                  >
+                    {editorBgMode === 'paper' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                    {editorBgMode === 'paper' ? 'Nền Tối Dark' : '☀️ Nền Giấy Sáng Paper'}
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleCleanPastedBackgrounds}
                     className="px-3 py-1.5 rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-500/40 font-extrabold text-[11px] flex items-center gap-1 hover:bg-indigo-900"
-                    title="Xóa nền vàng/nền trắng khi dán từ web khác"
+                    title="Chuyển toàn bộ chữ thành màu trắng sáng cao tương phản"
                   >
-                    <Eraser className="w-3.5 h-3.5" /> ✨ Chuẩn Hóa Nền Trong Suốt
+                    <Eraser className="w-3.5 h-3.5" /> ✨ Chuẩn Hóa Chữ Trắng Sáng
                   </button>
 
                   <label className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 font-extrabold text-[11px] cursor-pointer flex items-center gap-1">
@@ -555,7 +592,7 @@ export const MaterialPage = () => {
                 </div>
               </div>
 
-              {/* VISUAL CONTENTEDITABLE CONTAINER WITH PASTE SANITIZER */}
+              {/* CONTENTEDITABLE CONTAINER WITH STRICT BRIGHT WHITE TEXT & NO DARK TEXT */}
               <div
                 ref={contentEditableRef}
                 contentEditable={true}
@@ -563,7 +600,11 @@ export const MaterialPage = () => {
                 onInput={(e) => setFormContent(e.currentTarget.innerHTML)}
                 onBlur={(e) => setFormContent(e.currentTarget.innerHTML)}
                 dangerouslySetInnerHTML={{ __html: formContent }}
-                className="w-full min-h-[260px] max-h-[550px] overflow-y-auto glass-input p-4 text-xs font-serif leading-relaxed text-slate-100 bg-slate-900/95 rounded-2xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 space-y-3 prose prose-invert max-w-none [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block [&_*]:!bg-transparent"
+                className={`w-full min-h-[280px] max-h-[600px] overflow-y-auto p-4 text-xs font-serif leading-relaxed rounded-2xl border transition-all space-y-3 prose max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-500 [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block ${
+                  editorBgMode === 'paper'
+                    ? 'bg-[#fefea2] text-slate-950 border-amber-300 prose-slate [&_*]:!text-slate-950 [&_*]:!bg-transparent'
+                    : 'bg-slate-900/95 text-slate-100 border-slate-800 prose-invert [&_*]:!text-slate-100 [&_*]:!bg-transparent'
+                }`}
                 style={{ wordBreak: 'break-word' }}
               />
             </div>
@@ -604,7 +645,7 @@ export const MaterialPage = () => {
         </div>
       )}
 
-      {/* 4. DYNAMIC ARTICLE CARDS LIST */}
+      {/* DYNAMIC ARTICLE CARDS LIST */}
       <div className="space-y-6">
         
         {/* Category Header */}
@@ -735,7 +776,7 @@ export const MaterialPage = () => {
 
       </div>
 
-      {/* Reader Modal (Strips hardcoded yellow/white backgrounds from pasted content) */}
+      {/* Reader Modal */}
       {activeReaderArticle && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-4xl w-full border border-slate-800 overflow-hidden shadow-2xl space-y-0 relative animate-fadeIn max-h-[90vh] overflow-y-auto">
@@ -773,9 +814,9 @@ export const MaterialPage = () => {
                 </div>
               )}
 
-              {/* CLEANED ARTICLE CONTENT READER - ALL INLINE BACKGROUNDS SET TO TRANSPARENT */}
+              {/* ARTICLE READER - STRICT HIGH CONTRAST WHITE TEXT WITH ZERO BLACK ON BLACK */}
               <div 
-                className="text-sm font-serif text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
+                className="text-sm font-serif text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!text-slate-100 [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
                 dangerouslySetInnerHTML={{ __html: activeReaderArticle.content }}
               />
 
