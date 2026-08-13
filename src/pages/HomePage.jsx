@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { soundFX } from '../utils/soundEffects';
 import { supabase } from '../lib/supabase';
+import { cmsStorage } from '../utils/cmsStorage';
 import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { 
   Sparkles, 
@@ -37,16 +38,28 @@ export const HomePage = () => {
     fetchHomeArticles();
   }, []);
 
-  const fetchHomeArticles = async () => {
+  const fetchHomeArticles = () => {
     try {
-      const { data } = await supabase
-        .from('learning_materials')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(6);
+      const cmsArticles = cmsStorage.getAllArticles();
+      if (cmsArticles && cmsArticles.length > 0) {
+        // Map 1 article per 6 categories: vocabulary, grammar, audio, infographic, project, worksheet
+        const cats = ['vocabulary', 'grammar', 'audio', 'infographic', 'project', 'worksheet'];
+        const mapped = cats.map(catKey => {
+          const found = cmsArticles.find(a => (a.category || '').toLowerCase() === catKey);
+          if (found) {
+            return {
+              ...found,
+              category: found.categoryLabel || found.category.toUpperCase(),
+              link: `/materials?type=${catKey}`
+            };
+          }
+          return null;
+        }).filter(Boolean);
 
-      if (data && data.length > 0) {
-        setArticles(data);
+        if (mapped.length > 0) {
+          setArticles(mapped);
+          return;
+        }
       }
     } catch (err) {
       console.error('Error fetching home articles:', err);
