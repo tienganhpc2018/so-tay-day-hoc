@@ -240,7 +240,7 @@ export const MaterialPage = () => {
     alert('✨ ĐÃ CHÈN KHUNG ẨN ĐÁP ÁN TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
   };
 
-  // UPLOAD AUDIO FILE FROM COMPUTER DIRECTLY (RESTORES EXACT SAVED CURSOR RANGE)
+  // UPLOAD AUDIO FILE FROM COMPUTER DIRECTLY (TRANSPARENT NO-BORDER PLAYER WITH HEADPHONE ICON)
   const handleFileUploadAudioFile = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -250,9 +250,9 @@ export const MaterialPage = () => {
         const base64Audio = event.target.result;
         const audioHtml = `
           <br/>
-          <div style="padding: 14px 18px; border-radius: 16px; background-color: #3b0764; border: 1px solid #a855f7; margin: 14px 0; text-align: left;">
-            <p style="color: #e9d5ff; font-weight: 800; font-size: 12px; margin-bottom: 8px;">🎧 FILE NGHE AUDIO BÀI TẬP (${file.name}):</p>
-            <audio controls src="${base64Audio}" style="width: 100%; border-radius: 12px;" />
+          <div style="display: flex; align-items: center; gap: 12px; margin: 12px 0; background: transparent; border: none; padding: 4px 0;">
+            <span style="font-size: 22px; color: #a855f7; display: inline-flex; align-items: center;">🎧</span>
+            <audio controls src="${base64Audio}" style="width: 100%; max-width: 650px; background: transparent; outline: none; border-radius: 9999px;" />
           </div>
           <br/>
         `;
@@ -263,7 +263,7 @@ export const MaterialPage = () => {
     }
   };
 
-  // INSERT AUDIO PLAYER FROM LINK AT EXACT CURSOR POSITION
+  // INSERT AUDIO PLAYER FROM LINK (TRANSPARENT NO-BORDER PLAYER WITH HEADPHONE ICON)
   const handleInsertAudioPlayerAtCursor = () => {
     const audioUrl = prompt('Nhập link Audio MP3 hoặc link Google Drive bài nghe:');
     if (!audioUrl || !audioUrl.trim()) return;
@@ -276,17 +276,17 @@ export const MaterialPage = () => {
 
     const audioHtml = `
       <br/>
-      <div style="padding: 14px 18px; border-radius: 16px; background-color: #3b0764; border: 1px solid #a855f7; margin: 14px 0; text-align: left;">
-        <p style="color: #e9d5ff; font-weight: 800; font-size: 12px; margin-bottom: 8px;">🎧 TRÌNH PHÁT BÀI NGHE AUDIO (LISTENING PRACTICE):</p>
-        <audio controls src="${directAudio}" style="width: 100%; border-radius: 12px;" />
+      <div style="display: flex; align-items: center; gap: 12px; margin: 12px 0; background: transparent; border: none; padding: 4px 0;">
+        <span style="font-size: 22px; color: #a855f7; display: inline-flex; align-items: center;">🎧</span>
+        <audio controls src="${directAudio}" style="width: 100%; max-width: 650px; background: transparent; outline: none; border-radius: 9999px;" />
       </div>
       <br/>
     `;
     insertHtmlAtCursor(audioHtml);
-    alert('✨ ĐÃ CHÈN TRÌNH PHÁT AUDIO TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
+    alert('✨ ĐÃ CHÈN TRÌNH PHÁT AUDIO TRONG SUỐT TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
   };
 
-  // AI TEST FORMATTER: SEPARATE & ALIGN STUCK OPTIONS A, B, C, D INTO A CLEAN EXAM PAPER
+  // BULLETPROOF AI TEST FORMATTER: UNSTICK & ALIGN OPTIONS A, B, C, D INTO CLEAN LINES
   const handleAiFormatAndSeparateTestContent = () => {
     if (!formContent.trim()) {
       alert('Vui lòng dán nội dung bài kiểm tra/đề thi vào ô soạn thảo trước!');
@@ -295,39 +295,25 @@ export const MaterialPage = () => {
 
     soundFX.playClick();
 
-    let raw = formContent;
+    let text = formContent;
 
-    // 1. Separate stuck options like "libraryB. To", "labC. To", "roomD. To"
-    // Insert line breaks and indentation before B., C., D.
-    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(B\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
-    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(C\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
-    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(D\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
+    // 1. Unstick glued options like "labC. To", "roomD. To", "CherriesB. Magazines", "ProjectsD. English"
+    text = text.replace(/([^\s>])\s*([A-D]\.\s*)/g, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong>$2</strong>');
 
-    // Clean Option A. line breaks
-    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(A\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
+    // 2. Separate options B., C., D., A. on same lines
+    text = text.replace(/([^\n<]+?)\s+([B-D]\.\s*)/g, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong>$2</strong>');
+    text = text.replace(/([^\n<]+?)\s+(A\.\s*)/g, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong>$2</strong>');
 
-    // 2. Highlight Question numbers (1., 2., 3., 4., 5.)
-    raw = raw.replace(/(^|<br\s*\/?>|\n)\s*(\d{1,2}[\.\)])\s*/gi, '$1<br/><strong style="color: #fbbf24; font-size: 14px;">$2 </strong>');
+    // 3. Highlight question numbers (1., 2., 3., 4., 5., etc.)
+    text = text.replace(/(^|<br\s*\/?>|\n)\s*(\d{1,2}[\.\)])\s*/gi, '$1<br/><br/><strong style="color: #fbbf24; font-size: 14px;">$2 </strong>');
 
-    // 3. Format Section Banners (LISTENING SECTION, TASK 1, KỊCH BẢN NGHE)
-    raw = raw.replace(/(LISTENING SECTION|TASK \d+:[^\n<]+|KỊCH BẢN NGHE[^\n<]*)/gi, (match) => {
-      return `<br/><div style="padding: 12px 16px; background-color: #1e1b4b; border: 1px solid #6366f1; border-radius: 12px; margin: 16px 0; color: #a5b4fc; font-weight: 800; font-size: 13px; text-transform: uppercase;">📌 ${match}</div>`;
-    });
+    // 4. Style options A., B., C., D. in bright green
+    text = text.replace(/(A\.\s*|B\.\s*|C\.\s*|D\.\s*)/g, '<strong style="color: #34d399;">$1</strong>');
 
     const div = document.createElement('div');
-    div.innerHTML = raw;
-
-    // Ensure all images remain responsive
-    const imgs = div.querySelectorAll('img');
-    imgs.forEach(img => {
-      img.style.maxWidth = '100%';
-      img.style.borderRadius = '16px';
-      img.style.margin = '12px auto';
-      img.style.display = 'block';
-    });
+    div.innerHTML = text;
 
     const formattedHtml = div.innerHTML;
-    setFormContent(formattedHtml);
     if (contentEditableRef.current) {
       contentEditableRef.current.innerHTML = formattedHtml;
     }
@@ -335,7 +321,7 @@ export const MaterialPage = () => {
     soundFX.playFanfare();
     confetti({ particleCount: 120, spread: 80 });
 
-    alert('✨ AI ĐÃ BÓC TÁCH & CHUẨN HÓA CĂN CHỈNH TOÀN BỘ CÁC CÂU HỎI A, B, C, D HÀNG LỐI NHƯ MỘT ĐỀ THI CHUẨN SGK!');
+    alert('✨ AI ĐÃ BÓC TÁCH VÀ XUỐNG HÀNG THẲNG LỐI TOÀN BỘ CÁC LỰA CHỌN A, B, C, D CỦA BÀI KIỂM TRA!');
   };
 
   // RESIZE ALL IMAGES IN EDITOR TO CUSTOM PERCENTAGE (30%, 50%, 75%, 100%)
