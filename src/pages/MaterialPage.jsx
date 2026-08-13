@@ -1315,10 +1315,10 @@ export const MaterialPage = () => {
       </div>
       )}
 
-      {/* Reader Modal (z-[100] floating above Navbar z-50) */}
+      {/* Reader Modal (Floating below sticky Navbar top-20, narrowed max-w-3xl) */}
       {activeReaderArticle && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-4xl w-full border border-slate-800 overflow-hidden shadow-2xl space-y-0 relative animate-fadeIn max-h-[90vh] overflow-y-auto">
+        <div className="fixed top-20 inset-x-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
+          <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-3xl w-full border border-slate-800 overflow-hidden shadow-2xl space-y-0 relative animate-fadeIn max-h-[82vh] flex flex-col">
             <div className="p-6 pb-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
               <div className="space-y-1">
                 <span className="px-3 py-1 rounded-full bg-indigo-600 text-white font-black text-[10px] uppercase">
@@ -1334,7 +1334,7 @@ export const MaterialPage = () => {
               </button>
             </div>
 
-            <div className="p-6 sm:p-8 space-y-6">
+            <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
               <div className="h-64 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
                 <img 
                   src={activeReaderArticle.thumbnail} 
