@@ -13,6 +13,7 @@ import { WorksheetPage } from './pages/WorksheetPage';
 import { ExamTestingPage } from './pages/ExamTestingPage';
 import { ClassTrainingPage } from './pages/ClassTrainingPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AiTeachingAssistantWidget } from './components/common/AiTeachingAssistantWidget';
 import { AlertTriangle, GraduationCap, MessageCircle } from 'lucide-react';
 
 const ProtectedRoute = ({ children, teacherOnly = false, adminOnly = false }) => {
@@ -165,14 +166,8 @@ export const AppContent = () => {
         </div>
       </footer>
 
-      {/* FLOATING ACTION CHAT BUBBLE (BOTTOM RIGHT - MATCHING SCREENSHOT 3) */}
-      <button 
-        onClick={() => alert('Kết nối hỗ trợ trực tiếp với Giáo viên bộ môn!')}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 transition-all hover:scale-110 active:scale-95 border-2 border-indigo-400/40"
-        title="Hỗ trợ & Gửi phản hồi"
-      >
-        <MessageCircle className="w-7 h-7" />
-      </button>
+      {/* FLOATING AI TEACHING ASSISTANT CHATBOT (BOTTOM RIGHT - DIRECTIVE 1) */}
+      <AiTeachingAssistantWidget />
 
     </div>
   );

@@ -54,8 +54,10 @@ import {
   Sun,
   Moon,
   Zap,
-  HelpCircle
+  HelpCircle,
+  MessageSquare
 } from 'lucide-react';
+import { ClassSocialHubModal } from '../components/classroom/ClassSocialHubModal';
 
 export const ClassTrainingPage = () => {
   const { isTeacher, isAdmin } = useAuth();
@@ -67,6 +69,7 @@ export const ClassTrainingPage = () => {
   const [masterPasscode, setMasterPasscode] = useState('STDH-GL2026');
   const [newGeneratedCode, setNewGeneratedCode] = useState('');
   const [showAdminCodeModal, setShowAdminCodeModal] = useState(false);
+  const [showSocialHub, setShowSocialHub] = useState(false);
 
   // Student Unlock Modal State
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -302,6 +305,29 @@ export const ClassTrainingPage = () => {
         badge="QUẢN LÝ LỚP HỌC & LUYỆN THI 4.0"
         bgImage="/images/hero_school_bg.jpg"
       />
+
+      {/* CLASS SOCIAL HUB & AI AUTOMATION BAR (DIRECTIVES 1 & 2) */}
+      <div className="p-4 rounded-3xl bg-slate-900 border border-indigo-500/40 shadow-xl flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2.5 text-xs font-bold">
+          <div className="w-8 h-8 rounded-xl bg-indigo-600/30 text-amber-300 flex items-center justify-center font-black">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-white font-black">TRUNG TÂM BẢNG TIN LỚP, Q&A, CHAT 1-1 & AI AUTOMATION:</span>
+            <p className="text-[11px] text-slate-400 font-normal">Đăng thông báo dặn dò, Diễn đàn Q&A, Chat 1-1 với GV, AI Tạo trắc nghiệm & Backup Dữ liệu.</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            soundFX.playClick();
+            setShowSocialHub(true);
+          }}
+          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-black text-xs shadow-xl flex items-center gap-2 animate-pulse"
+        >
+          <MessageSquare className="w-4 h-4 text-amber-300" /> 📢 Mở Bảng Tin & Trung Tâm Tương Tác 4.0
+        </button>
+      </div>
 
       {/* ADMIN PASSCODE MANAGEMENT BAR (STDH PREFIX) */}
       {(isTeacher || isAdmin) && !activeBoxModule && (
@@ -850,6 +876,9 @@ export const ClassTrainingPage = () => {
           </div>
         </div>
       )}
+
+      {/* CLASSROOM SOCIAL HUB & AI AUTOMATION MODAL */}
+      <ClassSocialHubModal isOpen={showSocialHub} onClose={() => setShowSocialHub(false)} />
 
     </div>
   );

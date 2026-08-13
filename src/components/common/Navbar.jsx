@@ -16,7 +16,10 @@ import {
   Home,
   FileCheck,
   ChevronDown,
-  Zap
+  Zap,
+  Bell,
+  CheckCircle2,
+  Clock
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -25,6 +28,7 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(soundFX.isMuted());
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const toggleSound = () => {
     const nextState = !isMuted;
@@ -184,6 +188,53 @@ export const Navbar = () => {
             >
               {isMuted ? <VolumeX className="w-5 h-5 text-rose-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
             </button>
+
+            {/* REALTIME NOTIFICATION BELL WITH RED PULSE DOT (DIRECTIVE 2) */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setShowNotifications(!showNotifications);
+                }}
+                className="relative p-2.5 rounded-xl text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 transition-all"
+                title="Thông báo mới"
+              >
+                <Bell className="w-5 h-5 text-amber-300" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-950 animate-ping" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-950" />
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-900 border-2 border-slate-800 shadow-2xl p-4 space-y-3 z-50 animate-fadeIn text-xs font-bold">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="text-white font-black flex items-center gap-1.5">
+                      <Bell className="w-4 h-4 text-amber-400" /> THÔNG BÁO REALTIME (3 MỚI)
+                    </span>
+                    <span className="text-[10px] text-brand-400">Đã đọc tất cả</span>
+                  </div>
+
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="text-emerald-400 text-[11px] font-black">📝 BÀI TẬP MỚI</div>
+                      <div className="text-white font-bold">Thầy Hải vừa giao Bài tập Unit 1 Lớp 8</div>
+                      <div className="text-[10px] text-slate-500">5 phút trước • Hạn chót: 24h tới</div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="text-amber-400 text-[11px] font-black">⭐ ĐIỂM SỐ & NHẬN XÉT</div>
+                      <div className="text-white font-bold">Thầy Hải đã chấm bài Speaking: 9.5 Điểm</div>
+                      <div className="text-[10px] text-slate-500">1 giờ trước</div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="text-purple-400 text-[11px] font-black">📢 DẶN DÒ LỚP HỌC</div>
+                      <div className="text-white font-bold">Thông báo lịch thi thử trực tuyến tối nay</div>
+                      <div className="text-[10px] text-slate-500">3 giờ trước</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {profile && (
               <div className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs">
