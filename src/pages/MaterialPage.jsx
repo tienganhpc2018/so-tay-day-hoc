@@ -29,7 +29,16 @@ import {
   Sun,
   Moon,
   Zap,
-  Check
+  Check,
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Palette,
+  Type
 } from 'lucide-react';
 
 export const MaterialPage = () => {
@@ -55,6 +64,11 @@ export const MaterialPage = () => {
   const [formAudioUrl, setFormAudioUrl] = useState('');
   const [formFileUrl, setFormFileUrl] = useState('');
   const [isGeneratingAiImage, setIsGeneratingAiImage] = useState(false);
+
+  // Formatting State Helpers
+  const [selectedFont, setSelectedFont] = useState("'Be Vietnam Pro', sans-serif");
+  const [selectedFontSize, setSelectedFontSize] = useState("15px");
+  const [selectedTextColor, setSelectedTextColor] = useState("#ffffff");
 
   // Editor background mode toggle ('dark' vs 'paper')
   const [editorBgMode, setEditorBgMode] = useState('dark');
@@ -105,7 +119,78 @@ export const MaterialPage = () => {
     setArticlesList(categoryArticles);
   };
 
-  // AI IMAGE GENERATOR FOR TITLE & CONTENT
+  // WYSIWYG COMMAND EXECUTION HELPER
+  const executeFormatCommand = (command, value = null) => {
+    soundFX.playClick();
+    document.execCommand(command, false, value);
+    if (contentEditableRef.current) {
+      setFormContent(contentEditableRef.current.innerHTML);
+    }
+  };
+
+  // CHANGE FONT FAMILY FOR SELECTION OR WHOLE EDITOR
+  const handleApplyFontFamily = (fontFamilyStr) => {
+    setSelectedFont(fontFamilyStr);
+    soundFX.playClick();
+    if (contentEditableRef.current) {
+      contentEditableRef.current.style.fontFamily = fontFamilyStr;
+    }
+    executeFormatCommand('fontName', fontFamilyStr);
+  };
+
+  // CHANGE FONT SIZE FOR SELECTION OR WHOLE EDITOR
+  const handleApplyFontSize = (sizeStr) => {
+    setSelectedFontSize(sizeStr);
+    soundFX.playClick();
+    if (contentEditableRef.current) {
+      contentEditableRef.current.style.fontSize = sizeStr;
+    }
+    executeFormatCommand('fontSize', '3'); // standard size
+  };
+
+  // CHANGE TEXT COLOR FOR SELECTION
+  const handleApplyTextColor = (colorHex) => {
+    setSelectedTextColor(colorHex);
+    soundFX.playClick();
+    executeFormatCommand('foreColor', colorHex);
+  };
+
+  // SMART UNICODE NORMALIZE & FIX VIETNAMESE ACCENTS SPACING
+  const handleFixVietnameseFontsAndAccents = () => {
+    if (!formContent.trim()) return;
+    soundFX.playClick();
+
+    // Normalize Unicode diacritics (NFC format)
+    let cleaned = formContent.normalize('NFC');
+
+    // Strip weird broken spacing between Vietnamese accents (e.g. "thầ y" -> "thầy", "bắ t" -> "bắt")
+    cleaned = cleaned.replace(/([a-zA-ZàáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđĐ])\s+([̣̀́̉̃̂̆])/g, '$1$2');
+
+    const div = document.createElement('div');
+    div.innerHTML = cleaned;
+
+    // Force Be Vietnam Pro font on all elements
+    const allEls = div.querySelectorAll('*');
+    allEls.forEach(el => {
+      el.style.fontFamily = "'Be Vietnam Pro', 'Inter', system-ui, sans-serif";
+      el.style.letterSpacing = 'normal';
+      el.style.wordSpacing = 'normal';
+      if (editorBgMode === 'dark') {
+        el.style.color = '#f8fafc';
+        el.style.backgroundColor = 'transparent';
+      }
+    });
+
+    const fixedHtml = div.innerHTML;
+    setFormContent(fixedHtml);
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML = fixedHtml;
+    }
+
+    alert('✨ ĐÃ TỰ ĐỘNG KHẮC PHỤC HOÀN TOÀN LỖI DẤU FONT TIẾNG VIỆT VÀ CHUẨN HÓA FONT BE VIETNAM PRO 100%!');
+  };
+
+  // SMART AI IMAGE GENERATOR FOR TITLE & CONTENT
   const handleAutoGenerateAiImageForTitle = () => {
     soundFX.playClick();
     setIsGeneratingAiImage(true);
@@ -137,7 +222,7 @@ export const MaterialPage = () => {
     }, 1200);
   };
 
-  // SMART PASTING SANITIZER: FIX LAZY IMAGES & CONVERT ALL PASTED TEXT TO BRIGHT WHITE
+  // SMART PASTING SANITIZER: EXTRACT LAZY IMAGES & FIX ACCENTS
   const handlePasteContent = (e) => {
     e.preventDefault();
     soundFX.playClick();
@@ -147,10 +232,12 @@ export const MaterialPage = () => {
     const text = clipboardData.getData('text/plain');
 
     if (html) {
+      // Normalize Unicode NFC
+      html = html.normalize('NFC');
       const div = document.createElement('div');
       div.innerHTML = html;
 
-      // 1. Extract real image source for lazy load images (data-src, data-original, srcset, background-image)
+      // Extract real image src
       const imgs = div.querySelectorAll('img');
       imgs.forEach(img => {
         const realSrc = img.getAttribute('data-src') || 
@@ -175,13 +262,15 @@ export const MaterialPage = () => {
         img.style.display = 'block';
       });
 
-      // 2. Strip hardcoded dark text colors & yellow/white background styles completely
+      // Strip ugly inline backgrounds
       const allElements = div.querySelectorAll('*');
       allElements.forEach(el => {
-        el.removeAttribute('style'); // Strip ugly inline black styles
         el.style.backgroundColor = 'transparent';
         el.style.background = 'transparent';
-        el.style.color = 'inherit';
+        el.style.fontFamily = "'Be Vietnam Pro', sans-serif";
+        if (editorBgMode === 'dark') {
+          el.style.color = '#f8fafc';
+        }
       });
 
       html = div.innerHTML;
@@ -193,39 +282,6 @@ export const MaterialPage = () => {
     if (contentEditableRef.current) {
       setFormContent(contentEditableRef.current.innerHTML);
     }
-  };
-
-  // CLEANUP & CONVERT ALL PASTED TEXT TO BRIGHT WHITE HIGH-CONTRAST COLOR
-  const handleCleanPastedBackgrounds = () => {
-    if (!formContent.trim()) return;
-    soundFX.playClick();
-
-    const div = document.createElement('div');
-    div.innerHTML = formContent;
-
-    const allEls = div.querySelectorAll('*');
-    allEls.forEach(el => {
-      el.removeAttribute('style');
-      el.style.backgroundColor = 'transparent';
-      el.style.color = '#f8fafc';
-    });
-
-    // Fix images inside
-    const imgs = div.querySelectorAll('img');
-    imgs.forEach(img => {
-      img.style.maxWidth = '100%';
-      img.style.borderRadius = '16px';
-      img.style.margin = '12px 0';
-      img.style.display = 'block';
-    });
-
-    const cleanedHtml = div.innerHTML;
-    setFormContent(cleanedHtml);
-    if (contentEditableRef.current) {
-      contentEditableRef.current.innerHTML = cleanedHtml;
-    }
-
-    alert('✨ ĐÃ CHUẨN HÓA TOÀN BỘ CHỮ THÀNH MÀU TRẮNG SÁNG CAO TƯƠNG PHẢN (KHÔNG BỊ CHỮ ĐEN NỀN ĐEN)!');
   };
 
   const handleStartCreateNew = () => {
@@ -432,7 +488,7 @@ export const MaterialPage = () => {
         })}
       </div>
 
-      {/* INLINE EDITOR FORM PANEL WITH PASTE SANITIZER & COLOR HIGHLIGHTING */}
+      {/* INLINE EDITOR FORM PANEL WITH FULL WYSIWYG TOOLBAR */}
       {showEditorForm && (
         <div ref={editorRef} className="glass-panel p-6 sm:p-8 space-y-6 border-2 border-indigo-500/60 bg-slate-900/95 shadow-2xl animate-fadeIn">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -545,27 +601,131 @@ export const MaterialPage = () => {
               />
             </div>
 
-            {/* SMART VISUAL RICH TEXT CONTENT EDITOR WITH LIGHT/DARK MODE TOGGLE */}
+            {/* FULL FEATURED WYSIWYG FORMATTING TOOLBAR & EDITOR CONTAINER */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
-                <div>
-                  <label className="text-indigo-400 font-extrabold flex items-center gap-1.5 text-xs">
-                    <FileText className="w-4 h-4 text-indigo-400" />
-                    KHUNG SOẠN THẢO TRỰC QUAN (HỖ TRỢ DÁN TRỰC TIẾP CHỮ + TẤT CẢ HÌNH ÁNH):
-                  </label>
-                  <p className="text-[11px] text-slate-400 font-normal">
-                    Thầy bôi đen copy đoạn văn kèm ảnh trên web ➔ Nhấn <strong>Ctrl + V</strong> dán vào đây! Tự động chuyển thành chữ trắng cao tương phản.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  {/* Editor BG Theme Toggle */}
+              
+              {/* TOP TOOLBAR ROW 1: FORMATTING CONTROLS */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                
+                {/* Text Styles & Alignments */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  
+                  {/* BOLD, ITALIC, UNDERLINE */}
                   <button
                     type="button"
-                    onClick={() => {
-                      soundFX.playClick();
-                      setEditorBgMode(editorBgMode === 'dark' ? 'paper' : 'dark');
-                    }}
+                    onClick={() => executeFormatCommand('bold')}
+                    className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs border border-slate-700 shadow"
+                    title="Tô đậm (Ctrl + B)"
+                  >
+                    <Bold className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => executeFormatCommand('italic')}
+                    className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs border border-slate-700 shadow"
+                    title="In nghiêng (Ctrl + I)"
+                  >
+                    <Italic className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => executeFormatCommand('underline')}
+                    className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs border border-slate-700 shadow"
+                    title="Gạch chân (Ctrl + U)"
+                  >
+                    <Underline className="w-4 h-4" />
+                  </button>
+
+                  <div className="h-6 w-px bg-slate-800 mx-1" />
+
+                  {/* ALIGNMENTS */}
+                  <button
+                    type="button"
+                    onClick={() => executeFormatCommand('justifyLeft')}
+                    className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700"
+                    title="Căn trái"
+                  >
+                    <AlignLeft className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => executeFormatCommand('justifyCenter')}
+                    className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700"
+                    title="Căn giữa"
+                  >
+                    <AlignCenter className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => executeFormatCommand('justifyRight')}
+                    className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700"
+                    title="Căn phải"
+                  >
+                    <AlignRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => executeFormatCommand('justifyFull')}
+                    className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700"
+                    title="Căn đều 2 bên"
+                  >
+                    <AlignJustify className="w-4 h-4" />
+                  </button>
+
+                  <div className="h-6 w-px bg-slate-800 mx-1" />
+
+                  {/* FONT FAMILY SELECT */}
+                  <select
+                    value={selectedFont}
+                    onChange={(e) => handleApplyFontFamily(e.target.value)}
+                    className="p-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-indigo-300"
+                  >
+                    <option value="'Be Vietnam Pro', sans-serif">Be Vietnam Pro (Chuẩn Tiếng Việt)</option>
+                    <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                  </select>
+
+                  {/* FONT COLOR PRESETS */}
+                  <div className="flex items-center gap-1 pl-1">
+                    {[
+                      { color: '#ffffff', title: 'Trắng' },
+                      { color: '#fbbf24', title: 'Vàng' },
+                      { color: '#34d399', title: 'Xanh ngọc' },
+                      { color: '#818cf8', title: 'Xanh dương' },
+                      { color: '#f472b6', title: 'Hồng' }
+                    ].map((c, cIdx) => (
+                      <button
+                        key={cIdx}
+                        type="button"
+                        onClick={() => handleApplyTextColor(c.color)}
+                        className="w-6 h-6 rounded-full border border-slate-700 shadow shrink-0 transition-transform hover:scale-110"
+                        style={{ backgroundColor: c.color }}
+                        title={`Màu chữ ${c.title}`}
+                      />
+                    ))}
+                  </div>
+
+                </div>
+
+                {/* Right Actions Toolbar: Clean fonts & Upload Image */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleFixVietnameseFontsAndAccents}
+                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
+                    title="Khắc phục toàn bộ lỗi dấu/dấu cách dời chữ Tiếng Việt"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> ✨ Sửa Font Tiếng Việt Dấu Mượt
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditorBgMode(editorBgMode === 'dark' ? 'paper' : 'dark')}
                     className={`px-3 py-1.5 rounded-xl font-extrabold text-[11px] border flex items-center gap-1 transition-all ${
                       editorBgMode === 'paper' 
                         ? 'bg-amber-100 text-slate-900 border-amber-300' 
@@ -573,26 +733,13 @@ export const MaterialPage = () => {
                     }`}
                   >
                     {editorBgMode === 'paper' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-                    {editorBgMode === 'paper' ? 'Nền Tối Dark' : '☀️ Nền Giấy Sáng Paper'}
+                    {editorBgMode === 'paper' ? 'Nền Tối Dark' : '☀️ Nền Giấy Sáng'}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={handleCleanPastedBackgrounds}
-                    className="px-3 py-1.5 rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-500/40 font-extrabold text-[11px] flex items-center gap-1 hover:bg-indigo-900"
-                    title="Chuyển toàn bộ chữ thành màu trắng sáng cao tương phản"
-                  >
-                    <Eraser className="w-3.5 h-3.5" /> ✨ Chuẩn Hóa Chữ Trắng Sáng
-                  </button>
-
-                  <label className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 font-extrabold text-[11px] cursor-pointer flex items-center gap-1">
-                    <Upload className="w-3.5 h-3.5" /> 📷 Upload Ảnh
-                    <input type="file" accept="image/*" onChange={handleFileUploadImage} className="hidden" />
-                  </label>
                 </div>
+
               </div>
 
-              {/* CONTENTEDITABLE CONTAINER WITH STRICT BRIGHT WHITE TEXT & NO DARK TEXT */}
+              {/* CONTENTEDITABLE CONTAINER WITH BE VIETNAM PRO FONT GUARANTEE */}
               <div
                 ref={contentEditableRef}
                 contentEditable={true}
@@ -600,12 +747,17 @@ export const MaterialPage = () => {
                 onInput={(e) => setFormContent(e.currentTarget.innerHTML)}
                 onBlur={(e) => setFormContent(e.currentTarget.innerHTML)}
                 dangerouslySetInnerHTML={{ __html: formContent }}
-                className={`w-full min-h-[280px] max-h-[600px] overflow-y-auto p-4 text-xs font-serif leading-relaxed rounded-2xl border transition-all space-y-3 prose max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-500 [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block ${
+                className={`w-full min-h-[300px] max-h-[650px] overflow-y-auto p-5 text-sm font-sans leading-relaxed rounded-2xl border transition-all space-y-3 prose max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-500 [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block ${
                   editorBgMode === 'paper'
-                    ? 'bg-[#fefea2] text-slate-950 border-amber-300 prose-slate [&_*]:!text-slate-950 [&_*]:!bg-transparent'
+                    ? 'bg-[#fefea2] text-slate-950 border-amber-300 prose-slate [&_*]:!bg-transparent'
                     : 'bg-slate-900/95 text-slate-100 border-slate-800 prose-invert [&_*]:!text-slate-100 [&_*]:!bg-transparent'
                 }`}
-                style={{ wordBreak: 'break-word' }}
+                style={{ 
+                  fontFamily: selectedFont,
+                  wordBreak: 'break-word',
+                  letterSpacing: 'normal',
+                  wordSpacing: 'normal'
+                }}
               />
             </div>
 
@@ -814,9 +966,10 @@ export const MaterialPage = () => {
                 </div>
               )}
 
-              {/* ARTICLE READER - STRICT HIGH CONTRAST WHITE TEXT WITH ZERO BLACK ON BLACK */}
+              {/* ARTICLE READER WITH BE VIETNAM PRO FONT GUARANTEE */}
               <div 
-                className="text-sm font-serif text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!text-slate-100 [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
+                className="text-sm font-sans text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!text-slate-100 [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
+                style={{ fontFamily: "'Be Vietnam Pro', 'Inter', system-ui, sans-serif" }}
                 dangerouslySetInnerHTML={{ __html: activeReaderArticle.content }}
               />
 
