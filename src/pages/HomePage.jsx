@@ -284,35 +284,46 @@ export const HomePage = () => {
           </Link>
         </div>
 
-        {/* EXACTLY 6 BOXES IN 2 ROWS OF 3 GRID COLUMNS */}
+        {/* EXACTLY 6 BOXES WITH THUMBNAIL BANNER IMAGES (MATCHING SCREENSHOT 2) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayArticles.map((art, aIdx) => (
             <Link 
               key={aIdx} 
               to={art.link || '/materials'} 
-              className="rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 p-6 space-y-4 transition-all group shadow-xl backdrop-blur-sm block flex flex-col justify-between"
+              className="rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 overflow-hidden transition-all group shadow-xl backdrop-blur-sm block flex flex-col justify-between"
             >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className={`px-3 py-1 rounded-full font-black text-[11px] border uppercase ${
-                    art.badgeColor || 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
-                  }`}>
-                    {art.category || 'VOCABULARY'}
-                  </span>
-                  <span className="text-slate-400 font-semibold">{art.date || currentDateStr}</span>
+              <div>
+                {/* THUMBNAIL IMAGE BANNER MATCHING SCREENSHOT 2 */}
+                <div className="h-44 w-full overflow-hidden bg-slate-950 relative">
+                  <img 
+                    src={art.thumbnail || 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop'} 
+                    alt={art.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
                 </div>
 
-                <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
-                  {art.title}
-                </h3>
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className={`px-3 py-1 rounded-full font-black text-[11px] border uppercase ${
+                      art.badgeColor || 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                    }`}>
+                      {art.category || 'VOCABULARY'}
+                    </span>
+                    <span className="text-slate-400 font-semibold">{art.date || currentDateStr}</span>
+                  </div>
 
-                <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                  {art.description || art.content || 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.'}
-                </p>
+                  <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
+                    {art.title}
+                  </h3>
+
+                  <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                    {art.description || (art.content ? art.content.replace(/<[^>]*>?/gm, '').slice(0, 110) : 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.')}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs font-bold text-slate-400 pt-3 border-t border-slate-800/80 mt-auto">
-                <span>Tác giả: {authorName}</span>
+              <div className="p-5 pt-0 flex items-center justify-between text-xs font-bold text-slate-400 mt-auto border-t border-slate-800/80">
+                <span>Tác giả: {art.author || authorName}</span>
                 <span className="text-indigo-400 group-hover:underline flex items-center gap-1">
                   Đọc tiếp →
                 </span>
