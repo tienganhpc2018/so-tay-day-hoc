@@ -32,12 +32,6 @@ export const HomePage = () => {
   const authorName = profile?.full_name || 'Nguyễn Văn Hải';
   const currentDateStr = new Date().toLocaleDateString('vi-VN');
 
-  const [categoryBlocks, setCategoryBlocks] = useState([]);
-
-  useEffect(() => {
-    fetchHomeArticles();
-  }, []);
-
   const categoryConfigs = [
     { key: 'vocabulary', label: 'VOCABULARY', color: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40', defaultTitle: 'Mẹo & Từ Vựng Cốt Lõi Khối 6 • 7 • 8 • 9 Global Success', defaultImg: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=600&auto=format&fit=crop' },
     { key: 'grammar', label: 'GRAMMAR', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', defaultTitle: 'Chủ Điểm Ngữ Pháp Trọng Tâm 12 Units Tiếng Anh THCS', defaultImg: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=600&auto=format&fit=crop' },
@@ -46,6 +40,28 @@ export const HomePage = () => {
     { key: 'project', label: 'PROJECT', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40', defaultTitle: 'Hướng Dẫn Thiết Kế iFrame Game & Project Tương Tác', defaultImg: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop' },
     { key: 'worksheet', label: 'WORKSHEET', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', defaultTitle: 'Bộ Phiếu Bài Tập 4 Kỹ Năng Tích Hợp AI Chấm Điểm & Nhắc Lỗi', defaultImg: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=600&auto=format&fit=crop' }
   ];
+
+  const [categoryBlocks, setCategoryBlocks] = useState(() => {
+    return categoryConfigs.map(c => ({
+      key: c.key,
+      badgeLabel: c.label,
+      badgeColor: c.color,
+      mainArticle: {
+        id: `default-${c.key}`,
+        title: c.defaultTitle,
+        thumbnail: c.defaultImg,
+        description: 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.',
+        author: authorName,
+        categoryLabel: c.label,
+        category: c.key
+      },
+      previousArticles: []
+    }));
+  });
+
+  useEffect(() => {
+    fetchHomeArticles();
+  }, []);
 
   const fetchHomeArticles = () => {
     try {
