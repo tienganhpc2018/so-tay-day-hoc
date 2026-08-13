@@ -38,7 +38,8 @@ import {
   Upload,
   Plus,
   Image as ImageIcon,
-  Check
+  Check,
+  Move
 } from 'lucide-react';
 
 const AI_PIXAR_AVATARS = [
@@ -53,10 +54,8 @@ const AI_PIXAR_AVATARS = [
 export const BehaviorPage = () => {
   const { isTeacher } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const yearParam = searchParams.get('year') || '2025-2026';
 
   const [selectedClass, setSelectedClass] = useState('8A5');
-  const [academicYear, setAcademicYear] = useState(yearParam);
   const [avatarSize, setAvatarSize] = useState('normal');
   const [themeMode, setThemeMode] = useState('default');
 
@@ -82,6 +81,9 @@ export const BehaviorPage = () => {
 
   // TRACK OPENED BLIND BAG POUCHES
   const [openedPouchNumbers, setOpenedPouchNumbers] = useState([]);
+
+  // SEATING MAP DRAG & SWAP SEAT STATE (DIRECTIVE BY THẦY MATCHING SCREENSHOT 2 FIX)
+  const [draggedSeatIndex, setDraggedSeatIndex] = useState(null);
 
   // Active (Present) & Uncalled Students Only
   const availableStudents = students.filter(s => 
@@ -171,6 +173,18 @@ export const BehaviorPage = () => {
     const randomWinner = allMembers[Math.floor(Math.random() * allMembers.length)];
     setSelectedRepresentative(randomWinner);
     triggerAnnouncement('🎯 CHỌN ĐẠI DIỆN TRÌNH BÀY', `Đại diện trình bày được chọn: ${randomWinner.full_name}!`, randomWinner);
+  };
+
+  // SWAP SEATING MAP POSITIONS (DIRECTIVE BY THẦY)
+  const handleSwapSeats = (targetIndex) => {
+    if (draggedSeatIndex === null || draggedSeatIndex === targetIndex) return;
+    soundFX.playClick();
+    const newStudents = [...students];
+    const temp = newStudents[draggedSeatIndex];
+    newStudents[draggedSeatIndex] = newStudents[targetIndex];
+    newStudents[targetIndex] = temp;
+    setStudents(newStudents);
+    setDraggedSeatIndex(null);
   };
 
   // Change Student Avatar
@@ -305,8 +319,8 @@ export const BehaviorPage = () => {
       
       {/* HERO BANNER */}
       <PageHeroBanner
-        title={`Sổ Nề Nếp & Quản Lý Lớp Chủ Nhiệm (${academicYear}) 📋`}
-        subtitle={`Kéo Slider chọn con vịt (Ảnh 1), Mờ Túi Mù đã chọn (Ảnh 2) & Cây Mai Hái Lộc Tết (Ảnh 3,4,5) Lớp ${selectedClass}.`}
+        title={`Sổ Nề Nếp & Quản Lý Lớp Chủ Nhiệm (${selectedClass}) 📋`}
+        subtitle={`Kéo Slider chọn con vịt (Ảnh 1), Mờ Túi Mù đã chọn (Ảnh 2), Cây Mai Hái Lộc Tết & Sơ đồ lớp chỉnh sửa kéo thả.`}
         badge={`QUẢN LÝ LỚP CHỦ NHIỆM • LỚP ${selectedClass}`}
         bgImage="/images/hero_library_bg.jpg"
       />
@@ -345,7 +359,7 @@ export const BehaviorPage = () => {
           </div>
         </div>
 
-        {/* PILLS ROW WITH FULLY ACTIVE TABS */}
+        {/* PILLS ROW WITH REMOVED TAB CÁ (DIRECTIVE BY THẦY) */}
         <div className="flex flex-wrap gap-2 text-xs font-black">
           
           <button
@@ -375,7 +389,7 @@ export const BehaviorPage = () => {
           <button
             onClick={() => {
               soundFX.playClick();
-              setShowTetModal(true); // MATCHING SCREENSHOTS 3, 4 & 5 DIRECTIVE
+              setShowTetModal(true);
             }}
             className="px-5 py-2 rounded-full bg-gradient-to-r from-red-600 to-rose-500 text-amber-300 shadow-lg animate-pulse"
           >
@@ -394,13 +408,6 @@ export const BehaviorPage = () => {
             className="px-4 py-2 rounded-full bg-amber-400 text-slate-950 hover:bg-amber-300 shadow"
           >
             Gọi 1 (6s Hồi Hộp)
-          </button>
-
-          <button
-            onClick={() => { soundFX.playClick(); setActiveModal('duck_race'); }}
-            className="px-4 py-2 rounded-full bg-amber-400 text-slate-950 hover:bg-amber-300 shadow"
-          >
-            Cá
           </button>
 
           <button
@@ -453,7 +460,7 @@ export const BehaviorPage = () => {
             onClick={() => { soundFX.playClick(); setActiveModal('seating_map'); }}
             className="px-4 py-2 rounded-full bg-amber-400 text-slate-950 hover:bg-amber-300 shadow"
           >
-            Sơ Đồ Lớp 🏫
+            Sơ Đồ Lớp (Chỉnh Sửa Chỗ Ngồi) 🏫
           </button>
 
         </div>
@@ -463,7 +470,7 @@ export const BehaviorPage = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-            <Users className="w-4 h-4 text-emerald-400" /> DANH SÁCH HỌC SINH LỚP {selectedClass} ({academicYear})
+            <Users className="w-4 h-4 text-emerald-400" /> DANH SÁCH HỌC SINH LỚP {selectedClass}
           </h3>
           <span className="text-xs text-slate-400 font-bold">Bấm vào học sinh để cho điểm thưởng/phạt</span>
         </div>
@@ -517,7 +524,7 @@ export const BehaviorPage = () => {
         </div>
       </div>
 
-      {/* TAB TẾT HÁI HOA DÂN CHỦ MODAL (MATCHING SCREENSHOTS 3, 4 & 5 100%) */}
+      {/* TAB TẾT HÁI HOA DÂN CHỦ MODAL */}
       <TetPickNameModal
         isOpen={showTetModal}
         onClose={() => setShowTetModal(false)}
@@ -644,7 +651,7 @@ export const BehaviorPage = () => {
         onAddClass={handleAddNewClass}
       />
 
-      {/* DUCK RACE GAME CANVAS WITH RANGE SLIDER (MATCHING SCREENSHOT 1 100%) */}
+      {/* DUCK RACE GAME CANVAS */}
       {activeModal === 'duck_race' && (
         <DuckRaceGameCanvas
           students={students}
@@ -656,34 +663,69 @@ export const BehaviorPage = () => {
         />
       )}
 
-      {/* MODAL: SƠ ĐỒ LỚP HỌC */}
+      {/* MODAL: SƠ ĐỒ LỚP HỌC RỘNG RÃI + CHỈNH SỬA KÉO THẢ ĐỔI CHỖ NGỒI (MATCHING SCREENSHOT 2 FIX) */}
       {activeModal === 'seating_map' && (
-        <div className="fixed top-16 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto font-sans">
-          <div className="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn text-white">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-black text-amber-400 uppercase flex items-center gap-2">
-                🏫 SƠ ĐỒ CHỖ NGỒI LỚP HỌC {selectedClass}
-              </h3>
-              <button onClick={() => setActiveModal(null)} className="p-1 rounded-lg bg-slate-800 text-slate-300">
+        <div className="fixed top-14 inset-x-0 bottom-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto font-sans">
+          <div className="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-6xl w-full p-6 space-y-5 shadow-2xl animate-fadeIn text-white max-h-[92vh] flex flex-col">
+            
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+              <div>
+                <h3 className="text-base font-black text-amber-400 uppercase flex items-center gap-2">
+                  🏫 SƠ ĐỒ CHỖ NGỒI LỚP HỌC {selectedClass} (CÓ KÉO THẢ ĐỔI CHỖ)
+                </h3>
+                <span className="text-[11px] text-slate-400 font-bold">
+                  Thầy có thể kéo thả thẻ học sinh để đổi chỗ ngồi giữa các bàn học sinh tùy ý!
+                </span>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="p-1.5 rounded-xl bg-slate-800 text-slate-300">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-center text-sm uppercase tracking-widest">
-              BẢNG ĐEN GIẢNG BÀI CỦA GIÁO VIÊN
+            <div className="p-3.5 rounded-2xl bg-amber-500/20 border-2 border-amber-400 text-amber-300 font-black text-center text-sm uppercase tracking-widest shrink-0 shadow-lg">
+              🖥️ BẢNG ĐEN GIẢNG BÀI CỦA GIÁO VIÊN (ĐẦU LỚP)
             </div>
 
-            <div className="grid grid-cols-4 gap-4 p-4 bg-slate-950 rounded-2xl border border-slate-800">
-              {students.map((st, idx) => (
-                <div key={st.id} className="p-3 rounded-2xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center space-y-1.5">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border border-amber-400">
-                    <img src={st.avatar} alt={st.full_name} className="w-full h-full object-cover" />
+            {/* SEATING GRID WITH DRAG & DROP SWAP (FULL SCREEN SPACIOUS - SCREENSHOT 2 FIX) */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4 bg-slate-950 rounded-2xl border border-slate-800">
+                {students.map((st, idx) => (
+                  <div
+                    key={st.id}
+                    draggable
+                    onDragStart={() => setDraggedSeatIndex(idx)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => handleSwapSeats(idx)}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-move flex flex-col items-center text-center space-y-2 relative group shadow-lg ${
+                      draggedSeatIndex === idx
+                        ? 'bg-rose-600/40 border-rose-500 scale-95'
+                        : 'bg-slate-900 border-slate-700 hover:border-amber-400 hover:scale-105'
+                    }`}
+                  >
+                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow">
+                      <img src={st.avatar} alt={st.full_name} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-xs font-black line-clamp-1">{st.full_name}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full">
+                        Bàn {Math.floor(idx / 2) + 1}
+                      </span>
+                      <Move className="w-3 h-3 text-slate-400 group-hover:text-amber-400" />
+                    </div>
                   </div>
-                  <span className="text-xs font-bold line-clamp-1">{st.full_name}</span>
-                  <span className="text-[10px] text-amber-400 font-black">Bàn {Math.floor(idx / 2) + 1}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            <div className="flex items-center justify-between shrink-0 pt-3 border-t border-slate-800">
+              <span className="text-xs text-slate-400 font-bold">
+                Mẹo: Kéo 1 học sinh và thả đè lên vị trí học sinh khác để đổi chỗ lập tức.
+              </span>
+              <button onClick={() => setActiveModal(null)} className="px-6 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                Lưu Sơ Đồ Chỗ Ngồi
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -725,7 +767,7 @@ export const BehaviorPage = () => {
         <div className="fixed top-16 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
           <div className="bg-white text-slate-900 rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl animate-fadeIn max-h-[88vh] flex flex-col font-sans">
             <div className="text-center space-y-3 shrink-0">
-              <h2 className="text-2xl font-black text-slate-900">Điểm Danh Hôm Nay 13/08/2026 - Lớp {selectedClass}</h2>
+              <h2 className="text-2xl font-black text-slate-900">Điểm Danh Hôm Nay - Lớp {selectedClass}</h2>
               <div className="flex items-center justify-center gap-3">
                 <button onClick={() => triggerAnnouncement('🎉 BẢNG ĐIỂM DANH', 'Đã lưu điểm danh hôm nay thành công!')} className="px-6 py-2.5 rounded-full bg-amber-400 text-slate-950 font-black text-xs shadow-md">
                   Tạo Điểm Danh Hôm Nay
@@ -747,7 +789,7 @@ export const BehaviorPage = () => {
                     <th className="p-3 text-center border-r border-slate-200">Tuần này</th>
                     <th className="p-3 text-center border-r border-slate-200">Hôm nay</th>
                     <th className="p-3 text-center border-r border-slate-200">Điểm danh</th>
-                    <th className="p-3 text-center bg-rose-600 text-white">Nhận xét ngày 13/08/2026</th>
+                    <th className="p-3 text-center bg-rose-600 text-white">Nhận xét hôm nay</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">

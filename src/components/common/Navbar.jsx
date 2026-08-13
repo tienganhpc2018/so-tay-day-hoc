@@ -92,11 +92,7 @@ export const Navbar = () => {
     { 
       path: '/behavior', 
       label: 'Sổ Nề Nếp', 
-      icon: Users,
-      subMenus: [
-        { label: 'Năm học 2025 - 2026', path: '/behavior?year=2025-2026' },
-        { label: 'Năm học 2026 - 2027', path: '/behavior?year=2026-2027' }
-      ]
+      icon: Users
     },
     { 
       path: '/leaderboard', 
