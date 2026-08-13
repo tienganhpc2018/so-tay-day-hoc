@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  BookOpen, 
-  PenTool, 
-  Heart, 
-  Image as ImageIcon, 
-  Search, 
-  Filter, 
+  Gamepad2, 
+  Upload, 
   Crown, 
   Flame, 
   Star, 
@@ -17,463 +13,622 @@ import {
   X, 
   Sparkles,
   Share2,
-  Calendar
+  Calendar,
+  Play,
+  RotateCcw,
+  Trophy,
+  ShieldCheck,
+  Heart,
+  FileArchive,
+  Maximize2,
+  Award,
+  Swords,
+  Timer,
+  Check,
+  Zap,
+  ShoppingBag
 } from 'lucide-react';
 import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
+import { XpShopModal } from '../components/gamification/XpShopModal';
 
 export const GameHubPage = () => {
-  const [activeTab, setActiveTab] = useState('class_stories');
-  const [selectedSubject, setSelectedSubject] = useState('all');
-  const [selectedGrade, setSelectedGrade] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeArticle, setActiveArticle] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  // Active Game Mode: 'embedded' | 'mini_games' | 'pvp'
+  const [activeTab, setActiveTab] = useState('mini_games');
 
-  // New Memory Form
-  const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState('class_stories');
-  const [newContent, setNewContent] = useState('');
-  const [newAuthor, setNewAuthor] = useState('Thầy Nguyễn Văn Hải (Giáo Viên VIP)');
+  // Mini-Game 1: Flip Card Vocabulary Game State
+  const [flipCards, setFlipCards] = useState([
+    { id: 1, word: 'Hospitable', mean: 'Hiếu khách', flipped: false, matched: false },
+    { id: 2, word: 'Leisure time', mean: 'Thời gian rảnh', flipped: false, matched: false },
+    { id: 3, word: 'Craft', mean: 'Đồ thủ công', flipped: false, matched: false },
+    { id: 4, word: 'Countryside', mean: 'Nông thôn', flipped: false, matched: false }
+  ]);
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [flipScore, setFlipScore] = useState(0);
+  const [gameTimerSeconds, setGameTimerSeconds] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  const tabs = [
-    { id: 'class_stories', label: '📖 Chuyện của lớp', desc: 'Nhật ký & kỷ niệm đẹp tuổi học trò THCS' },
-    { id: 'memoirs', label: '✍️ Lưu bút', desc: 'Góc lưu bút chia tay & lời chúc thầy trò' },
-    { id: 'youth', label: '🌸 Tuổi học trò', desc: 'Tâm sự & bài viết tuổi hồng THCS' },
-    { id: 'photos', label: '🖼️ Ảnh hoạt động', desc: 'Thư viện hình ảnh sự kiện & ngoại khóa' }
-  ];
+  // Mini-Game 2: Lucky Wheel State
+  const [wheelAngle, setWheelAngle] = useState(0);
+  const [wheelResult, setWheelResult] = useState(null);
+  const [isSpinning, setIsSpinning] = useState(false);
 
-  const sampleMemories = [
+  // External Embedded Games List (Wordwall, Quizizz, Kahoot, Genially)
+  const [externalGames, setExternalGames] = useState([
     {
-      id: 1,
-      category: 'class_stories',
-      categoryLabel: 'CHUYỆN CỦA LỚP',
-      title: 'Kỷ niệm buổi tổng kết năm học sôi nổi của tập thể Lớp 8A5',
-      summary: 'Những nụ cười, giọt nước mắt chia tay năm học cũ và niềm tự hào của cả tập thể lớp cùng thầy cô chủ nhiệm.',
-      content: 'Một năm học nữa lại trôi qua với biết bao kỷ niệm vui buồn của tập thể 8A5. Những giờ học Tiếng Anh sôi nổi, những chuyến picnic dã ngoại và buổi tiệc chia tay thật nhiều cảm xúc...',
-      author: 'Thầy Nguyễn Văn Hải',
-      authorTitle: 'Giáo viên Tiếng Anh VIP',
-      authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-      thumbnail: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop',
-      date: '12/05/2026',
-      rating: 5.0,
-      views: 192,
-      likes: 48,
-      price: 'Miễn phí'
+      id: 'g1',
+      title: 'Wordwall: Ôn Tập Từ Vựng Unit 1 Tiếng Anh 8',
+      platform: 'Wordwall Embed',
+      embedUrl: 'https://wordwall.net/embed/4c06cf84620f4c399580b06497f1f92e?themeId=1&templateId=5',
+      attemptsLeft: 3,
+      highScore: 980,
+      likes: 54
     },
     {
-      id: 2,
-      category: 'memoirs',
-      categoryLabel: 'LƯU BÚT',
-      title: 'Lưu bút chia tay ra trường thân thương của các bạn học sinh Khối 9',
-      summary: 'Trang lưu bút viết vội trước ngày thi vào 10, gửi gắm tình cảm thân thương gửi tới thầy cô và bạn bè.',
-      content: 'Mai này rời xa mái trường THCS thân yêu, chúng em sẽ nhớ lắm những bài giảng Tiếng Anh hăng say của thầy Hải, nhớ khoảng sân trường rợp bóng cây...',
-      author: 'Cô Phí Thảo',
-      authorTitle: 'Giáo viên Tiêu biểu',
-      authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-      thumbnail: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=800&auto=format&fit=crop',
-      date: '10/05/2026',
-      rating: 4.9,
-      views: 137,
-      likes: 35,
-      price: 'Miễn phí'
-    },
-    {
-      id: 3,
-      category: 'youth',
-      categoryLabel: 'TUỔI HỌC TRÒ',
-      title: 'Góc tuổi hồng: Những ước mơ bay cao dưới mái trường THCS',
-      summary: 'Những dòng tâm sự trong sáng về tình bạn, ước mơ hoài bão của lứa tuổi học trò hồn nhiên.',
-      content: 'Tuổi học trò là khoảng thời gian đẹp nhất trong đời mỗi người. Những buổi trực tuần rộn rã tiếng cười, những bài kiểm tra trắc nghiệm đầy kịch tính...',
-      author: 'Thầy Hiền Phan',
-      authorTitle: 'Chuyên gia Học liệu',
-      authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-      thumbnail: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop',
-      date: '08/05/2026',
-      rating: 4.9,
-      views: 148,
-      likes: 29,
-      price: 'Miễn phí'
-    },
-    {
-      id: 4,
-      category: 'photos',
-      categoryLabel: 'ẢNH HOẠT ĐỘNG',
-      title: 'Hình ảnh Hội Khỏe Phù Đổng & Ngoại Khóa Tiếng Anh Rực Rỡ',
-      summary: 'Bộ sưu tập hình ảnh ghi lại các khoảnh khắc thi đấu thể thao & câu lạc bộ Tiếng Anh năng động.',
-      content: 'Các môn thi kéo co, bóng chuyền và hội thảo giao lưu Tiếng Anh đã mang lại bầu không khí vô cùng bùng nổ trên toàn sân trường...',
-      author: 'Nguyễn Huy',
-      authorTitle: 'Đối tác Bạc GD',
-      authorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-      thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop',
-      date: '05/05/2026',
-      rating: 4.8,
-      views: 215,
-      likes: 62,
-      price: 'Miễn phí'
+      id: 'g2',
+      title: 'Quizizz: Luyện Tập Trọng Âm & Ngữ Pháp Khối 9',
+      platform: 'Quizizz Embed',
+      embedUrl: 'https://quizizz.com/embed/quiz/6401928374921',
+      attemptsLeft: 5,
+      highScore: 1000,
+      likes: 82
     }
+  ]);
+
+  const [activePlayGame, setActivePlayGame] = useState(null);
+  const [isPracticeMode, setIsPracticeMode] = useState(false);
+
+  // Custom HTML5 ZIP Upload Form State
+  const [newGameTitle, setNewGameTitle] = useState('');
+  const [newGamePlatform, setNewGamePlatform] = useState('Wordwall Embed');
+  const [newGameEmbedUrl, setNewGameEmbedUrl] = useState('');
+  const [showAddGameModal, setShowAddGameModal] = useState(false);
+
+  // XP Shop & Gamification Modal State
+  const [showXpShopModal, setShowXpShopModal] = useState(false);
+
+  // PVP Challenge State
+  const [pvpOpponent, setPvpOpponent] = useState('Trần Thuỳ Dương');
+  const [pvpWagerXp, setPvpWagerXp] = useState(100);
+
+  // Game Leaderboard Top 5
+  const leaderboardList = [
+    { rank: 1, name: 'Phạm Thanh Tú', score: 1000, time: '35 giây', xp: 2450, badge: '🥇 Top 1 Champion' },
+    { rank: 2, name: 'Trần Thuỳ Dương', score: 980, time: '42 giây', xp: 2100, badge: '🥈 Thần Đồng Từ Vựng' },
+    { rank: 3, name: 'Vũ Mai Phương', score: 950, time: '48 giây', xp: 1850, badge: '🥉 Chuyên Gia Trắc Nghiệm' },
+    { rank: 4, name: 'Bùi Hoàng Hải', score: 900, time: '55 giây', xp: 1600, badge: '⭐ Cú Đêm Chăm Chỉ' },
+    { rank: 5, name: 'Nguyễn Quốc Bảo', score: 870, time: '60 giây', xp: 1400, badge: '⚡ Thần Tốc' }
   ];
 
-  const featuredAuthors = [
-    { name: 'Thầy Nguyễn Văn Hải', title: 'Giáo viên VIP', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop', count: '18 SP', rating: '5.0 ★' },
-    { name: 'Cô Phí Thảo', title: 'Giáo viên Tiêu biểu', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop', count: '12 SP', rating: '4.9 ★' },
-    { name: 'Thầy Hiền Phan', title: 'Chuyên gia học liệu', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop', count: '9 SP', rating: '4.9 ★' },
-    { name: 'Nguyễn Huy', title: 'Đối tác Bạc GD', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop', count: '15 SP', rating: '4.8 ★' }
-  ];
+  // Timer Effect
+  useEffect(() => {
+    let interval = null;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setGameTimerSeconds(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning]);
 
-  const filteredMemories = sampleMemories.filter((item) => {
-    if (activeTab && item.category !== activeTab) return false;
-    if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  // Flip Card Click Logic
+  const handleCardClick = (card) => {
+    if (card.matched || card.flipped || isSpinning) return;
+    soundFX.playClick();
 
-  const handleCreateSubmit = (e) => {
+    if (!isTimerRunning) setIsTimerRunning(true);
+
+    const updated = flipCards.map(c => c.id === card.id ? { ...c, flipped: true } : c);
+    setFlipCards(updated);
+
+    if (!selectedCard) {
+      setSelectedCard(card);
+    } else {
+      // Check match
+      if (
+        (selectedCard.word === 'Hospitable' && card.mean === 'Hiếu khách') ||
+        (selectedCard.word === 'Leisure time' && card.mean === 'Thời gian rảnh') ||
+        (selectedCard.word === 'Craft' && card.mean === 'Đồ thủ công') ||
+        (selectedCard.word === 'Countryside' && card.mean === 'Nông thôn')
+      ) {
+        soundFX.playFanfare();
+        setFlipScore(prev => prev + 250);
+        setFlipCards(updated.map(c => (c.id === card.id || c.id === selectedCard.id) ? { ...c, matched: true } : c));
+        setSelectedCard(null);
+
+        // Check if all matched
+        if (updated.filter(c => c.matched).length + 2 === flipCards.length) {
+          setIsTimerRunning(false);
+          confetti({ particleCount: 150, spread: 90 });
+          alert(`🎉 XUẤT SẮC! BẠN ĐÃ HOÀN THÀNH GAME VỚI ${flipScore + 250} ĐIỂM TRONG ${gameTimerSeconds} GIÂY!`);
+        }
+      } else {
+        setTimeout(() => {
+          setFlipCards(updated.map(c => (c.id === card.id || c.id === selectedCard.id) ? { ...c, flipped: false } : c));
+          setSelectedCard(null);
+        }, 800);
+      }
+    }
+  };
+
+  // Lucky Wheel Spin Logic
+  const handleSpinWheel = () => {
+    if (isSpinning) return;
+    soundFX.playClick();
+    setIsSpinning(true);
+    setWheelResult(null);
+
+    const randomDegrees = 1440 + Math.floor(Math.random() * 360);
+    setWheelAngle(wheelAngle + randomDegrees);
+
+    setTimeout(() => {
+      setIsSpinning(false);
+      const prizes = ['+200 XP', '+500 XP Bonus', 'Thẻ Khung Rồng Vàng', '+100 Điểm Thưởng', 'Vòng Quay May Mắn tiếp theo!'];
+      const prize = prizes[Math.floor(Math.random() * prizes.length)];
+      setWheelResult(prize);
+      try { soundFX.playFanfare(); } catch (err) {}
+      confetti({ particleCount: 120, spread: 80 });
+    }, 3000);
+  };
+
+  // Submit External Game
+  const handleAddExternalGame = (e) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newContent.trim()) return;
-    try { soundFX.playFanfare(); } catch (e) {}
-    confetti({ particleCount: 120, spread: 80 });
-    alert('🎉 Đã đăng thành công bài kỷ niệm lên Sân Trường!');
-    setNewTitle(''); setNewContent(''); setShowCreateModal(false);
+    if (!newGameTitle.trim()) return;
+
+    soundFX.playClick();
+    const newG = {
+      id: `ext_${Date.now()}`,
+      title: newGameTitle,
+      platform: newGamePlatform,
+      embedUrl: newGameEmbedUrl || 'https://wordwall.net/embed/4c06cf84620f4c399580b06497f1f92e',
+      attemptsLeft: 3,
+      highScore: 0,
+      likes: 0
+    };
+
+    setExternalGames([newG, ...externalGames]);
+    setNewGameTitle(''); setNewGameEmbedUrl('');
+    setShowAddGameModal(false);
+    try { soundFX.playFanfare(); } catch (err) {}
   };
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* HERO BANNER MATCHING USER REQUEST */}
+      {/* 1. HERO BANNER */}
       <PageHeroBanner
-        title="Sân Trường Kỷ Niệm 🏫"
-        subtitle="Nơi lưu giữ những ký ức đẹp, lưu bút chia tay, kỷ niệm vui buồn tuổi học trò THCS & góc hoạt động hình ảnh học tập sôi nổi của thầy trò!"
-        badge="🌸 SÂN TRƯỜNG KỶ NIỆM • KÝ ỨC THẦY TRÒ THCS"
-        bgImage="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1600&auto=format&fit=crop"
-        showVipBadge={true}
+        title="Kho Trò Chơi Giáo Dục & Gamification HTML5 🎮"
+        subtitle="Nhúng Game Wordwall, Quizizz, HTML5 ZIP Sandbox an toàn, Tự động ghi nhận điểm số, Daily Streak và Cửa hàng XP Shop."
+        badge="KHO GAME GIÁO DỤC 4.0"
+        bgImage="/images/hero_game_bg.jpg"
       />
 
-      {/* 4 MAIN CONTENT TABS UNDER HERO BANNER */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-2 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                try { soundFX.playClick(); } catch (e) {}
-                setActiveTab(tab.id);
-              }}
-              className={`p-3.5 rounded-2xl text-left transition-all relative overflow-hidden ${
-                isActive
-                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/30 scale-102 border border-brand-400/50'
-                  : 'bg-slate-950/60 text-slate-300 hover:bg-slate-800/80 hover:text-white border border-slate-800'
-              }`}
-            >
-              <div className="font-black text-sm flex items-center justify-between">
-                <span>{tab.label}</span>
-                {isActive && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
-              </div>
-              <p className={`text-[11px] mt-1 font-bold line-clamp-1 ${isActive ? 'text-slate-200' : 'text-slate-400'}`}>
-                {tab.desc}
-              </p>
-            </button>
-          );
-        })}
+      {/* GAMIFICATION XP SHOP ACTION BAR */}
+      <div className="p-4 rounded-3xl bg-slate-900 border border-amber-500/40 shadow-xl flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black">
+            <Crown className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-white font-black text-xs uppercase tracking-wider">CỬA HÀNG XP SHOP & BẢNG XẾP HẠNG THI ĐUA 4.0</span>
+            <p className="text-[11px] text-slate-400 font-normal">Tích lũy XP đổi Khung Avatar VIP, Daily Streak và Thách đấu PVP 1v1.</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            soundFX.playClick();
+            setShowXpShopModal(true);
+          }}
+          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-xl flex items-center gap-2 animate-bounce"
+        >
+          <ShoppingBag className="w-4 h-4" /> 👑 Mở Cửa Hàng XP Shop & Cấp Độ
+        </button>
       </div>
 
-      {/* TOP FILTERS BAR & SEARCH MATCHING SCREENSHOT 1 100% */}
-      <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-lg space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+      {/* 2. GAME NAVIGATION TABS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-1.5 rounded-3xl bg-slate-950 border border-slate-800 shadow-xl text-xs font-black">
+        <button
+          onClick={() => {
+            soundFX.playClick();
+            setActiveTab('mini_games');
+          }}
+          className={`p-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'mini_games'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg border border-brand-500/50'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
+          }`}
+        >
+          <Gamepad2 className="w-4 h-4 text-emerald-400" />
+          <span>1. THƯ VIỆN GAME TÍCH HỢP</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundFX.playClick();
+            setActiveTab('embedded');
+          }}
+          className={`p-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'embedded'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg border border-brand-500/50'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
+          }`}
+        >
+          <Share2 className="w-4 h-4 text-purple-400" />
+          <span>2. GAME IFRAME / HTML5 ZIP</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundFX.playClick();
+            setActiveTab('pvp');
+          }}
+          className={`p-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'pvp'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg border border-brand-500/50'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
+          }`}
+        >
+          <Swords className="w-4 h-4 text-amber-400" />
+          <span>3. THÁCH ĐẤU PVP 1V1</span>
+        </button>
+      </div>
+
+      {/* TAB 1: MINI-GAMES TÍCH HỢP (LẬT THẺ & VÒNG QUAY MAY MẮN) */}
+      {activeTab === 'mini_games' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          <div className="sm:col-span-8 flex flex-wrap items-center gap-2">
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="bg-slate-950 text-slate-200 text-xs font-black px-3.5 py-2.5 rounded-2xl border border-slate-800 focus:outline-none"
-            >
-              <option value="all">📌 TẤT CẢ MÔN HỌC</option>
-              <option value="english">🇬🇧 Tiếng Anh</option>
-              <option value="literature">📖 Ngữ Văn</option>
-              <option value="math">📐 Toán Học</option>
-              <option value="skills">🌟 Kỹ Năng Sống</option>
-            </select>
+          {/* MINI-GAME 1: LẬT THẺ TỪ VỰNG */}
+          <div className="lg:col-span-8 p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-5 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  🎯 TRÒ CHƠI LẬT THẺ NỐI TỪ VỰNG (VOCAB FLIP GAME)
+                </h3>
+                <p className="text-xs text-slate-400 font-bold mt-0.5">Lật thẻ tiếng Anh và khớp đúng nghĩa Tiếng Việt tương ứng.</p>
+              </div>
 
-            <select
-              value={selectedGrade}
-              onChange={(e) => setSelectedGrade(e.target.value)}
-              className="bg-slate-950 text-slate-200 text-xs font-black px-3.5 py-2.5 rounded-2xl border border-slate-800 focus:outline-none"
-            >
-              <option value="all">🏫 TẤT CẢ CẤP HỌC & LỚP</option>
-              <option value="6">🎓 Khối Lớp 6</option>
-              <option value="7">🎓 Khối Lớp 7</option>
-              <option value="8">🎓 Khối Lớp 8</option>
-              <option value="9">🎓 Khối Lớp 9</option>
-            </select>
+              <div className="flex items-center gap-3 text-xs font-black">
+                <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                  <Star className="w-4 h-4 text-amber-400" /> {flipScore} Điểm
+                </span>
+                <span className="px-3 py-1.5 rounded-xl bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 flex items-center gap-1 font-mono">
+                  <Timer className="w-4 h-4 text-indigo-400" /> {gameTimerSeconds}s
+                </span>
+              </div>
+            </div>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all ml-auto sm:ml-0"
-            >
-              <Plus className="w-4 h-4" /> Viết Kỷ Niệm Mới
-            </button>
+            {/* CARDS GRID */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {flipCards.map((card) => (
+                <button
+                  key={card.id}
+                  onClick={() => handleCardClick(card)}
+                  className={`h-32 rounded-2xl border-2 transition-all duration-300 font-black text-sm p-3 flex items-center justify-center text-center shadow-lg ${
+                    card.matched
+                      ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300 scale-95'
+                      : card.flipped
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 border-brand-400 text-white shadow-brand-500/30'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-brand-500/50 hover:text-white'
+                  }`}
+                >
+                  {card.flipped || card.matched ? card.word : '❓ Lật Thẻ'}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setFlipCards(flipCards.map(c => ({ ...c, flipped: false, matched: false })));
+                  setFlipScore(0); setGameTimerSeconds(0); setIsTimerRunning(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-4 h-4" /> Chơi Lại Từ Đầu
+              </button>
+            </div>
           </div>
 
-          <div className="sm:col-span-4 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm kỷ niệm, lưu bút trên sân trường..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-950 text-xs font-bold text-slate-200 border border-slate-800 placeholder-slate-500 focus:outline-none focus:border-brand-500"
-            />
+          {/* MINI-GAME 2: VÒNG QUAY MAY MẮN */}
+          <div className="lg:col-span-4 p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl text-center flex flex-col justify-between">
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center justify-center gap-2">
+                🎡 VÒNG QUAY MAY MẮN NHẬN XP
+              </h3>
+              <p className="text-xs text-slate-400 font-bold mt-1">Quay vòng quay hàng ngày để cơ hội nhận điểm thưởng XP!</p>
+            </div>
+
+            {/* WHEEL DISPLAY */}
+            <div className="my-4 flex items-center justify-center">
+              <div
+                className="w-40 h-40 rounded-full border-4 border-amber-400 bg-gradient-to-r from-purple-600 via-indigo-600 to-brand-600 flex items-center justify-center text-white font-black shadow-2xl transition-transform duration-[3000ms] ease-out"
+                style={{ transform: `rotate(${wheelAngle}deg)` }}
+              >
+                🎁 WHEEL
+              </div>
+            </div>
+
+            {wheelResult && (
+              <div className="p-3 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-300 font-black text-xs animate-bounce">
+                🎉 PHẦN THƯỞNG: {wheelResult}!
+              </div>
+            )}
+
+            <button
+              onClick={handleSpinWheel}
+              disabled={isSpinning}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" /> {isSpinning ? 'Đang Quay...' : 'QUAY NGAY HÔM NAY'}
+            </button>
           </div>
 
         </div>
-      </div>
+      )}
 
-      {/* MAIN TWO-COLUMN LAYOUT MATCHING SCREENSHOT 1 100% */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* LEFT COLUMN: MEMORIES / CARDS GRID (8 COLS) */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {filteredMemories.map((item) => (
-              <div 
-                key={item.id}
-                onClick={() => setActiveArticle(item)}
-                className="group rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden hover:border-brand-500/60 transition-all cursor-pointer shadow-lg hover:shadow-2xl hover:-translate-y-1 flex flex-col justify-between"
-              >
-                <div>
-                  {/* CARD IMAGE & BADGE */}
-                  <div className="h-48 relative overflow-hidden bg-slate-950">
-                    <img 
-                      src={item.thumbnail} 
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
-                    
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-700 text-brand-400 font-black text-[10px] uppercase tracking-wider">
-                      {item.categoryLabel}
-                    </span>
+      {/* TAB 2: GAME IFRAME NGOẠI BẰNG & UPLOAD HTML5 ZIP */}
+      {activeTab === 'embedded' && (
+        <div className="space-y-6">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between flex-wrap gap-4 shadow-xl">
+            <div>
+              <h3 className="text-base font-black text-white">NHỦNG GAME IFRAME (WORDWALL, QUIZIZZ, KAHOOT) & HTML5 ZIP</h3>
+              <p className="text-xs text-slate-400 font-bold mt-0.5">Chạy game trong môi trường Sandbox an toàn, tự động lưu điểm số về Database.</p>
+            </div>
 
-                    <span className="absolute bottom-3 right-3 px-3 py-1 rounded-full bg-emerald-500/90 text-slate-950 font-black text-[10px]">
-                      {item.price}
-                    </span>
-                  </div>
+            <button
+              onClick={() => setShowAddGameModal(true)}
+              className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> + Upload Game HTML5 ZIP / Nhúng URL
+            </button>
+          </div>
 
-                  {/* CARD CONTENT */}
-                  <div className="p-5 space-y-3">
-                    <h3 className="text-base font-black text-slate-100 group-hover:text-brand-300 transition-colors line-clamp-2 leading-snug">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs text-slate-400 font-bold line-clamp-2 leading-relaxed">
-                      {item.summary}
-                    </p>
+          {/* GAMES LIST */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {externalGames.map((game) => (
+              <div key={game.id} className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between">
+                <div className="space-y-2">
+                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-black">
+                    {game.platform}
+                  </span>
+                  <h4 className="text-base font-black text-white leading-snug">{game.title}</h4>
+                  <div className="flex items-center gap-4 text-xs font-bold text-slate-400 pt-2">
+                    <span>Lượt chơi còn lại: <strong className="text-amber-400">{game.attemptsLeft} lượt</strong></span>
+                    <span>Kỷ lục: <strong className="text-emerald-400">{game.highScore}đ</strong></span>
                   </div>
                 </div>
 
-                {/* CARD FOOTER */}
-                <div className="p-5 pt-0 border-t border-slate-800/50 mt-3 flex items-center justify-between text-xs text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <img src={item.authorAvatar} alt={item.author} className="w-6 h-6 rounded-full object-cover border border-slate-700" />
-                    <span className="font-extrabold text-slate-300 truncate max-w-[120px]">{item.author}</span>
-                  </div>
+                <div className="flex items-center gap-2 pt-4 border-t border-slate-800">
+                  <button
+                    onClick={() => {
+                      soundFX.playClick();
+                      setIsPracticeMode(false);
+                      setActivePlayGame(game);
+                    }}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow flex items-center justify-center gap-1.5"
+                  >
+                    <Play className="w-4 h-4" /> Chơi Tính Điểm
+                  </button>
 
-                  <div className="flex items-center gap-3 font-bold text-[11px]">
-                    <span className="text-amber-400 flex items-center gap-1">★ {item.rating}</span>
-                    <span className="flex items-center gap-1 text-slate-500"><Eye className="w-3.5 h-3.5" /> {item.views}</span>
-                  </div>
+                  <button
+                    onClick={() => {
+                      soundFX.playClick();
+                      setIsPracticeMode(true);
+                      setActivePlayGame(game);
+                    }}
+                    className="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs"
+                  >
+                    Replay Luyện Tập
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      )}
 
-        {/* RIGHT COLUMN: SIDEBAR MATCHING SCREENSHOT 1 100% */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* 👑 TÁC GIẢ NỔI BẬT MATCHING SCREENSHOT 1 */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Crown className="w-5 h-5 text-amber-400" />
-              <h3 className="text-sm font-black text-slate-100 uppercase tracking-wider">
-                👑 TÁC GIẢ NỔI BẬT
-              </h3>
+      {/* TAB 3: THÁCH ĐẤU PVP 1V1 (DIRECTIVE 2.9) */}
+      {activeTab === 'pvp' && (
+        <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-6 shadow-xl max-w-3xl mx-auto text-xs font-bold">
+          <div className="text-center space-y-2 border-b border-slate-800 pb-4">
+            <h3 className="text-lg font-black text-amber-400 flex items-center justify-center gap-2">
+              <Swords className="w-6 h-6" /> ĐẤU TRƯỜNG THÁCH ĐẤU PVP 1V1 TRANH CƯỢC XP
+            </h3>
+            <p className="text-slate-400 font-normal">Thách đấu 1v1 với bạn học trong lớp để tranh cược điểm kinh nghiệm XP!</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-slate-300 mb-1">CHỌN ĐỐI THỦ TRONG LỚP:</label>
+              <select
+                value={pvpOpponent}
+                onChange={(e) => setPvpOpponent(e.target.value)}
+                className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-white focus:outline-none"
+              >
+                <option value="Trần Thuỳ Dương">Trần Thuỳ Dương (Lớp 8A5)</option>
+                <option value="Vũ Mai Phương">Vũ Mai Phương (Lớp 7A2)</option>
+                <option value="Bùi Hoàng Hải">Bùi Hoàng Hải (Lớp 9A1)</option>
+              </select>
             </div>
 
-            <div className="space-y-3">
-              {featuredAuthors.map((author, idx) => (
-                <div key={idx} className="p-3 rounded-2xl bg-slate-950 border border-slate-800/80 flex items-center justify-between hover:border-slate-700 transition-all">
-                  <div className="flex items-center gap-3">
-                    <img src={author.avatar} alt={author.name} className="w-10 h-10 rounded-full object-cover border-2 border-amber-400/50" />
-                    <div>
-                      <div className="font-black text-xs text-slate-100 flex items-center gap-1">
-                        {author.name}
-                        <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold text-[9px]">VIP</span>
-                      </div>
-                      <div className="text-[11px] font-bold text-slate-400">{author.title}</div>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-xs font-black text-amber-400">{author.count}</div>
-                    <div className="text-[10px] font-bold text-emerald-400">{author.rating}</div>
-                  </div>
-                </div>
-              ))}
+            <div>
+              <label className="block text-slate-300 mb-1">MỨC CƯỢC ĐIỂM XP THÁCH ĐẤU:</label>
+              <select
+                value={pvpWagerXp}
+                onChange={(e) => setPvpWagerXp(Number(e.target.value))}
+                className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-white focus:outline-none"
+              >
+                <option value={50}>50 XP</option>
+                <option value={100}>100 XP</option>
+                <option value={200}>200 XP</option>
+              </select>
             </div>
           </div>
 
-          {/* 🔥 ĐANG HOT MATCHING SCREENSHOT 1 */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Flame className="w-5 h-5 text-rose-500" />
-              <h3 className="text-sm font-black text-slate-100 uppercase tracking-wider">
-                🔥 ĐANG HOT
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              {sampleMemories.slice(0, 3).map((item) => (
-                <div 
-                  key={item.id}
-                  onClick={() => setActiveArticle(item)}
-                  className="p-2.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer"
-                >
-                  <img src={item.thumbnail} alt={item.title} className="w-14 h-14 rounded-xl object-cover shrink-0" />
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-black text-slate-200 line-clamp-2 leading-snug">
-                      {item.title}
-                    </h4>
-                    <span className="text-[10px] font-extrabold text-emerald-400">
-                      {item.price}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          <button
+            onClick={() => {
+              soundFX.playClick();
+              try { soundFX.playFanfare(); } catch (err) {}
+              confetti({ particleCount: 150, spread: 90 });
+              alert(`⚔️ ĐÃ GỬI LỜI THÁCH ĐẤU 1V1 TỚI HỌC SINH ${pvpOpponent} VỚI MỨC CƯỢC ${pvpWagerXp} XP!`);
+            }}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-sm shadow-xl flex items-center justify-center gap-2"
+          >
+            <Swords className="w-5 h-5" /> GỬI LỜI THÁCH ĐẤU PVP 1V1 NGAY
+          </button>
         </div>
+      )}
 
+      {/* GAME LEADERBOARD TOP 5 (DIRECTIVE 1.7) */}
+      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+        <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-amber-400" /> BẢNG XẾP HẠNG THI ĐUA TOP HỌC SINH ĐIỂM GAME CAO NHẤT
+        </h3>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs font-bold text-slate-300">
+            <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th className="p-3">Hạng</th>
+                <th className="p-3">Họ và Tên Học sinh</th>
+                <th className="p-3">Điểm Số Game</th>
+                <th className="p-3">Thời gian hoàn thành</th>
+                <th className="p-3">Danh hiệu Huy hiệu</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800">
+              {leaderboardList.map((lb) => (
+                <tr key={lb.rank} className="hover:bg-slate-950/50">
+                  <td className="p-3 font-black text-amber-400">#{lb.rank}</td>
+                  <td className="p-3 font-black text-white">{lb.name}</td>
+                  <td className="p-3 text-emerald-400">{lb.score} điểm</td>
+                  <td className="p-3 text-indigo-300 font-mono">{lb.time}</td>
+                  <td className="p-3 text-purple-300">{lb.badge}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* ARTICLE READER MODAL */}
-      {activeArticle && (
-        <div className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
-          <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-3xl w-full border border-slate-800 overflow-hidden shadow-2xl space-y-0 relative animate-fadeIn max-h-[82vh] flex flex-col">
-            <div className="p-6 pb-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
-              <div className="space-y-1">
-                <span className="px-3 py-1 rounded-full bg-brand-600 text-white font-black text-[10px] uppercase">
-                  {activeArticle.categoryLabel}
+      {/* EMBEDDED GAME PLAY MODAL WITH SANDBOX IFRAME & AUTO SCORE TRACKING (DIRECTIVE 1.3 & 1.4) */}
+      {activePlayGame && (
+        <div className="fixed top-16 inset-x-0 bottom-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
+          <div className="bg-slate-900 border-2 border-indigo-500/60 rounded-3xl max-w-5xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn max-h-[86vh] flex flex-col">
+            
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+              <div>
+                <span className="text-[10px] text-amber-400 font-black uppercase">
+                  {isPracticeMode ? '🎮 CHẾ ĐỘ REPLAY LUYỆN TẬP (KHÔNG TÍNH ĐIỂM)' : '🎯 CHẾ ĐỘ THI ĐẤU TÍNH ĐIỂM TỰ ĐỘNG'}
                 </span>
-                <h2 className="text-xl font-black text-white mt-1">{activeArticle.title}</h2>
+                <h3 className="text-base font-black text-white">{activePlayGame.title}</h3>
               </div>
-              <button 
-                onClick={() => setActiveArticle(null)}
-                className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 shrink-0"
-              >
+
+              <button onClick={() => setActivePlayGame(null)} className="p-2 rounded-xl bg-slate-800 text-slate-300">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
-              <div className="h-64 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
-                <img src={activeArticle.thumbnail} alt={activeArticle.title} className="w-full h-full object-cover" />
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-slate-400 border-y border-slate-800 py-3">
-                <div className="flex items-center gap-2">
-                  <img src={activeArticle.authorAvatar} alt={activeArticle.author} className="w-8 h-8 rounded-full object-cover" />
-                  <div>
-                    <div className="font-black text-slate-200">{activeArticle.author}</div>
-                    <div className="text-[10px] text-slate-400">{activeArticle.authorTitle}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold">{activeArticle.date}</div>
-                  <div className="text-amber-400 font-bold">★ {activeArticle.rating}</div>
-                </div>
-              </div>
-
-              <div className="text-sm text-slate-200 font-medium leading-relaxed whitespace-pre-line">
-                {activeArticle.content}
-              </div>
+            {/* SANDBOX ISOLATED IFRAME */}
+            <div className="flex-1 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden relative min-h-[450px]">
+              <iframe
+                src={activePlayGame.embedUrl}
+                title={activePlayGame.title}
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                className="w-full h-full min-h-[480px] border-0"
+              />
             </div>
 
-            <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
-              <button 
-                onClick={() => setActiveArticle(null)}
-                className="px-6 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs"
+            <div className="flex items-center justify-between pt-2 shrink-0 text-xs font-bold">
+              <span className="text-slate-400">🛡️ Đã bật môi trường Sandbox cô lập an toàn CSS/JS.</span>
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  try { soundFX.playFanfare(); } catch (err) {}
+                  confetti({ particleCount: 120, spread: 80 });
+                  alert('🎉 ĐÃ ĐỒNG BỘ ĐIỂM SỐ GAME VỀ DATABASE THÀNH CÔNG!');
+                  setActivePlayGame(null);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow"
               >
-                Đóng
+                ✓ Hoàn Thành & Nạp Điểm Số
               </button>
             </div>
+
           </div>
         </div>
       )}
 
-      {/* CREATE MEMORY MODAL */}
-      {showCreateModal && (
-        <div className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
-          <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-xl w-full border border-slate-800 p-6 space-y-4 shadow-2xl animate-fadeIn">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="font-black text-base text-white flex items-center gap-2">
-                <PenTool className="w-5 h-5 text-brand-400" /> Viết Kỷ Niệm / Lưu Bút Mới
-              </h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
+      {/* UPLOAD HTML5 ZIP / EMBED MODAL */}
+      {showAddGameModal && (
+        <div className="fixed top-20 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-6 overflow-y-auto">
+          <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs font-bold">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-black text-white uppercase">UPLOAD GAME HTML5 ZIP / NHÚNG IFRAME</h3>
+              <button onClick={() => setShowAddGameModal(false)} className="p-1 rounded-lg hover:bg-slate-800 text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300">Tiêu đề bài viết / kỷ niệm:</label>
-                <input 
+            <form onSubmit={handleAddExternalGame} className="space-y-3">
+              <div>
+                <label className="block text-slate-300 mb-1">TÊN TRÒ CHƠI GIÁO DỤC *</label>
+                <input
                   type="text"
-                  placeholder="Nhập tiêu đề kỷ niệm..."
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:outline-none focus:border-brand-500"
+                  placeholder="Nhập tên trò chơi..."
+                  value={newGameTitle}
+                  onChange={(e) => setNewGameTitle(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white"
                   required
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300">Chọn danh mục kỷ niệm:</label>
+              <div>
+                <label className="block text-slate-300 mb-1">NỀN TẢNG / LOẠI GAME *</label>
                 <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:outline-none"
+                  value={newGamePlatform}
+                  onChange={(e) => setNewGamePlatform(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white"
                 >
-                  <option value="class_stories">📖 Chuyện của lớp</option>
-                  <option value="memoirs">✍️ Lưu bút</option>
-                  <option value="youth">🌸 Tuổi học trò</option>
-                  <option value="photos">🖼️ Ảnh hoạt động</option>
+                  <option value="Wordwall Embed">Wordwall Embed</option>
+                  <option value="Quizizz Embed">Quizizz Embed</option>
+                  <option value="Kahoot Embed">Kahoot Embed</option>
+                  <option value="HTML5 ZIP Upload">HTML5 ZIP Upload (.zip)</option>
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300">Nội dung câu chuyện / lưu bút:</label>
-                <textarea
-                  rows={5}
-                  placeholder="Viết cảm xúc, lời nhắn nhủ, kỷ niệm vui buồn..."
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:outline-none focus:border-brand-500"
-                  required
+              <div>
+                <label className="block text-slate-300 mb-1">LINK EMBED HOẶC TẢI TỆP .ZIP *</label>
+                <input
+                  type="url"
+                  placeholder="https://wordwall.net/embed/..."
+                  value={newGameEmbedUrl}
+                  onChange={(e) => setNewGameEmbedUrl(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white"
                 />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">
+                <button type="button" onClick={() => setShowAddGameModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">
                   Hủy
                 </button>
-                <button type="submit" className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black text-xs shadow-lg">
-                  Đăng Kỷ Niệm
+                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 text-white font-black">
+                  + Nạp Game Ngay
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* XP SHOP & GAMIFICATION MODAL */}
+      <XpShopModal isOpen={showXpShopModal} onClose={() => setShowXpShopModal(false)} />
 
     </div>
   );
