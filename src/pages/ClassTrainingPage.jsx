@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
@@ -38,15 +38,27 @@ import {
   Link as LinkIcon,
   ShieldAlert,
   Sparkles,
-  Volume2
+  Volume2,
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Palette,
+  Type,
+  ImageIcon,
+  Eraser,
+  Wand2
 } from 'lucide-react';
 
 export const ClassTrainingPage = () => {
   const { isTeacher, isAdmin } = useAuth();
 
   // 4 MAIN TABS:
-  // Tab 1: 'courses' (3 Box theo chỉ đạo mới: 1. Luyện thi vào 10 Gia Lai, 2. Trang luyện đề, 3. Tài liệu chúng em)
-  // Tab 2: 'students' (Quản lý Lớp & Điểm danh 4 trạng thái + Sinh mã Join 6 ký tự + QR)
+  // Tab 1: 'courses' (3 Box: 1. Luyện thi vào 10 Gia Lai, 2. Trang luyện đề, 3. Tài liệu chúng em)
+  // Tab 2: 'students' (Quản lý Lớp & Điểm danh 4 trạng thái + Sinh mã Join 6 ký tự STDH... + QR)
   // Tab 3: 'academic_year' (Năm học - GV tự nhập)
   // Tab 4: 'tuition' (Học phí 3 Đợt)
   const [activeTab, setActiveTab] = useState('courses');
@@ -54,8 +66,8 @@ export const ClassTrainingPage = () => {
   // Active Selected Box Module in Tab 1
   const [activeBoxModule, setActiveBoxModule] = useState(null); // 'gialai_10' | 'practice_hub' | 'our_docs'
 
-  // Passcode Management State (Default Code: 'ETA-GL2026')
-  const [masterPasscode, setMasterPasscode] = useState('ETA-GL2026');
+  // PASSCODE MANAGEMENT STATE (PREFIX CHANGED FROM ETA TO STDH - DIRECTIVE 2)
+  const [masterPasscode, setMasterPasscode] = useState('STDH-GL2026');
   const [newGeneratedCode, setNewGeneratedCode] = useState('');
   const [showAdminCodeModal, setShowAdminCodeModal] = useState(false);
 
@@ -66,17 +78,14 @@ export const ClassTrainingPage = () => {
   const [inputZaloPhone, setInputZaloPhone] = useState('');
   const [studentUnlockedCourseIds, setStudentUnlockedCourseIds] = useState([]);
 
-  // 3 MAIN COURSES/BOXES ACCORDING TO USER DIRECTIVES:
-  // Box 1: "Luyện thi vào 10 Gia Lai" (PDF / Google Drive SECURE VIEWER - HIDE RAW LINK)
-  // Box 2: "Trang luyện đề" (Bài viết: Tiêu đề, Dán văn bản, Chèn Audio...)
-  // Box 3: "Tài liệu chúng em" (PDF / Google Drive SECURE VIEWER - HIDE RAW LINK)
+  // 3 MAIN COURSES/BOXES WITH STDH PASSCODES
   const [coursesList, setCoursesList] = useState([
     {
       id: 'gialai_10',
       title: 'Luyện thi vào 10 Gia Lai 🏆',
       type: 'pdf_drive',
       desc: 'Kho đề thi tuyển sinh Tiếng Anh vào Lớp 10 Tỉnh Gia Lai. Xem trực tuyến bảo mật không lộ link Google Drive.',
-      code: 'ETA-GL2026',
+      code: 'STDH-GL2026',
       grade: 9
     },
     {
@@ -84,7 +93,7 @@ export const ClassTrainingPage = () => {
       title: 'Trang luyện đề 📝',
       type: 'article_editor',
       desc: 'Trang luyện đề tổng hợp với bài viết chuyên sâu, dán văn bản WYSIWYG, chèn Audio & Video mượt mà.',
-      code: 'ETA-LUYENDE',
+      code: 'STDH-LUYENDE',
       grade: 8
     },
     {
@@ -92,12 +101,12 @@ export const ClassTrainingPage = () => {
       title: 'Tài liệu chúng em 📚',
       type: 'pdf_drive',
       desc: 'Bộ sưu tập tài liệu, giáo án và chuyên đề môn Tiếng Anh. Xem trực tuyến bảo mật không lộ link Google Drive.',
-      code: 'ETA-TAILIEU',
+      code: 'STDH-TAILIEU',
       grade: 8
     }
   ]);
 
-  // Exam Papers List for Box 1 ("Luyện thi vào 10 Gia Lai") & Box 3 ("Tài liệu chúng em")
+  // PDF Exam Papers List for Box 1 & Box 3
   const [pdfExamsList, setPdfExamsList] = useState([
     {
       id: 'pdf-1',
@@ -115,36 +124,67 @@ export const ClassTrainingPage = () => {
     }
   ]);
 
-  // Form State for Adding New PDF/Drive Exam
   const [newExamTitle, setNewExamTitle] = useState('');
   const [newExamDriveLink, setNewExamDriveLink] = useState('');
   const [activePdfViewer, setActivePdfViewer] = useState(null);
 
-  // Articles List for Box 2 ("Trang luyện đề")
+  // FULL WYSIWYG ARTICLE EDITOR STATE FOR BOX 2 ("Trang luyện đề" - DIRECTIVE 3)
   const [practiceArticles, setPracticeArticles] = useState([
     {
       id: 'art-1',
       title: 'Chuyên đề 1: Trắc nghiệm trọng âm và phát âm Tiếng Anh Lớp 9',
       content: 'Nội dung bài viết hướng dẫn mẹo phát âm đuôi -ed, -s/es và quy tắc trọng âm 2, 3 âm tiết...',
-      audioUrl: 'https://actions.google.com/sounds/v1/speech/person_speaking.ogg'
+      audioUrl: 'https://actions.google.com/sounds/v1/speech/person_speaking.ogg',
+      date: 'Hôm nay'
     }
   ]);
-  const [newArtTitle, setNewArtTitle] = useState('');
-  const [newArtContent, setNewArtContent] = useState('');
 
-  // Class & Student State
+  const [formArtTitle, setFormArtTitle] = useState('');
+  const [formArtContent, setFormArtContent] = useState('');
+  const [formArtAudioUrl, setFormArtAudioUrl] = useState('');
+  const [formArtFileUrl, setFormArtFileUrl] = useState('');
+  const [editingArtId, setEditingArtId] = useState(null);
+  const [activeArtReader, setActiveArtReader] = useState(null);
+
+  const contentEditableRef = useRef(null);
+  const selectedEditorImageRef = useRef(null);
+
+  // Class & Student State with STDH Join Codes
   const [classList, setClassList] = useState([
-    { id: 'cls1', name: 'Lớp 8A5 - Tiếng Anh Nâng Cao', joinCode: 'ETA68X', grade: 8, studentCount: 35 },
-    { id: 'cls2', name: 'Lớp 7A2 - Tiếng Anh Cơ Bản', joinCode: 'ETA72Y', grade: 7, studentCount: 30 }
+    { id: 'cls1', name: 'Lớp 8A5 - Tiếng Anh Nâng Cao', joinCode: 'STDH68X', grade: 8, studentCount: 35 },
+    { id: 'cls2', name: 'Lớp 7A2 - Tiếng Anh Cơ Bản', joinCode: 'STDH72Y', grade: 7, studentCount: 30 }
   ]);
+  const [newClassName, setNewClassName] = useState('');
+  const [showQrModal, setShowQrModal] = useState(null);
+
   const [studentList, setStudentList] = useState([
     { id: 'st1', name: 'Phạm Thanh Tú', grade: 8, className: '8A5', parentPhone: '0987.654.321', attendanceStatus: 'present', behaviorPoints: 10, notes: 'Phát biểu xuất sắc' },
     { id: 'st2', name: 'Trần Thuỳ Dương', grade: 8, className: '8A5', parentPhone: '0912.345.678', attendanceStatus: 'present', behaviorPoints: 8, notes: 'Hoàn thành bài tập' }
   ]);
 
+  // Tab 3: Academic Year State
+  const [academicYears, setAcademicYears] = useState([
+    { id: 'ay1', year: 'Năm học 2025 - 2026', startDate: '2025-09-05', endDate: '2026-05-30', isCurrent: true },
+    { id: 'ay2', year: 'Năm học 2026 - 2027', startDate: '2026-09-05', endDate: '2027-05-30', isCurrent: false }
+  ]);
+
+  // Tab 4: Tuition State
+  const [tuitionList, setTuitionList] = useState([
+    {
+      id: 't1',
+      studentName: 'Phạm Thanh Tú',
+      className: '8A5',
+      attendedSessions: 24,
+      totalSessions: 24,
+      phase1: { amount: 1500000, paid: true, date: '05/09/2025' },
+      phase2: { amount: 1500000, paid: true, date: '15/11/2025' },
+      phase3: { amount: 1500000, paid: false, date: 'Dự kiến 01/03/2026' }
+    }
+  ]);
+
   // Check if current user is unlocked (Teacher/Admin auto-unlocked 100%)
   const isCourseUnlocked = (courseId) => {
-    if (isTeacher || isAdmin) return true; // ADMIN & TEACHER AUTO UNLOCKED WITHOUT CODE!
+    if (isTeacher || isAdmin) return true;
     return studentUnlockedCourseIds.includes(courseId);
   };
 
@@ -153,7 +193,8 @@ export const ClassTrainingPage = () => {
     e.preventDefault();
     if (!inputJoinCode.trim()) return;
 
-    if (inputJoinCode.trim().toUpperCase() === masterPasscode.toUpperCase() || inputJoinCode.trim().toUpperCase() === targetCourse?.code.toUpperCase()) {
+    const enteredCode = inputJoinCode.trim().toUpperCase();
+    if (enteredCode === masterPasscode.toUpperCase() || enteredCode === targetCourse?.code.toUpperCase()) {
       try { soundFX.playFanfare(); } catch (err) {}
       if (targetCourse) {
         setStudentUnlockedCourseIds([...studentUnlockedCourseIds, targetCourse.id]);
@@ -161,15 +202,15 @@ export const ClassTrainingPage = () => {
       setShowUnlockModal(false);
       setInputJoinCode(''); setInputZaloPhone('');
       confetti({ particleCount: 150, spread: 90 });
-      alert('🎉 XÁC NHẬN MỞ KHÓA THÀNH CÔNG! Học sinh đã có thể xem toàn bộ đề thi & tài liệu.');
+      alert('🎉 XÁC NHẬN MỞ KHÓA THÀNH CÔNG! Học sinh đã có thể xem toàn bộ bài viết & tài liệu.');
     } else {
       alert('❌ Mã gia nhập không chính xác! Vui lòng liên hệ Giáo viên/Ban tổ chức để lấy mã mới nhất.');
     }
   };
 
-  // Handle Admin Generating & Updating New Passcode
+  // Handle Admin Generating New STDH Passcode (DIRECTIVE 2)
   const handleGenerateNewMasterCode = () => {
-    const code = `ETA-${Math.floor(1000 + Math.random() * 9000)}`;
+    const code = `STDH-${Math.floor(1000 + Math.random() * 9000)}`;
     setNewGeneratedCode(code);
   };
 
@@ -197,13 +238,80 @@ export const ClassTrainingPage = () => {
     try { soundFX.playFanfare(); } catch (err) {}
   };
 
+  // WYSIWYG EDITOR COMMAND EXECUTOR FOR BOX 2 ("Trang luyện đề" - DIRECTIVE 3)
+  const executeCmd = (command, value = null) => {
+    soundFX.playClick();
+    document.execCommand(command, false, value);
+    if (contentEditableRef.current) {
+      setFormArtContent(contentEditableRef.current.innerHTML);
+    }
+  };
+
+  // Save Practice Article (Box 2)
+  const handleSavePracticeArticle = (e) => {
+    e.preventDefault();
+    if (!formArtTitle.trim()) return;
+
+    const htmlContent = contentEditableRef.current ? contentEditableRef.current.innerHTML : formArtContent;
+
+    const artObj = {
+      id: editingArtId || `art_${Date.now()}`,
+      title: formArtTitle,
+      content: htmlContent,
+      audioUrl: formArtAudioUrl,
+      fileUrl: formArtFileUrl,
+      date: new Date().toLocaleDateString('vi-VN')
+    };
+
+    if (editingArtId) {
+      setPracticeArticles(practiceArticles.map(a => a.id === editingArtId ? artObj : a));
+      setEditingArtId(null);
+    } else {
+      setPracticeArticles([artObj, ...practiceArticles]);
+    }
+
+    setFormArtTitle(''); setFormArtContent(''); setFormArtAudioUrl(''); setFormArtFileUrl('');
+    if (contentEditableRef.current) contentEditableRef.current.innerHTML = '';
+    try { soundFX.playFanfare(); } catch (err) {}
+    confetti({ particleCount: 120, spread: 80 });
+  };
+
+  // Create New Class & Auto-generate 6-char STDH Join Code (DIRECTIVE 2)
+  const handleCreateClass = (e) => {
+    e.preventDefault();
+    if (!newClassName.trim()) return;
+    const autoCode = `STDH${Math.floor(100 + Math.random() * 900)}`;
+    const newCls = {
+      id: `cls_${Date.now()}`,
+      name: newClassName,
+      joinCode: autoCode,
+      grade: 8,
+      studentCount: 0
+    };
+    setClassList([...classList, newCls]);
+    setNewClassName('');
+    try { soundFX.playFanfare(); } catch (err) {}
+  };
+
+  // Attendance Toggle
+  const setAttendanceStatus = (stId, statusVal) => {
+    try { soundFX.playClick(); } catch (err) {}
+    setStudentList(studentList.map(s => s.id === stId ? { ...s, attendanceStatus: statusVal } : s));
+  };
+
+  // Behavior Points (+/-)
+  const adjustBehaviorPoints = (stId, delta) => {
+    try { soundFX.playClick(); } catch (err) {}
+    setStudentList(studentList.map(s => s.id === stId ? { ...s, behaviorPoints: Math.max(0, s.behaviorPoints + delta) } : s));
+  };
+
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
       {/* 1. HERO BANNER */}
       <PageHeroBanner
         title="Hệ Thống Lớp Đào Tạo & Luyện Thi Vào 10 Gia Lai 🎓"
-        subtitle="Kho tài liệu bảo mật trực tuyến không lộ link Google Drive, Trang luyện đề và Quản lý Lớp học & Điểm danh."
+        subtitle="Kho tài liệu bảo mật trực tuyến không lộ link Google Drive, Trang luyện đề WYSIWYG và Quản lý Lớp học & Điểm danh."
         badge="QUẢN LÝ LỚP HỌC & LUYỆN THI 4.0"
         bgImage="/images/hero_school_bg.jpg"
       />
@@ -272,13 +380,13 @@ export const ClassTrainingPage = () => {
         </button>
       </div>
 
-      {/* ADMIN PASSCODE MANAGEMENT BAR FOR TEACHERS / ADMIN (USER DIRECTIVE 4) */}
+      {/* ADMIN PASSCODE MANAGEMENT BAR (STDH PREFIX - DIRECTIVE 2) */}
       {(isTeacher || isAdmin) && activeTab === 'courses' && (
         <div className="p-4 rounded-3xl bg-slate-900 border border-purple-500/40 shadow-xl flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2 text-xs font-bold">
             <ShieldCheck className="w-5 h-5 text-amber-400" />
             <span className="text-white">QUYỀN GIÁO VIÊN / ADMIN:</span>
-            <span className="text-slate-300">Thầy/Cô không cần nhập mã khi chỉnh sửa! Mã hiện tại gửi Học sinh:</span>
+            <span className="text-slate-300">Thầy/Cô không cần nhập mã khi chỉnh sửa! Mã STDH hiện tại:</span>
             <span className="px-3 py-1 rounded-xl bg-purple-600/30 text-amber-300 font-mono font-black border border-purple-500/40">
               {masterPasscode}
             </span>
@@ -291,12 +399,12 @@ export const ClassTrainingPage = () => {
             }}
             className="px-4 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow flex items-center gap-1.5"
           >
-            <Key className="w-4 h-4 text-amber-300" /> 🔑 Tạo Mã Mới Gửi Học Sinh
+            <Key className="w-4 h-4 text-amber-300" /> 🔑 Tạo Mã STDH Mới Gửi Học Sinh
           </button>
         </div>
       )}
 
-      {/* TAB 1: CÁC KHÓA HỌC WITH 3 RENAMED BOXES (LUYỆN THI VÀO 10 GIA LAI, TRANG LUYỆN ĐỀ, TÀI LIỆU CHÚNG EM) */}
+      {/* TAB 1: CÁC KHÓA HỌC WITH 3 RENAMED BOXES */}
       {activeTab === 'courses' && !activeBoxModule && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -351,7 +459,7 @@ export const ClassTrainingPage = () => {
                         }}
                         className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2"
                       >
-                        <Key className="w-4 h-4 text-amber-300" /> Nhập Mã Mở Khóa
+                        <Key className="w-4 h-4 text-amber-300" /> Nhập Mã Mở Khóa STDH
                       </button>
                     )}
                   </div>
@@ -378,11 +486,10 @@ export const ClassTrainingPage = () => {
             </h3>
           </div>
 
-          {/* FORM UPLOAD DE THI CAN HIDE GOOGLE DRIVE LINK FOR TEACHERS/ADMIN */}
           {(isTeacher || isAdmin) && (
             <form onSubmit={handleAddPdfExam} className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
               <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 border-b border-slate-800 pb-3">
-                <Plus className="w-4 h-4 text-emerald-400" /> UPLOAD ĐỀ THI .PDF / LIÊN KẾT GOOGLE DRIVE (BẢO MẬT KHÔNG LỘ LINK)
+                <Plus className="w-4 h-4 text-emerald-400" /> UPLOAD ĐỀ THI .PDF / LIÊN KẾT GOOGLE DRIVE (BẢO MẬT KHÔNG LỘ LINK GỐC)
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold">
@@ -411,7 +518,6 @@ export const ClassTrainingPage = () => {
             </form>
           )}
 
-          {/* LIST OF ALL EXAM PAPERS WITH SECURE INLINE VIEWER (HIDE GOOGLE DRIVE LINK - DIRECTIVE 1) */}
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">
               DANH SÁCH TẤT CẢ ĐỀ THI & BÀI HỌC LƯU TRỮ:
@@ -449,7 +555,7 @@ export const ClassTrainingPage = () => {
         </div>
       )}
 
-      {/* MODULE DETAIL VIEW FOR BOX 2 ("TRANG LUYỆN ĐỀ") */}
+      {/* MODULE DETAIL VIEW FOR BOX 2 ("TRANG LUYỆN ĐỀ" WITH FULL WYSIWYG EDITOR - DIRECTIVE 3) */}
       {activeTab === 'courses' && activeBoxModule === 'practice_hub' && (
         <div className="space-y-6 animate-fadeIn">
           <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between flex-wrap gap-3 shadow-xl">
@@ -460,16 +566,80 @@ export const ClassTrainingPage = () => {
               ← Quay lại danh sách Khóa học
             </button>
 
-            <h3 className="text-base font-black text-white">📝 TRANG LUYỆN ĐỀ</h3>
+            <h3 className="text-base font-black text-white">📝 TRANG LUYỆN ĐỀ (SOẠN BÀI BẰNG BỘ CÔNG CỤ WYSIWYG)</h3>
           </div>
 
+          {/* FULL WYSIWYG EDITOR FORM MATCHING MATERIAL PAGE - DIRECTIVE 3 */}
+          {(isTeacher || isAdmin) && (
+            <form onSubmit={handleSavePracticeArticle} className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+              <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 border-b border-slate-800 pb-3">
+                <Edit3 className="w-4 h-4 text-indigo-400" /> KHUNG SOẠN BÀI LUYỆN ĐỀ MỚI (BẠN ĐANG DÙNG BỘ EDITOR CHUẨN)
+              </h4>
+
+              <input
+                type="text"
+                placeholder="Nhập tiêu đề bài luyện đề..."
+                value={formArtTitle}
+                onChange={(e) => setFormArtTitle(e.target.value)}
+                className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:outline-none focus:border-brand-500"
+                required
+              />
+
+              {/* WYSIWYG TOOLBAR */}
+              <div className="p-2 rounded-2xl bg-slate-950 border border-slate-800 flex flex-wrap items-center gap-1 text-xs">
+                <button type="button" onClick={() => executeCmd('bold')} className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold" title="In đậm"><Bold className="w-3.5 h-3.5" /></button>
+                <button type="button" onClick={() => executeCmd('italic')} className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold" title="In nghiêng"><Italic className="w-3.5 h-3.5" /></button>
+                <button type="button" onClick={() => executeCmd('underline')} className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold" title="Gạch chân"><Underline className="w-3.5 h-3.5" /></button>
+                <div className="w-px h-5 bg-slate-800 mx-1" />
+                <button type="button" onClick={() => executeCmd('justifyLeft')} className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200" title="Căn trái"><AlignLeft className="w-3.5 h-3.5" /></button>
+                <button type="button" onClick={() => executeCmd('justifyCenter')} className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200" title="Căn giữa"><AlignCenter className="w-3.5 h-3.5" /></button>
+                <button type="button" onClick={() => executeCmd('justifyRight')} className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200" title="Căn phải"><AlignRight className="w-3.5 h-3.5" /></button>
+              </div>
+
+              {/* CONTENTEDITABLE WYSIWYG AREA */}
+              <div
+                ref={contentEditableRef}
+                contentEditable={true}
+                className="w-full min-h-[220px] max-h-[450px] overflow-y-auto p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-sans text-slate-100 leading-relaxed focus:outline-none focus:border-brand-500 prose prose-invert max-w-none"
+                style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
+                onInput={(e) => setFormArtContent(e.currentTarget.innerHTML)}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold">
+                <input
+                  type="url"
+                  placeholder="Link Audio nghe MP3 / Drive (Nếu có)..."
+                  value={formArtAudioUrl}
+                  onChange={(e) => setFormArtAudioUrl(e.target.value)}
+                  className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-white focus:outline-none"
+                />
+                <input
+                  type="url"
+                  placeholder="Link File tài liệu đính kèm (Nếu có)..."
+                  value={formArtFileUrl}
+                  onChange={(e) => setFormArtFileUrl(e.target.value)}
+                  className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-white focus:outline-none"
+                />
+              </div>
+
+              <button type="submit" className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black text-xs shadow-xl flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                LƯU & XUẤT BẢN BÀI LUYỆN ĐỀ MỚI
+              </button>
+            </form>
+          )}
+
+          {/* LIST OF PRACTICE ARTICLES */}
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">DANH SÁCH BÀI LUYỆN ĐỀ CHUYÊN SÂU:</h4>
 
             {practiceArticles.map((art) => (
               <div key={art.id} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                <h4 className="text-sm font-black text-white">{art.title}</h4>
-                <p className="text-xs text-slate-300 leading-relaxed font-sans">{art.content}</p>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-black text-white">{art.title}</h4>
+                  <span className="text-[11px] text-slate-500 font-bold">{art.date}</span>
+                </div>
+                <div className="text-xs text-slate-300 leading-relaxed font-sans prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: art.content }} />
                 {art.audioUrl && (
                   <audio controls src={art.audioUrl} className="w-full rounded-xl bg-slate-900" />
                 )}
@@ -483,7 +653,6 @@ export const ClassTrainingPage = () => {
       {activeTab === 'students' && (
         <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
           <h3 className="text-xs font-black text-white uppercase tracking-wider">QUẢN LÝ LỚP & ĐIỂM DANH THỜI GIAN THỰC</h3>
-          <p className="text-xs text-slate-400 font-bold">Điểm danh 4 trạng thái và sổ nề nếp ý thức từng học sinh trong lớp.</p>
         </div>
       )}
 
@@ -501,7 +670,7 @@ export const ClassTrainingPage = () => {
         </div>
       )}
 
-      {/* STUDENT PASSCODE UNLOCK MODAL (OPENING BELOW STICKY NAVBAR PT-20 TO PREVENT OVERLAPPING) */}
+      {/* STUDENT PASSCODE UNLOCK MODAL (STDH PREFIX - DIRECTIVE 2) */}
       {showUnlockModal && (
         <div className="fixed top-20 inset-x-0 bottom-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-6 overflow-y-auto">
           <div className="bg-slate-900 border-2 border-purple-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-fadeIn">
@@ -523,7 +692,7 @@ export const ClassTrainingPage = () => {
                 <label className="text-slate-300">Vui lòng nhập mã do Ban tổ chức cung cấp:</label>
                 <input
                   type="text"
-                  placeholder="VD: ETA-GL2026..."
+                  placeholder="VD: STDH-GL2026..."
                   value={inputJoinCode}
                   onChange={(e) => setInputJoinCode(e.target.value)}
                   className="w-full p-3.5 rounded-2xl bg-slate-950 border border-slate-800 font-mono text-xs font-bold text-white focus:outline-none focus:border-purple-500"
@@ -556,13 +725,13 @@ export const ClassTrainingPage = () => {
         </div>
       )}
 
-      {/* ADMIN/TEACHER PASSCODE GENERATOR MODAL */}
+      {/* ADMIN/TEACHER STDH PASSCODE GENERATOR MODAL */}
       {showAdminCodeModal && (
         <div className="fixed top-20 inset-x-0 bottom-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-6 overflow-y-auto">
           <div className="bg-slate-900 border-2 border-purple-500/50 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-fadeIn">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-sm font-black text-amber-400 flex items-center gap-2 uppercase">
-                🔑 QUẢN LÝ & TẠO MÃ MỞ KHÓA MỚI (DÀNH CHO GIÁO VIÊN/ADMIN)
+                🔑 QUẢN LÝ MÃ MỞ KHÓA STDH MỚI (GIÁO VIÊN/ADMIN)
               </h3>
               <button onClick={() => setShowAdminCodeModal(false)} className="p-1 rounded-lg hover:bg-slate-800 text-slate-400">
                 <X className="w-4 h-4" />
@@ -578,7 +747,7 @@ export const ClassTrainingPage = () => {
               </div>
 
               <div>
-                <span className="text-slate-300">Mã ngẫu nhiên mới vừa tạo:</span>
+                <span className="text-slate-300">Mã ngẫu nhiên STDH mới vừa tạo:</span>
                 <input
                   type="text"
                   value={newGeneratedCode || masterPasscode}
@@ -592,7 +761,7 @@ export const ClassTrainingPage = () => {
                 onClick={handleGenerateNewMasterCode}
                 className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-xs"
               >
-                ⚡ Tạo Mã Ngẫu Nhiên Mới
+                ⚡ Tạo Mã STDH Ngẫu Nhiên Mới
               </button>
             </div>
 
@@ -611,7 +780,7 @@ export const ClassTrainingPage = () => {
         </div>
       )}
 
-      {/* SECURE PDF/DRIVE INLINE VIEWER (HIDE RAW GOOGLE DRIVE LINK - DIRECTIVE 1) */}
+      {/* SECURE PDF/DRIVE INLINE VIEWER (HIDE RAW GOOGLE DRIVE LINK) */}
       {activePdfViewer && (
         <div className="fixed top-20 inset-x-0 bottom-0 z-40 bg-slate-950/90 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
           <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn max-h-[84vh] flex flex-col">

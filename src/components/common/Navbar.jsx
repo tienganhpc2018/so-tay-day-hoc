@@ -89,13 +89,7 @@ export const Navbar = () => {
     { 
       path: '/lop-dao-tao', 
       label: 'Lớp Đào Tạo', 
-      icon: GraduationCap,
-      subMenus: [
-        { label: '1. Các Khóa Học (Tiếng Anh 6-9)', path: '/lop-dao-tao?tab=courses' },
-        { label: '2. Thông Tin Học Sinh', path: '/lop-dao-tao?tab=students' },
-        { label: '3. Khai Báo Năm Học', path: '/lop-dao-tao?tab=academic_year' },
-        { label: '4. Học Phí & Điểm Danh (3 Đợt)', path: '/lop-dao-tao?tab=tuition' }
-      ]
+      icon: GraduationCap
     },
     { 
       path: '/behavior', 
