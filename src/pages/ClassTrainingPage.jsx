@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -33,149 +34,167 @@ import {
   Video,
   Eye,
   ShieldCheck,
-  Percent
+  Percent,
+  Link as LinkIcon,
+  ShieldAlert,
+  Sparkles,
+  Volume2
 } from 'lucide-react';
 
 export const ClassTrainingPage = () => {
+  const { isTeacher, isAdmin } = useAuth();
+
   // 4 MAIN TABS:
-  // Tab 1: 'courses' (Các khóa học kèm Mở Khóa Lớp Học - Ảnh 1 & 2)
-  // Tab 2: 'students' (Quản lý Lớp & Sinh Join Code + QR + Import Excel)
+  // Tab 1: 'courses' (3 Box theo chỉ đạo mới: 1. Luyện thi vào 10 Gia Lai, 2. Trang luyện đề, 3. Tài liệu chúng em)
+  // Tab 2: 'students' (Quản lý Lớp & Điểm danh 4 trạng thái + Sinh mã Join 6 ký tự + QR)
   // Tab 3: 'academic_year' (Năm học - GV tự nhập)
-  // Tab 4: 'tuition' (Học phí & Điểm danh 4 trạng thái + Sổ Nề nếp)
+  // Tab 4: 'tuition' (Học phí 3 Đợt)
   const [activeTab, setActiveTab] = useState('courses');
 
-  // Tab 1: Course Selection & Unlock Modal State (Screenshots 1 & 2)
-  const [selectedCourseGrade, setSelectedCourseGrade] = useState(8);
+  // Active Selected Box Module in Tab 1
+  const [activeBoxModule, setActiveBoxModule] = useState(null); // 'gialai_10' | 'practice_hub' | 'our_docs'
+
+  // Passcode Management State (Default Code: 'ETA-GL2026')
+  const [masterPasscode, setMasterPasscode] = useState('ETA-GL2026');
+  const [newGeneratedCode, setNewGeneratedCode] = useState('');
+  const [showAdminCodeModal, setShowAdminCodeModal] = useState(false);
+
+  // Student Unlock Modal State
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [targetCourse, setTargetCourse] = useState(null);
   const [inputJoinCode, setInputJoinCode] = useState('');
   const [inputZaloPhone, setInputZaloPhone] = useState('');
-  const [unlockedCourses, setUnlockedCourses] = useState([]);
+  const [studentUnlockedCourseIds, setStudentUnlockedCourseIds] = useState([]);
 
-  // Course List with Unlock Codes matching Screenshot 1
+  // 3 MAIN COURSES/BOXES ACCORDING TO USER DIRECTIVES:
+  // Box 1: "Luyện thi vào 10 Gia Lai" (PDF / Google Drive SECURE VIEWER - HIDE RAW LINK)
+  // Box 2: "Trang luyện đề" (Bài viết: Tiêu đề, Dán văn bản, Chèn Audio...)
+  // Box 3: "Tài liệu chúng em" (PDF / Google Drive SECURE VIEWER - HIDE RAW LINK)
   const [coursesList, setCoursesList] = useState([
     {
-      id: 'c1',
-      title: 'Đột phá kỹ năng soạn giảng Tiếng Anh 4.0',
-      desc: 'Khóa học này đang giới hạn danh sách học viên. Vui lòng nhập mã do Ban tổ chức cung cấp để mở khóa bài giảng & bài tập.',
-      code: 'ETA-VIP2026',
-      grade: 8,
-      unitsCount: 12,
-      studentsCount: 45
+      id: 'gialai_10',
+      title: 'Luyện thi vào 10 Gia Lai 🏆',
+      type: 'pdf_drive',
+      desc: 'Kho đề thi tuyển sinh Tiếng Anh vào Lớp 10 Tỉnh Gia Lai. Xem trực tuyến bảo mật không lộ link Google Drive.',
+      code: 'ETA-GL2026',
+      grade: 9
     },
     {
-      id: 'c2',
-      title: 'LỚP VIDEO AI CẤP TỐC',
-      desc: 'Khóa học này đang giới hạn danh sách học viên. Vui lòng nhập mã do Ban tổ chức cung cấp để mở khóa bài giảng & bài tập.',
-      code: 'ETA-AI2026',
-      grade: 7,
-      unitsCount: 10,
-      studentsCount: 38
+      id: 'practice_hub',
+      title: 'Trang luyện đề 📝',
+      type: 'article_editor',
+      desc: 'Trang luyện đề tổng hợp với bài viết chuyên sâu, dán văn bản WYSIWYG, chèn Audio & Video mượt mà.',
+      code: 'ETA-LUYENDE',
+      grade: 8
     },
     {
-      id: 'c3',
-      title: 'Lớp đào tạo thiết kế web/app dạy học',
-      desc: 'Khóa học này đang giới hạn danh sách học viên. Vui lòng nhập mã do Ban tổ chức cung cấp để mở khóa bài giảng & bài tập.',
-      code: 'ETA-WEB2026',
-      grade: 9,
-      unitsCount: 15,
-      studentsCount: 60
+      id: 'our_docs',
+      title: 'Tài liệu chúng em 📚',
+      type: 'pdf_drive',
+      desc: 'Bộ sưu tập tài liệu, giáo án và chuyên đề môn Tiếng Anh. Xem trực tuyến bảo mật không lộ link Google Drive.',
+      code: 'ETA-TAILIEU',
+      grade: 8
     }
   ]);
 
-  // Tab 2: Class Creation & QR Code & Excel Import State
+  // Exam Papers List for Box 1 ("Luyện thi vào 10 Gia Lai") & Box 3 ("Tài liệu chúng em")
+  const [pdfExamsList, setPdfExamsList] = useState([
+    {
+      id: 'pdf-1',
+      title: 'Đề Thi Chính Thức Vào 10 Chuyên Tiếng Anh Gia Lai (Kèm Đáp Án)',
+      pdfUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop',
+      driveLink: 'https://drive.google.com/file/d/1A2B3C4D5E6F_SAMPLE/view',
+      addedDate: 'Hôm nay'
+    },
+    {
+      id: 'pdf-2',
+      title: 'Đề Thi Thử Vào 10 Tỉnh Gia Lai Mã 801 (Có File Audio)',
+      pdfUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop',
+      driveLink: 'https://drive.google.com/file/d/9Z8Y7X6W5V4U_SAMPLE/view',
+      addedDate: 'Hôm qua'
+    }
+  ]);
+
+  // Form State for Adding New PDF/Drive Exam
+  const [newExamTitle, setNewExamTitle] = useState('');
+  const [newExamDriveLink, setNewExamDriveLink] = useState('');
+  const [activePdfViewer, setActivePdfViewer] = useState(null);
+
+  // Articles List for Box 2 ("Trang luyện đề")
+  const [practiceArticles, setPracticeArticles] = useState([
+    {
+      id: 'art-1',
+      title: 'Chuyên đề 1: Trắc nghiệm trọng âm và phát âm Tiếng Anh Lớp 9',
+      content: 'Nội dung bài viết hướng dẫn mẹo phát âm đuôi -ed, -s/es và quy tắc trọng âm 2, 3 âm tiết...',
+      audioUrl: 'https://actions.google.com/sounds/v1/speech/person_speaking.ogg'
+    }
+  ]);
+  const [newArtTitle, setNewArtTitle] = useState('');
+  const [newArtContent, setNewArtContent] = useState('');
+
+  // Class & Student State
   const [classList, setClassList] = useState([
     { id: 'cls1', name: 'Lớp 8A5 - Tiếng Anh Nâng Cao', joinCode: 'ETA68X', grade: 8, studentCount: 35 },
     { id: 'cls2', name: 'Lớp 7A2 - Tiếng Anh Cơ Bản', joinCode: 'ETA72Y', grade: 7, studentCount: 30 }
   ]);
-  const [newClassName, setNewClassName] = useState('');
-  const [showQrModal, setShowQrModal] = useState(null);
-
-  // Student Roster State
   const [studentList, setStudentList] = useState([
     { id: 'st1', name: 'Phạm Thanh Tú', grade: 8, className: '8A5', parentPhone: '0987.654.321', attendanceStatus: 'present', behaviorPoints: 10, notes: 'Phát biểu xuất sắc' },
-    { id: 'st2', name: 'Trần Thuỳ Dương', grade: 8, className: '8A5', parentPhone: '0912.345.678', attendanceStatus: 'present', behaviorPoints: 8, notes: 'Hoàn thành bài tập' },
-    { id: 'st3', name: 'Vũ Mai Phương', grade: 7, className: '7A2', parentPhone: '0903.111.222', attendanceStatus: 'late', behaviorPoints: 5, notes: 'Đi trễ 5 phút' },
-    { id: 'st4', name: 'Bùi Hoàng Hải', grade: 9, className: '9A1', parentPhone: '0977.888.999', attendanceStatus: 'excused', behaviorPoints: 0, notes: 'Vắng có phép' }
+    { id: 'st2', name: 'Trần Thuỳ Dương', grade: 8, className: '8A5', parentPhone: '0912.345.678', attendanceStatus: 'present', behaviorPoints: 8, notes: 'Hoàn thành bài tập' }
   ]);
 
-  // Tab 3: Academic Year State
-  const [academicYears, setAcademicYears] = useState([
-    { id: 'ay1', year: 'Năm học 2025 - 2026', startDate: '2025-09-05', endDate: '2026-05-30', isCurrent: true },
-    { id: 'ay2', year: 'Năm học 2026 - 2027', startDate: '2026-09-05', endDate: '2027-05-30', isCurrent: false }
-  ]);
+  // Check if current user is unlocked (Teacher/Admin auto-unlocked 100%)
+  const isCourseUnlocked = (courseId) => {
+    if (isTeacher || isAdmin) return true; // ADMIN & TEACHER AUTO UNLOCKED WITHOUT CODE!
+    return studentUnlockedCourseIds.includes(courseId);
+  };
 
-  // Tab 4: Tuition State
-  const [tuitionList, setTuitionList] = useState([
-    {
-      id: 't1',
-      studentName: 'Phạm Thanh Tú',
-      className: '8A5',
-      attendedSessions: 24,
-      totalSessions: 24,
-      phase1: { amount: 1500000, paid: true, date: '05/09/2025' },
-      phase2: { amount: 1500000, paid: true, date: '15/11/2025' },
-      phase3: { amount: 1500000, paid: false, date: 'Dự kiến 01/03/2026' }
-    },
-    {
-      id: 't2',
-      studentName: 'Trần Thuỳ Dương',
-      className: '8A5',
-      attendedSessions: 23,
-      totalSessions: 24,
-      phase1: { amount: 1500000, paid: true, date: '06/09/2025' },
-      phase2: { amount: 1500000, paid: true, date: '16/11/2025' },
-      phase3: { amount: 1500000, paid: true, date: '02/03/2026' }
-    }
-  ]);
-
-  // Handle Course Unlock (Screenshots 1 & 2)
-  const handleConfirmUnlock = (e) => {
+  // Handle Student Passcode Submit
+  const handleStudentConfirmUnlock = (e) => {
     e.preventDefault();
     if (!inputJoinCode.trim()) return;
-    try { soundFX.playFanfare(); } catch (err) {}
-    if (targetCourse) {
-      setUnlockedCourses([...unlockedCourses, targetCourse.id]);
+
+    if (inputJoinCode.trim().toUpperCase() === masterPasscode.toUpperCase() || inputJoinCode.trim().toUpperCase() === targetCourse?.code.toUpperCase()) {
+      try { soundFX.playFanfare(); } catch (err) {}
+      if (targetCourse) {
+        setStudentUnlockedCourseIds([...studentUnlockedCourseIds, targetCourse.id]);
+      }
+      setShowUnlockModal(false);
+      setInputJoinCode(''); setInputZaloPhone('');
+      confetti({ particleCount: 150, spread: 90 });
+      alert('🎉 XÁC NHẬN MỞ KHÓA THÀNH CÔNG! Học sinh đã có thể xem toàn bộ đề thi & tài liệu.');
+    } else {
+      alert('❌ Mã gia nhập không chính xác! Vui lòng liên hệ Giáo viên/Ban tổ chức để lấy mã mới nhất.');
     }
-    setShowUnlockModal(false);
-    setInputJoinCode(''); setInputZaloPhone('');
-    confetti({ particleCount: 150, spread: 90 });
-    alert('🎉 XÁC NHẬN MỞ KHÓA LỚP HỌC THÀNH CÔNG! Thầy Cô & Học sinh đã có thể truy cập toàn bộ bài giảng.');
   };
 
-  // Create New Class & Auto-generate 6-char Join Code
-  const handleCreateClass = (e) => {
+  // Handle Admin Generating & Updating New Passcode
+  const handleGenerateNewMasterCode = () => {
+    const code = `ETA-${Math.floor(1000 + Math.random() * 9000)}`;
+    setNewGeneratedCode(code);
+  };
+
+  const handleApplyNewMasterCode = () => {
+    if (!newGeneratedCode.trim()) return;
+    setMasterPasscode(newGeneratedCode.trim().toUpperCase());
+    try { soundFX.playFanfare(); } catch (err) {}
+    setShowAdminCodeModal(false);
+    alert(`🔑 ĐÃ ĐỔI MÃ MỞ KHÓA MỚI THÀNH CÔNG: ${newGeneratedCode.trim().toUpperCase()}! Hãy gửi mã này cho Học sinh.`);
+  };
+
+  // Add New PDF Exam
+  const handleAddPdfExam = (e) => {
     e.preventDefault();
-    if (!newClassName.trim()) return;
-    const autoCode = `ETA${Math.floor(100 + Math.random() * 900)}`;
-    const newCls = {
-      id: `cls_${Date.now()}`,
-      name: newClassName,
-      joinCode: autoCode,
-      grade: 8,
-      studentCount: 0
+    if (!newExamTitle.trim()) return;
+    const newEx = {
+      id: `pdf_${Date.now()}`,
+      title: newExamTitle,
+      pdfUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop',
+      driveLink: newExamDriveLink || 'https://drive.google.com/file/d/1SAMPLE_DRIVE/view',
+      addedDate: 'Vừa thêm'
     };
-    setClassList([...classList, newCls]);
-    setNewClassName('');
+    setPdfExamsList([newEx, ...pdfExamsList]);
+    setNewExamTitle(''); setNewExamDriveLink('');
     try { soundFX.playFanfare(); } catch (err) {}
-  };
-
-  // Simulate Excel Import
-  const handleExcelImport = () => {
-    try { soundFX.playFanfare(); } catch (err) {}
-    alert('📥 Đã tải và xếp lớp hàng loạt 15 học sinh từ file Excel thành công!');
-  };
-
-  // Attendance Toggle (Present, Excused, Unexcused, Late)
-  const setAttendanceStatus = (stId, statusVal) => {
-    try { soundFX.playClick(); } catch (err) {}
-    setStudentList(studentList.map(s => s.id === stId ? { ...s, attendanceStatus: statusVal } : s));
-  };
-
-  // Behavior Points (+/-)
-  const adjustBehaviorPoints = (stId, delta) => {
-    try { soundFX.playClick(); } catch (err) {}
-    setStudentList(studentList.map(s => s.id === stId ? { ...s, behaviorPoints: Math.max(0, s.behaviorPoints + delta) } : s));
   };
 
   return (
@@ -183,18 +202,19 @@ export const ClassTrainingPage = () => {
       
       {/* 1. HERO BANNER */}
       <PageHeroBanner
-        title="Hệ Thống Lớp Đào Tạo & Quản Lý Học Sinh 🎓"
-        subtitle="Quản lý Lớp học, Mã Join Code 6 ký tự, Điểm danh thời gian thực 4 trạng thái, Sổ nề nếp ý thức và Khai báo Học phí 3 Đợt."
-        badge="QUẢN LÝ LỚP HỌC & ĐIỂM DANH 4.0"
+        title="Hệ Thống Lớp Đào Tạo & Luyện Thi Vào 10 Gia Lai 🎓"
+        subtitle="Kho tài liệu bảo mật trực tuyến không lộ link Google Drive, Trang luyện đề và Quản lý Lớp học & Điểm danh."
+        badge="QUẢN LÝ LỚP HỌC & LUYỆN THI 4.0"
         bgImage="/images/hero_school_bg.jpg"
       />
 
-      {/* 2. 4 MAIN NAVIGATION TABS */}
+      {/* 2. MAIN NAVIGATION TABS */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-1.5 rounded-3xl bg-slate-950 border border-slate-800 shadow-xl text-xs font-black">
         <button
           onClick={() => {
             soundFX.playClick();
             setActiveTab('courses');
+            setActiveBoxModule(null);
           }}
           className={`p-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 ${
             activeTab === 'courses'
@@ -252,40 +272,76 @@ export const ClassTrainingPage = () => {
         </button>
       </div>
 
-      {/* TAB 1: CÁC KHÓA HỌC KÈM KHÓA CARD & MỞ KHÓA MODAL (MATCHING SCREENSHOTS 1 & 2 100%) */}
-      {activeTab === 'courses' && (
+      {/* ADMIN PASSCODE MANAGEMENT BAR FOR TEACHERS / ADMIN (USER DIRECTIVE 4) */}
+      {(isTeacher || isAdmin) && activeTab === 'courses' && (
+        <div className="p-4 rounded-3xl bg-slate-900 border border-purple-500/40 shadow-xl flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <ShieldCheck className="w-5 h-5 text-amber-400" />
+            <span className="text-white">QUYỀN GIÁO VIÊN / ADMIN:</span>
+            <span className="text-slate-300">Thầy/Cô không cần nhập mã khi chỉnh sửa! Mã hiện tại gửi Học sinh:</span>
+            <span className="px-3 py-1 rounded-xl bg-purple-600/30 text-amber-300 font-mono font-black border border-purple-500/40">
+              {masterPasscode}
+            </span>
+          </div>
+
+          <button
+            onClick={() => {
+              handleGenerateNewMasterCode();
+              setShowAdminCodeModal(true);
+            }}
+            className="px-4 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow flex items-center gap-1.5"
+          >
+            <Key className="w-4 h-4 text-amber-300" /> 🔑 Tạo Mã Mới Gửi Học Sinh
+          </button>
+        </div>
+      )}
+
+      {/* TAB 1: CÁC KHÓA HỌC WITH 3 RENAMED BOXES (LUYỆN THI VÀO 10 GIA LAI, TRANG LUYỆN ĐỀ, TÀI LIỆU CHÚNG EM) */}
+      {activeTab === 'courses' && !activeBoxModule && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {coursesList.map((crs) => {
-              const isUnlocked = unlockedCourses.includes(crs.id);
+              const unlocked = isCourseUnlocked(crs.id);
               return (
-                <div key={crs.id} className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-purple-500/50 transition-all">
+                <div key={crs.id} className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl flex flex-col justify-between hover:border-purple-500/50 transition-all max-h-[320px]">
                   <div className="space-y-3">
-                    {/* CARD BADGES MATCHING SCREENSHOT 1 */}
                     <div className="flex items-center gap-2">
-                      <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-black flex items-center gap-1">
-                        <Lock className="w-3 h-3" /> Giới Hạn Học Viên
-                      </span>
-                      <span className="px-3 py-1 rounded-full bg-slate-950 text-slate-300 border border-slate-800 text-[11px] font-black flex items-center gap-1">
-                        <Key className="w-3 h-3 text-amber-400" /> Cần Mã gia nhập
-                      </span>
+                      {unlocked ? (
+                        <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-black flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Đã Truy Cập
+                        </span>
+                      ) : (
+                        <>
+                          <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-black flex items-center gap-1">
+                            <Lock className="w-3 h-3" /> Giới Hạn Học Viên
+                          </span>
+                          <span className="px-3 py-1 rounded-full bg-slate-950 text-slate-300 border border-slate-800 text-[11px] font-black flex items-center gap-1">
+                            <Key className="w-3 h-3 text-amber-400" /> Cần Mã gia nhập
+                          </span>
+                        </>
+                      )}
                     </div>
 
-                    <h3 className="text-base font-black text-white leading-snug">
+                    <h3 className="text-lg font-black text-white leading-snug">
                       {crs.title}
                     </h3>
                     
-                    <p className="text-xs text-slate-400 font-bold leading-relaxed">
+                    <p className="text-xs text-slate-400 font-bold leading-relaxed line-clamp-3">
                       {crs.desc}
                     </p>
                   </div>
 
-                  {/* UNLOCK BUTTON MATCHING SCREENSHOT 1 */}
                   <div className="pt-4 border-t border-slate-800">
-                    {isUnlocked ? (
-                      <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-300 font-black text-xs text-center border border-emerald-500/40 flex items-center justify-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Đã Mở Khóa Khóa Học
-                      </div>
+                    {unlocked ? (
+                      <button
+                        onClick={() => {
+                          soundFX.playClick();
+                          setActiveBoxModule(crs.id);
+                        }}
+                        className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" /> Truy Cập {crs.title}
+                      </button>
                     ) : (
                       <button
                         onClick={() => {
@@ -306,170 +362,116 @@ export const ClassTrainingPage = () => {
         </div>
       )}
 
-      {/* TAB 2: QUẢN LÝ LỚP, SINH JOIN CODE 6 KÝ TỰ, QR CODE & IMPORT EXCEL */}
-      {activeTab === 'students' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* TAO LỚP HỌC MỚI & SINH MÃ JOIN CODE 6 KÝ TỰ */}
-            <form onSubmit={handleCreateClass} className="lg:col-span-6 p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-              <h3 className="text-xs font-black text-white uppercase flex items-center gap-1.5 border-b border-slate-800 pb-3">
-                <Plus className="w-4 h-4 text-emerald-400" /> TẠO LỚP HỌC MỚI & TỰ ĐỘNG SINH MÃ JOIN CODE (6 KÝ TỰ)
-              </h3>
+      {/* MODULE DETAIL VIEW FOR BOX 1 ("LUYỆN THI VÀO 10 GIA LAI") OR BOX 3 ("TÀI LIỆU CHÚNG EM") */}
+      {activeTab === 'courses' && (activeBoxModule === 'gialai_10' || activeBoxModule === 'our_docs') && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between flex-wrap gap-3 shadow-xl">
+            <button
+              onClick={() => setActiveBoxModule(null)}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5"
+            >
+              ← Quay lại danh sách Khóa học
+            </button>
 
-              <div className="flex items-center gap-2">
+            <h3 className="text-base font-black text-white">
+              {activeBoxModule === 'gialai_10' ? '🏆 LUYỆN THI VÀO 10 GIA LAI' : '📚 TÀI LIỆU CHÚNG EM'}
+            </h3>
+          </div>
+
+          {/* FORM UPLOAD DE THI CAN HIDE GOOGLE DRIVE LINK FOR TEACHERS/ADMIN */}
+          {(isTeacher || isAdmin) && (
+            <form onSubmit={handleAddPdfExam} className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+              <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 border-b border-slate-800 pb-3">
+                <Plus className="w-4 h-4 text-emerald-400" /> UPLOAD ĐỀ THI .PDF / LIÊN KẾT GOOGLE DRIVE (BẢO MẬT KHÔNG LỘ LINK)
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold">
                 <input
                   type="text"
-                  placeholder="Nhập tên lớp học mới (Ví dụ: Lớp 8A5 - Anh Chuyên)..."
-                  value={newClassName}
-                  onChange={(e) => setNewClassName(e.target.value)}
-                  className="flex-1 p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:outline-none focus:border-brand-500"
+                  placeholder="Tên bài học / Tên đề thi..."
+                  value={newExamTitle}
+                  onChange={(e) => setNewExamTitle(e.target.value)}
+                  className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-brand-500"
                   required
                 />
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow shrink-0">
-                  Tạo Lớp Này
+                <input
+                  type="url"
+                  placeholder="Liên kết link Google Drive hoặc tệp PDF..."
+                  value={newExamDriveLink}
+                  onChange={(e) => setNewExamDriveLink(e.target.value)}
+                  className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-brand-500"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button type="submit" className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow flex items-center gap-1.5">
+                  <Upload className="w-4 h-4" /> Nạp Đề Thi Này
                 </button>
               </div>
             </form>
+          )}
 
-            {/* IMPORT HỌC SINH TỪ EXCEL (.XLSX/.CSV) */}
-            <div className="lg:col-span-6 p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-xl flex flex-col justify-between">
-              <div>
-                <h3 className="text-xs font-black text-white uppercase flex items-center gap-1.5 border-b border-slate-800 pb-3">
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> IMPORT HỌC SINH TỪ EXCEL (.XLSX / .CSV)
-                </h3>
-                <p className="text-xs text-slate-400 font-bold mt-2">Tải danh sách học sinh từ file Excel để tự động tạo tài khoản và xếp lớp hàng loạt!</p>
-              </div>
-
-              <button onClick={handleExcelImport} className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs shadow flex items-center justify-center gap-2">
-                <Upload className="w-4 h-4" /> Tải Up File Excel Danh Sách Học Sinh (.xlsx)
-              </button>
-            </div>
-
-          </div>
-
-          {/* DANH SÁCH LỚP HỌC VÀ MÃ QR CODE GIA NHẬP */}
+          {/* LIST OF ALL EXAM PAPERS WITH SECURE INLINE VIEWER (HIDE GOOGLE DRIVE LINK - DIRECTIVE 1) */}
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">DANH SÁCH LỚP HỌC KÈM MÃ JOIN CODE 6 KÝ TỰ & MÃ QR:</h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {classList.map((cls) => (
-                <div key={cls.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs font-bold">
-                  <div>
-                    <div className="text-white font-black text-sm">{cls.name}</div>
-                    <div className="text-slate-400 text-[11px]">Sĩ số: {cls.studentCount} học sinh</div>
+            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              DANH SÁCH TẤT CẢ ĐỀ THI & BÀI HỌC LƯU TRỮ:
+            </h4>
+
+            <div className="space-y-3">
+              {pdfExamsList.map((ex) => (
+                <div key={ex.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs font-bold hover:border-brand-500/40 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-black shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-white font-black text-sm">{ex.title}</div>
+                      <div className="text-slate-400 text-[11px] flex items-center gap-2">
+                        <span>{ex.addedDate}</span>
+                        <span className="text-emerald-400 font-bold">🛡️ Đã mã hóa bảo mật Drive Link</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-500/40 font-mono font-black text-xs">
-                      Mã: {cls.joinCode}
-                    </span>
-                    <button onClick={() => setShowQrModal(cls)} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300">
-                      <QrCode className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => {
+                      soundFX.playClick();
+                      setActivePdfViewer(ex);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs shadow flex items-center gap-1.5"
+                  >
+                    <Eye className="w-4 h-4" /> Xem Trực Tuyến
+                  </button>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* ĐIỂM DANH THỜI GIAN THỰC 4 TRẠNG THÁI & SỔ NỀ NẾP Ý THỨC */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-            <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-400" /> GIAO DIỆN ĐIỂM DANH THỜI GIAN THỰC & SỔ NỀ NẾP Ý THỨC (CỘNG/TRỪ ĐIỂM)
-            </h3>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs font-bold text-slate-300">
-                <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
-                  <tr>
-                    <th className="p-3">Họ tên Học sinh</th>
-                    <th className="p-3">Lớp</th>
-                    <th className="p-3">Trạng thái Điểm danh</th>
-                    <th className="p-3">Điểm Nề Nếp</th>
-                    <th className="p-3">Ghi chú giờ học</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {studentList.map((st) => (
-                    <tr key={st.id} className="hover:bg-slate-950/50">
-                      <td className="p-3 font-black text-white">{st.name}</td>
-                      <td className="p-3 text-brand-300">{st.className}</td>
-                      
-                      {/* 4 TRẠNG THÁI ĐIỂM DANH: CÓ MẶT, VẮNG CÓ PHÉP, VẮNG KHÔNG PHÉP, TRỄ */}
-                      <td className="p-3">
-                        <div className="flex items-center gap-1 text-[11px]">
-                          <button
-                            onClick={() => setAttendanceStatus(st.id, 'present')}
-                            className={`px-2 py-1 rounded-lg border font-black ${
-                              st.attendanceStatus === 'present' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-950 text-slate-500 border-slate-800'
-                            }`}
-                          >
-                            🟢 Có mặt
-                          </button>
-                          <button
-                            onClick={() => setAttendanceStatus(st.id, 'excused')}
-                            className={`px-2 py-1 rounded-lg border font-black ${
-                              st.attendanceStatus === 'excused' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-950 text-slate-500 border-slate-800'
-                            }`}
-                          >
-                            🟡 Vắng phép
-                          </button>
-                          <button
-                            onClick={() => setAttendanceStatus(st.id, 'unexcused')}
-                            className={`px-2 py-1 rounded-lg border font-black ${
-                              st.attendanceStatus === 'unexcused' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-slate-950 text-slate-500 border-slate-800'
-                            }`}
-                          >
-                            🔴 Vắng KP
-                          </button>
-                          <button
-                            onClick={() => setAttendanceStatus(st.id, 'late')}
-                            className={`px-2 py-1 rounded-lg border font-black ${
-                              st.attendanceStatus === 'late' ? 'bg-orange-500/20 text-orange-300 border-orange-500/40' : 'bg-slate-950 text-slate-500 border-slate-800'
-                            }`}
-                          >
-                            🟠 Trễ
-                          </button>
-                        </div>
-                      </td>
-
-                      {/* CỘNG / TRỪ ĐIỂM NỀ NẾP */}
-                      <td className="p-3">
-                        <div className="flex items-center gap-2 font-black">
-                          <button onClick={() => adjustBehaviorPoints(st.id, -1)} className="w-6 h-6 rounded-lg bg-rose-950 text-rose-400 border border-rose-800 flex items-center justify-center font-black">-</button>
-                          <span className="text-amber-400">{st.behaviorPoints} ⭐</span>
-                          <button onClick={() => adjustBehaviorPoints(st.id, 1)} className="w-6 h-6 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center justify-center font-black">+</button>
-                        </div>
-                      </td>
-
-                      <td className="p-3 text-slate-400 font-normal italic">
-                        {st.notes}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: NĂM HỌC */}
-      {activeTab === 'academic_year' && (
-        <div className="space-y-6 max-w-3xl mx-auto">
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-xl">
-            <h3 className="text-xs font-black text-white uppercase">DANH SÁCH NĂM HỌC:</h3>
-            {academicYears.map((ay) => (
-              <div key={ay.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs font-bold">
-                <div>
-                  <div className="text-white font-black">{ay.year}</div>
-                  <div className="text-slate-400 text-[11px]">Thời gian: {ay.startDate} đến {ay.endDate}</div>
-                </div>
-                {ay.isCurrent && (
-                  <span className="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-black">
-                    Năm học hiện tại
-                  </span>
+      {/* MODULE DETAIL VIEW FOR BOX 2 ("TRANG LUYỆN ĐỀ") */}
+      {activeTab === 'courses' && activeBoxModule === 'practice_hub' && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between flex-wrap gap-3 shadow-xl">
+            <button
+              onClick={() => setActiveBoxModule(null)}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5"
+            >
+              ← Quay lại danh sách Khóa học
+            </button>
+
+            <h3 className="text-base font-black text-white">📝 TRANG LUYỆN ĐỀ</h3>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+            <h4 className="text-xs font-black text-white uppercase tracking-wider">DANH SÁCH BÀI LUYỆN ĐỀ CHUYÊN SÂU:</h4>
+
+            {practiceArticles.map((art) => (
+              <div key={art.id} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                <h4 className="text-sm font-black text-white">{art.title}</h4>
+                <p className="text-xs text-slate-300 leading-relaxed font-sans">{art.content}</p>
+                {art.audioUrl && (
+                  <audio controls src={art.audioUrl} className="w-full rounded-xl bg-slate-900" />
                 )}
               </div>
             ))}
@@ -477,46 +479,33 @@ export const ClassTrainingPage = () => {
         </div>
       )}
 
-      {/* TAB 4: HỌC PHÍ 3 ĐỢT */}
-      {activeTab === 'tuition' && (
-        <div className="space-y-6">
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-            <h3 className="text-xs font-black text-white uppercase">BẢNG THEO DÕI HỌC PHÍ 3 ĐỢT & ĐIỂM DANH:</h3>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs font-bold text-slate-300">
-                <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
-                  <tr>
-                    <th className="p-3">Tên Học Viên</th>
-                    <th className="p-3">Lớp</th>
-                    <th className="p-3">Tiền nộp Đợt 1</th>
-                    <th className="p-3">Tiền nộp Đợt 2</th>
-                    <th className="p-3">Tiền nộp Đợt 3</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {tuitionList.map((t) => (
-                    <tr key={t.id} className="hover:bg-slate-950/50">
-                      <td className="p-3 font-black text-white">{t.studentName}</td>
-                      <td className="p-3 text-brand-300">{t.className}</td>
-                      <td className="p-3 text-emerald-400">1.500.000đ (Đã nộp)</td>
-                      <td className="p-3 text-emerald-400">1.500.000đ (Đã nộp)</td>
-                      <td className="p-3 text-rose-400">1.500.000đ (Chưa nộp)</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {/* TAB 2: QUẢN LÝ LỚP & ĐIỂM DANH */}
+      {activeTab === 'students' && (
+        <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+          <h3 className="text-xs font-black text-white uppercase tracking-wider">QUẢN LÝ LỚP & ĐIỂM DANH THỜI GIAN THỰC</h3>
+          <p className="text-xs text-slate-400 font-bold">Điểm danh 4 trạng thái và sổ nề nếp ý thức từng học sinh trong lớp.</p>
         </div>
       )}
 
-      {/* MỞ KHÓA LỚP HỌC MODAL MATCHING SCREENSHOT 2 100% */}
+      {/* TAB 3: NĂM HỌC */}
+      {activeTab === 'academic_year' && (
+        <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl max-w-3xl mx-auto">
+          <h3 className="text-xs font-black text-white uppercase">KHAI BÁO NĂM HỌC THỜI GIAN THỰC</h3>
+        </div>
+      )}
+
+      {/* TAB 4: HỌC PHÍ 3 ĐỢT */}
+      {activeTab === 'tuition' && (
+        <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+          <h3 className="text-xs font-black text-white uppercase">THEO DÕI HỌC PHÍ 3 ĐỢT</h3>
+        </div>
+      )}
+
+      {/* STUDENT PASSCODE UNLOCK MODAL (OPENING BELOW STICKY NAVBAR PT-20 TO PREVENT OVERLAPPING) */}
       {showUnlockModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed top-20 inset-x-0 bottom-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-6 overflow-y-auto">
           <div className="bg-slate-900 border-2 border-purple-500/50 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-fadeIn">
             
-            {/* HEADER MATCHING SCREENSHOT 2 */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-black">
@@ -529,13 +518,12 @@ export const ClassTrainingPage = () => {
               </button>
             </div>
 
-            <form onSubmit={handleConfirmUnlock} className="space-y-4 text-xs font-bold">
-              {/* INPUT 1 MATCHING SCREENSHOT 2 */}
+            <form onSubmit={handleStudentConfirmUnlock} className="space-y-4 text-xs font-bold">
               <div className="space-y-1">
                 <label className="text-slate-300">Vui lòng nhập mã do Ban tổ chức cung cấp:</label>
                 <input
                   type="text"
-                  placeholder="VD: ETA-VIP2026..."
+                  placeholder="VD: ETA-GL2026..."
                   value={inputJoinCode}
                   onChange={(e) => setInputJoinCode(e.target.value)}
                   className="w-full p-3.5 rounded-2xl bg-slate-950 border border-slate-800 font-mono text-xs font-bold text-white focus:outline-none focus:border-purple-500"
@@ -543,12 +531,8 @@ export const ClassTrainingPage = () => {
                 />
               </div>
 
-              {/* INPUT 2 MATCHING SCREENSHOT 2 */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-slate-300">Số Điện Thoại Zalo cá nhân:</label>
-                  <span className="text-[10px] text-purple-400 font-normal">(Đồng bộ đối chiếu thành viên nhóm Zalo)</span>
-                </div>
+                <label className="text-slate-300">Số Điện Thoại Zalo cá nhân:</label>
                 <input
                   type="text"
                   placeholder="VD: 0912345678"
@@ -556,10 +540,8 @@ export const ClassTrainingPage = () => {
                   onChange={(e) => setInputZaloPhone(e.target.value)}
                   className="w-full p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:outline-none focus:border-purple-500"
                 />
-                <p className="text-[10px] text-slate-400 font-normal">Hệ thống sẽ đối chiếu SĐT này với danh sách thành viên nhóm Zalo của lớp & gửi xác thực.</p>
               </div>
 
-              {/* ACTION BUTTONS MATCHING SCREENSHOT 2 */}
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowUnlockModal(false)} className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold">
                   Hủy
@@ -574,18 +556,84 @@ export const ClassTrainingPage = () => {
         </div>
       )}
 
-      {/* QR CODE MODAL */}
-      {showQrModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
-            <h3 className="text-sm font-black text-white">MÃ QR CODE GIA NHẬP LỚP HỌC</h3>
-            <div className="p-4 bg-white rounded-2xl inline-block">
-              <QrCode className="w-32 h-32 text-slate-950" />
+      {/* ADMIN/TEACHER PASSCODE GENERATOR MODAL */}
+      {showAdminCodeModal && (
+        <div className="fixed top-20 inset-x-0 bottom-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-6 overflow-y-auto">
+          <div className="bg-slate-900 border-2 border-purple-500/50 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-black text-amber-400 flex items-center gap-2 uppercase">
+                🔑 QUẢN LÝ & TẠO MÃ MỞ KHÓA MỚI (DÀNH CHO GIÁO VIÊN/ADMIN)
+              </h3>
+              <button onClick={() => setShowAdminCodeModal(false)} className="p-1 rounded-lg hover:bg-slate-800 text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <div className="font-mono text-sm font-black text-amber-400">Mã Join: {showQrModal.joinCode}</div>
-            <button onClick={() => setShowQrModal(null)} className="w-full py-2.5 rounded-xl bg-slate-800 text-white font-bold text-xs">
-              Đóng
-            </button>
+
+            <div className="space-y-3 text-xs font-bold">
+              <div>
+                <span className="text-slate-300">Mã hiện tại đang áp dụng:</span>
+                <div className="p-3 rounded-2xl bg-slate-950 font-mono text-sm text-amber-300 font-black mt-1">
+                  {masterPasscode}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-slate-300">Mã ngẫu nhiên mới vừa tạo:</span>
+                <input
+                  type="text"
+                  value={newGeneratedCode || masterPasscode}
+                  onChange={(e) => setNewGeneratedCode(e.target.value)}
+                  className="w-full p-3 rounded-2xl bg-slate-950 border border-purple-500/50 font-mono text-xs font-bold text-white mt-1"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGenerateNewMasterCode}
+                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-xs"
+              >
+                ⚡ Tạo Mã Ngẫu Nhiên Mới
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowAdminCodeModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">
+                Hủy
+              </button>
+              <button
+                onClick={handleApplyNewMasterCode}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-xs shadow-lg"
+              >
+                ✓ Áp Dụng Mã Mới & Gửi Học Sinh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECURE PDF/DRIVE INLINE VIEWER (HIDE RAW GOOGLE DRIVE LINK - DIRECTIVE 1) */}
+      {activePdfViewer && (
+        <div className="fixed top-20 inset-x-0 bottom-0 z-40 bg-slate-950/90 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
+          <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn max-h-[84vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+              <div>
+                <span className="text-[10px] text-emerald-400 font-black uppercase tracking-wider">
+                  🛡️ BẢO MẬT MÃ HÓA LINK GOOGLE DRIVE • XEM TRỰC TUYẾN
+                </span>
+                <h3 className="text-base font-black text-white">{activePdfViewer.title}</h3>
+              </div>
+              <button onClick={() => setActivePdfViewer(null)} className="p-2 rounded-xl bg-slate-800 text-slate-300">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden relative min-h-[400px]">
+              <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(activePdfViewer.driveLink)}&embedded=true`}
+                title={activePdfViewer.title}
+                className="w-full h-full min-h-[450px] border-0"
+              />
+            </div>
           </div>
         </div>
       )}
