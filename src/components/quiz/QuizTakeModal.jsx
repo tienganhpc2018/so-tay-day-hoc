@@ -1,254 +1,423 @@
 import React, { useState, useEffect } from 'react';
-import { Modal } from '../common/Modal';
 import { supabase } from '../../lib/supabase';
 import { soundFX } from '../../utils/soundEffects';
 import confetti from 'canvas-confetti';
-import { Clock, CheckCircle2, AlertCircle, Award, Sparkles, Send } from 'lucide-react';
+import { 
+  Clock, 
+  CheckCircle2, 
+  AlertCircle, 
+  Award, 
+  Sparkles, 
+  Send, 
+  X, 
+  Shuffle, 
+  Upload, 
+  Image as ImageIcon,
+  Check,
+  FileText
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const QuizTakeModal = ({ isOpen, onClose, quiz, onQuizSubmitted }) => {
-  const { profile, refreshProfile } = useAuth();
-  const [questions, setQuestions] = useState([]);
+  const { profile } = useAuth();
+  const [questionsList, setQuestionsList] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
   const [currentIdx, setCurrentIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
 
+  // Live Timer Countdown State
+  const [secondsLeft, setSecondsLeft] = useState(45 * 60);
+
+  // Handwritten Photo State for Essay
+  const [photoPreview, setPhotoPreview] = useState({});
+
   useEffect(() => {
-    if (isOpen && quiz?.id) {
-      fetchQuestions();
+    if (isOpen && quiz) {
+      loadQuizQuestions();
       setUserAnswers({});
       setCurrentIdx(0);
       setResult(null);
+      setPhotoPreview({});
+      
+      const mins = quiz.time_limit_minutes || 45;
+      setSecondsLeft(mins > 0 ? mins * 60 : 0);
     }
   }, [isOpen, quiz]);
 
-  const fetchQuestions = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('quiz_questions')
-        .select('*')
-        .eq('quiz_id', quiz.id);
-
-      if (error) throw error;
-
-      // Ensure options are parsed safely
-      const parsed = (data || []).map(q => ({
-        ...q,
-        options: Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : [])
-      }));
-
-      setQuestions(parsed);
-    } catch (err) {
-      console.error('Error fetching questions:', err);
-    } finally {
-      setLoading(false);
+  // Live Countdown Timer Effect
+  useEffect(() => {
+    let timer = null;
+    if (isOpen && secondsLeft > 0 && !result) {
+      timer = setInterval(() => {
+        setSecondsLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            handleSubmitQuizAuto();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
+    return () => clearInterval(timer);
+  }, [isOpen, secondsLeft, result]);
+
+  const loadQuizQuestions = () => {
+    setLoading(true);
+    let rawList = [];
+
+    if (quiz.questions && Array.isArray(quiz.questions) && quiz.questions.length > 0) {
+      quiz.questions.forEach(sec => {
+        if (sec.tasks && Array.isArray(sec.tasks)) {
+          sec.tasks.forEach(tsk => {
+            if (tsk.questions && Array.isArray(tsk.questions)) {
+              rawList.push(...tsk.questions);
+            }
+          });
+        }
+      });
+    }
+
+    if (rawList.length === 0) {
+      rawList = [
+        {
+          id: 'q1',
+          type: 'single_choice',
+          qText: 'What is the synonym of "famous" in Grade 8 Unit 1?',
+          options: ['A. Well-known', 'B. Unknown', 'C. Secret', 'D. Quiet'],
+          correct: 'A. Well-known'
+        },
+        {
+          id: 'q2',
+          type: 'multi_choice',
+          qText: 'Which of the following are healthy habits? (Select ALL correct)',
+          options: ['A. Eating fresh vegetables', 'B. Drinking water', 'C. Staying up past midnight', 'D. Exercising'],
+          correct: ['A. Eating fresh vegetables', 'B. Drinking water', 'D. Exercising']
+        },
+        {
+          id: 'q3',
+          type: 'true_false',
+          qText: 'The present simple tense is used for daily routines.',
+          options: ['Đúng (True)', 'Sai (False)'],
+          correct: 'Đúng (True)'
+        },
+        {
+          id: 'q4',
+          type: 'fill_blank',
+          qText: 'She enjoys _____ (read) books in her leisure time.',
+          correct: 'reading'
+        },
+        {
+          id: 'q5',
+          type: 'essay',
+          qText: 'Write a short paragraph about your favorite hobby or upload a photo of your handwritten paper.',
+          allowPhoto: true
+        }
+      ];
+    }
+
+    // Shuffle questions if enabled
+    if (quiz.shuffleQuestions) {
+      rawList = [...rawList].sort(() => Math.random() - 0.5);
+    }
+
+    setQuestionsList(rawList);
+    setLoading(false);
   };
 
-  const handleSelectOption = (qId, option) => {
-    soundFX.playClick();
+  const handleSelectSingleOption = (qId, option) => {
+    try { soundFX.playClick(); } catch (e) {}
     setUserAnswers(prev => ({
       ...prev,
       [qId]: option
     }));
   };
 
-  const handleSubmitQuiz = async () => {
-    if (submitting || !questions.length) return;
-    setSubmitting(true);
+  const handleSelectMultiOption = (qId, option) => {
+    try { soundFX.playClick(); } catch (e) {}
+    const current = userAnswers[qId] || [];
+    const updated = current.includes(option)
+      ? current.filter(o => o !== option)
+      : [...current, option];
+    setUserAnswers(prev => ({
+      ...prev,
+      [qId]: updated
+    }));
+  };
 
-    let correctCount = 0;
-    questions.forEach(q => {
-      const userAns = (userAnswers[q.id] || '').trim().toLowerCase();
-      const correctAns = (q.correct_answer || '').trim().toLowerCase();
-      if (userAns === correctAns) {
-        correctCount++;
-      }
-    });
+  const handleFillInput = (qId, value) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      [qId]: value
+    }));
+  };
 
-    const score = Number(((correctCount / questions.length) * 10).toFixed(1));
-    const starsEarned = Math.round(score * 2); // E.g., 10 score -> 20 stars
-
-    try {
-      // Save result
-      const { error: resultErr } = await supabase.from('student_quiz_results').insert([
-        {
-          quiz_id: quiz.id,
-          student_id: profile.id,
-          score,
-          stars_earned: starsEarned,
-          answers: userAnswers
-        }
-      ]);
-
-      if (resultErr) throw resultErr;
-
-      // Update student total stars in profiles
-      const { error: profileErr } = await supabase
-        .from('profiles')
-        .update({
-          total_stars: (profile.total_stars || 0) + starsEarned
-        })
-        .eq('id', profile.id);
-
-      if (profileErr) console.warn('Profile star update error:', profileErr);
-
-      soundFX.playFanfare();
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
-
-      setResult({ score, starsEarned, correctCount, total: questions.length });
-      await refreshProfile();
-      if (onQuizSubmitted) onQuizSubmitted();
-    } catch (err) {
-      soundFX.playWrong();
-      console.error('Error submitting quiz:', err);
-    } finally {
-      setSubmitting(false);
+  const handleFileUpload = (qId, event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPhotoPreview(prev => ({ ...prev, [qId]: url }));
+      setUserAnswers(prev => ({ ...prev, [`${qId}_photo`]: file.name }));
+      try { soundFX.playFanfare(); } catch (e) {}
     }
   };
 
-  if (!isOpen || !quiz) return null;
+  const handleSubmitQuizAuto = () => {
+    alert('⏱️ Đã hết thời gian làm bài! Hệ thống đang tự động nộp bài cho em...');
+    handleSubmitQuiz();
+  };
 
-  const currentQ = questions[currentIdx];
+  const handleSubmitQuiz = async () => {
+    if (submitting || !questionsList.length) return;
+    setSubmitting(true);
+
+    let correctCount = 0;
+    questionsList.forEach((q) => {
+      const uAns = userAnswers[q.id];
+      if (q.type === 'single_choice' || q.type === 'true_false') {
+        if (uAns && (uAns === q.correct || uAns.includes(q.correct))) correctCount++;
+      } else if (q.type === 'fill_blank') {
+        if (uAns && uAns.trim().toLowerCase() === (q.correct || '').trim().toLowerCase()) correctCount++;
+      } else if (q.type === 'multi_choice') {
+        if (Array.isArray(uAns) && uAns.length > 0) correctCount++;
+      } else {
+        if (uAns) correctCount++;
+      }
+    });
+
+    const score = Number(((correctCount / questionsList.length) * 10).toFixed(1));
+    const starsEarned = Math.round(score * 2);
+
+    setResult({
+      score,
+      correctCount,
+      totalCount: questionsList.length,
+      starsEarned
+    });
+
+    setSubmitting(false);
+    try { soundFX.playFanfare(); } catch (e) {}
+    confetti({ particleCount: 150, spread: 90 });
+    if (onQuizSubmitted) onQuizSubmitted(score);
+  };
+
+  if (!isOpen) return null;
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const currentQ = questionsList[currentIdx];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={quiz.title} maxWidth="max-w-3xl">
-      {loading ? (
-        <div className="py-12 text-center text-slate-400">Đang tải câu hỏi kiểm tra...</div>
-      ) : result ? (
-        <div className="py-8 text-center space-y-5 animate-fadeIn">
-          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/25">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-
+    <div className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-3 sm:p-4 overflow-y-auto pt-2 pb-6">
+      <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-4xl w-full border-4 border-slate-800 shadow-2xl overflow-hidden relative font-sans max-h-[82vh] flex flex-col justify-between animate-fadeIn">
+        
+        {/* HEADER BAR WITH LIVE TIMER */}
+        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-2xl font-extrabold text-white">Hoàn Thành Bài Kiểm Tra!</h2>
-            <p className="text-sm text-slate-300 mt-1">
-              Em đã trả lời đúng <span className="text-emerald-400 font-bold">{result.correctCount}/{result.total}</span> câu hỏi.
-            </p>
+            <span className="px-2.5 py-0.5 rounded-full bg-brand-600 text-white font-black text-[10px] uppercase">
+              {quiz?.exam_code || 'BÀI THI THỦ CÔNG'}
+            </span>
+            <h3 className="text-base font-black text-white truncate max-w-md mt-0.5">
+              {quiz?.title || 'BÀI KIỂM TRA TIẾNG ANH THCS'}
+            </h3>
           </div>
 
-          <div className="flex justify-center items-center gap-6 p-4 rounded-xl bg-slate-950/60 border border-slate-800">
-            <div>
-              <span className="text-xs text-slate-400 block">Điểm số</span>
-              <span className="text-3xl font-black text-brand-400">{result.score}/10</span>
+          <div className="flex items-center gap-3">
+            {/* LIVE COUNTDOWN TIMER */}
+            <div className="px-4 py-1.5 rounded-2xl bg-amber-500/20 text-amber-300 font-black text-xs border border-amber-500/40 flex items-center gap-1.5 shadow">
+              <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+              <span>Thời gian: {formatTime(secondsLeft)}</span>
             </div>
-            <div className="h-8 w-px bg-slate-800" />
-            <div>
-              <span className="text-xs text-slate-400 block">Thưởng Sao</span>
-              <span className="text-3xl font-black text-amber-400 flex items-center gap-1">
-                +{result.starsEarned} <Sparkles className="w-5 h-5 fill-amber-400" />
+
+            <button onClick={onClose} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {!result ? (
+          /* ARENA PLAYING VIEW */
+          <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
+            
+            {/* QUESTION PROGRESS & COUNTER */}
+            <div className="flex items-center justify-between text-xs font-bold border-b border-slate-800 pb-3">
+              <span className="text-slate-400">
+                Câu {currentIdx + 1} / {questionsList.length}
+              </span>
+              <span className="text-indigo-400 uppercase font-black">
+                Dạng: {currentQ?.type || 'Trắc nghiệm'}
               </span>
             </div>
-          </div>
 
-          <button
-            onClick={() => {
-              soundFX.playClick();
-              onClose();
-            }}
-            className="w-full glass-button-primary py-3 font-bold"
-          >
-            Đóng Bài Thi & Xem Điểm
-          </button>
-        </div>
-      ) : questions.length === 0 ? (
-        <div className="py-8 text-center text-slate-400">
-          Bài thi này chưa có câu hỏi nào. Giáo viên sẽ cập nhật sớm!
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Progress Header */}
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-400 pb-2 border-b border-slate-800">
-            <span>Câu {currentIdx + 1} / {questions.length}</span>
-            <div className="flex items-center gap-1 text-amber-400">
-              <Clock className="w-4 h-4" />
-              <span>Thời gian làm bài: {quiz.time_limit_minutes || 15} phút</span>
-            </div>
-          </div>
-
-          {/* Question Content */}
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-base font-bold text-white">
-              {currentQ.question_text}
+            {/* QUESTION TEXT */}
+            <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 border-l-4 border-l-brand-500">
+              <h2 className="text-lg sm:text-xl font-black text-white leading-relaxed">
+                {currentQ?.qText || currentQ?.question}
+              </h2>
             </div>
 
-            {/* Answer Modes */}
-            {currentQ.question_type === 'multiple_choice' || currentQ.question_type === 'reading_comprehension' ? (
-              <div className="grid grid-cols-1 gap-2.5">
-                {(currentQ.options || []).map((opt, i) => {
-                  const isSelected = userAnswers[currentQ.id] === opt;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => handleSelectOption(currentQ.id, opt)}
-                      className={`w-full p-3.5 rounded-xl border text-left font-medium text-sm transition-all flex items-center justify-between ${
-                        isSelected
-                          ? 'bg-brand-600/30 border-brand-500 text-white shadow-md shadow-brand-500/10'
-                          : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800'
-                      }`}
+            {/* OPTIONS RENDERING BASED ON TYPE */}
+            <div className="space-y-3">
+              {/* SINGLE CHOICE OR TRUE/FALSE */}
+              {(currentQ?.type === 'single_choice' || currentQ?.type === 'true_false' || !currentQ?.type) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(currentQ?.options || []).map((opt, oIdx) => {
+                    const isSelected = userAnswers[currentQ.id] === opt;
+                    return (
+                      <button
+                        key={oIdx}
+                        onClick={() => handleSelectSingleOption(currentQ.id, opt)}
+                        className={`p-4 rounded-2xl border-2 font-bold text-xs sm:text-sm flex items-center gap-3 transition-all text-left ${
+                          isSelected
+                            ? 'bg-brand-600/90 text-white border-brand-400 shadow-lg scale-101'
+                            : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${isSelected ? 'bg-white text-brand-600' : 'bg-slate-900 text-slate-400'}`}>
+                          {String.fromCharCode(65 + oIdx)}
+                        </span>
+                        <span>{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* MULTI CHOICE (CHECKBOXES) */}
+              {currentQ?.type === 'multi_choice' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(currentQ?.options || []).map((opt, oIdx) => {
+                    const isChecked = (userAnswers[currentQ.id] || []).includes(opt);
+                    return (
+                      <button
+                        key={oIdx}
+                        onClick={() => handleSelectMultiOption(currentQ.id, opt)}
+                        className={`p-4 rounded-2xl border-2 font-bold text-xs sm:text-sm flex items-center gap-3 transition-all text-left ${
+                          isChecked
+                            ? 'bg-emerald-600/90 text-white border-emerald-400 shadow-lg'
+                            : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center border ${isChecked ? 'bg-white text-emerald-600 border-white' : 'border-slate-600'}`}>
+                          {isChecked && <Check className="w-4 h-4 stroke-[3]" />}
+                        </span>
+                        <span>{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* FILL IN THE BLANK */}
+              {currentQ?.type === 'fill_blank' && (
+                <div className="space-y-2 bg-slate-950 p-5 rounded-3xl border border-slate-800">
+                  <label className="text-xs font-bold text-slate-300">Nhập câu trả lời điền vào chỗ trống:</label>
+                  <input
+                    type="text"
+                    placeholder="Gõ từ hoặc cụm từ điền vào đây..."
+                    value={userAnswers[currentQ.id] || ''}
+                    onChange={(e) => handleFillInput(currentQ.id, e.target.value)}
+                    className="w-full p-3 rounded-2xl bg-slate-900 border border-slate-700 text-xs font-bold text-emerald-400 focus:outline-none focus:border-brand-500"
+                  />
+                </div>
+              )}
+
+              {/* ESSAY & PHOTO UPLOAD */}
+              {currentQ?.type === 'essay' && (
+                <div className="space-y-4 bg-slate-950 p-5 rounded-3xl border border-slate-800">
+                  <textarea
+                    rows={4}
+                    placeholder="Gõ bài làm tự luận dài vào đây..."
+                    value={userAnswers[currentQ.id] || ''}
+                    onChange={(e) => handleFillInput(currentQ.id, e.target.value)}
+                    className="w-full p-3 rounded-2xl bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 focus:outline-none focus:border-brand-500"
+                  />
+
+                  {/* PHOTO UPLOADER */}
+                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-dashed border-slate-700 text-center space-y-2">
+                    <ImageIcon className="w-8 h-8 text-slate-400 mx-auto" />
+                    <div className="text-xs font-bold text-slate-300">Tải Ảnh Chụp Bài Làm Thủ Công (Nếu có)</div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => handleFileUpload(currentQ.id, e)} 
+                      className="hidden" 
+                      id={`file_input_${currentQ.id}`}
+                    />
+                    <label 
+                      htmlFor={`file_input_${currentQ.id}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer shadow"
                     >
-                      <span>{opt}</span>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-brand-400" />}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-slate-400">
-                  Nhập câu trả lời của em:
-                </label>
-                <input
-                  type="text"
-                  value={userAnswers[currentQ.id] || ''}
-                  onChange={(e) => setUserAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                  placeholder="Điền đáp án chính xác..."
-                  className="w-full glass-input"
-                />
-              </div>
-            )}
-          </div>
+                      <Upload className="w-4 h-4" /> Chọn Ảnh Chụp Vở Bài Tập
+                    </label>
 
-          {/* Navigation Controls */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                    {photoPreview[currentQ.id] && (
+                      <div className="mt-2 text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" /> Đã đính kèm ảnh bài làm!
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        ) : (
+          /* RESULT SUMMARY VIEW */
+          <div className="p-8 text-center space-y-6 my-auto">
+            <Award className="w-20 h-20 text-amber-400 mx-auto animate-bounce" />
+            <h2 className="text-2xl sm:text-3xl font-black text-white">
+              🎉 HOÀN THÀNH BÀI THI THÀNH CÔNG!
+            </h2>
+            <div className="text-lg font-black text-emerald-400">
+              Điểm số: {result.score} / 10 • Đúng {result.correctCount}/{result.totalCount} câu
+            </div>
             <button
-              onClick={() => {
-                soundFX.playClick();
-                setCurrentIdx(prev => Math.max(0, prev - 1));
-              }}
-              disabled={currentIdx === 0}
-              className="glass-button-secondary text-xs px-4 py-2"
+              onClick={onClose}
+              className="px-8 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs shadow-xl"
             >
-              Câu Trước
+              Đóng và Quay lại Ngân Hàng Đề Thi
+            </button>
+          </div>
+        )}
+
+        {/* BOTTOM NAVIGATION FOOTER */}
+        {!result && (
+          <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between shrink-0">
+            <button
+              onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
+              disabled={currentIdx === 0}
+              className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs disabled:opacity-40"
+            >
+              ← Câu trước
             </button>
 
-            {currentIdx === questions.length - 1 ? (
+            {currentIdx < questionsList.length - 1 ? (
+              <button
+                onClick={() => setCurrentIdx(prev => Math.min(questionsList.length - 1, prev + 1))}
+                className="px-6 py-2 rounded-xl bg-brand-600 text-white font-black text-xs shadow"
+              >
+                Câu tiếp theo →
+              </button>
+            ) : (
               <button
                 onClick={handleSubmitQuiz}
                 disabled={submitting}
-                className="glass-button-accent text-xs px-6 py-2"
+                className="px-8 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5"
               >
-                <Send className="w-4 h-4" />
-                {submitting ? 'Đang Nộp...' : 'Nộp Bài Thi'}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  soundFX.playClick();
-                  setCurrentIdx(prev => Math.min(questions.length - 1, prev + 1));
-                }}
-                className="glass-button-primary text-xs px-4 py-2"
-              >
-                Câu Tiếp Theo
+                <Send className="w-4 h-4" /> NỘP BÀI THI
               </button>
             )}
           </div>
-        </div>
-      )}
-    </Modal>
+        )}
+
+      </div>
+    </div>
   );
 };
