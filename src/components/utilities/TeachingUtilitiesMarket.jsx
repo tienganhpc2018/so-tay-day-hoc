@@ -18,7 +18,8 @@ import {
   ExternalLink,
   BookOpen,
   Layers,
-  Dices
+  Dices,
+  Swords
 } from 'lucide-react';
 import { soundFX } from '../../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -27,6 +28,7 @@ import { FlashcardGame } from '../games/FlashcardGame';
 import { MatchingPairsGame } from '../games/MatchingPairsGame';
 import { WordScrambleGame } from '../games/WordScrambleGame';
 import { IFrameGameViewer } from '../games/iFrameGameViewer';
+import { TugOfWarGameCanvas } from '../games/TugOfWarGameCanvas';
 
 export const TeachingUtilitiesMarket = () => {
   const [activeTab, setActiveTab] = useState('games');
@@ -39,12 +41,13 @@ export const TeachingUtilitiesMarket = () => {
   // Preview Modal for "Xem thử"
   const [previewItem, setPreviewItem] = useState(null);
 
-  // Play Game Modal
+  // Play Game State / Canvas Modal
   const [activePlayGame, setActivePlayGame] = useState(null);
 
-  // 4 MAIN TABS - TAB 1 IS "Game vui học"
+  // 5 MAIN TABS UNDER HERO BANNER
   const tabs = [
     { id: 'games', label: 'Game vui học', icon: Gamepad2 },
+    { id: 'interactive', label: 'Game tương tác', icon: Swords },
     { id: 'questions', label: 'Kho câu hỏi cá nhân', icon: HelpCircle },
     { id: 'classes', label: 'Danh sách lớp học', icon: Users },
     { id: 'community', label: 'Thư viện cộng đồng', icon: Globe }
@@ -58,7 +61,7 @@ export const TeachingUtilitiesMarket = () => {
     { id: 'iframe', label: '4. iFrame Game Project', icon: ExternalLink }
   ];
 
-  // 4 ADDITIONAL INTERACTIVE GAMES
+  // 4 INTERACTIVE GAMES FOR TAB "Game tương tác"
   const [interactiveGames, setInteractiveGames] = useState([
     {
       id: 'g1',
@@ -102,21 +105,21 @@ export const TeachingUtilitiesMarket = () => {
     }
   ]);
 
-  // TAB 2: KHO CÂU HỎI CÁ NHÂN
+  // TAB 3: KHO CÂU HỎI CÁ NHÂN
   const personalQuestions = [
     { id: 1, title: 'Ngân hàng 150 câu hỏi Từ vựng Unit 1 - Unit 6 (Khối 8)', count: '150 câu', grade: 'Lớp 8' },
     { id: 2, title: 'Bộ câu hỏi Ngữ pháp Verbs of Liking + V-ing', count: '45 câu', grade: 'Lớp 7' },
     { id: 3, title: 'Đề thi trắc nghiệm giữa kỳ I Global Success Khối 9', count: '80 câu', grade: 'Lớp 9' }
   ];
 
-  // TAB 3: DANH SÁCH LỚP HỌC
+  // TAB 4: DANH SÁCH LỚP HỌC
   const classRosters = [
     { id: 1, name: 'Lớp 8A5 - Tiếng Anh THCS', count: '38 học sinh', teacher: 'Thầy Nguyễn Văn Hải' },
     { id: 2, name: 'Lớp 7A2 - Tiếng Anh THCS', count: '40 học sinh', teacher: 'Thầy Nguyễn Văn Hải' },
     { id: 3, name: 'Lớp 9A1 - Ôn thi Vào 10', count: '35 học sinh', teacher: 'Thầy Nguyễn Văn Hải' }
   ];
 
-  // TAB 4: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG (CHỈ 4 LỚP: 6, 7, 8, 9)
+  // TAB 5: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG (CHỈ 4 LỚP: 6, 7, 8, 9)
   const communityQuestionSets = [
     {
       id: 'c1',
@@ -243,8 +246,8 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       </div>
 
-      {/* 2. 4 MAIN TABS DIRECTLY BELOW HERO BANNER */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 pb-4">
+      {/* 2. 5 MAIN TABS DIRECTLY BELOW HERO BANNER */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 border-b border-slate-800 pb-4">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -255,7 +258,7 @@ export const TeachingUtilitiesMarket = () => {
                 try { soundFX.playClick(); } catch (e) {}
                 setActiveTab(t.id);
               }}
-              className={`px-5 py-3 rounded-2xl font-extrabold text-xs sm:text-sm flex items-center gap-2.5 transition-all ${
+              className={`px-4 sm:px-5 py-3 rounded-2xl font-extrabold text-xs sm:text-sm flex items-center gap-2 transition-all ${
                 isActive
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 shadow-lg shadow-orange-500/30 scale-105'
                   : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800 hover:bg-slate-800'
@@ -268,11 +271,11 @@ export const TeachingUtilitiesMarket = () => {
         })}
       </div>
 
-      {/* TAB 1: GAME VUI HỌC (CHỨA ĐẦY ĐỦ 4 TRÒ CHƠI NGUYÊN BẢN & BỘ CARD GAME) */}
+      {/* TAB 1: GAME VUI HỌC (4 CHẾ ĐỘ GAME INTERACTIVE PLAYABLE) */}
       {activeTab === 'games' && (
         <div className="space-y-8 animate-fadeIn">
           
-          {/* 4 SUB-TABS DÀNH RIÊNG CHO 4 GAMES TƯƠNG TÁC */}
+          {/* 4 SUB-TABS CHO 4 GAMES TƯƠNG TÁC */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
             {gameSubTabs.map((tab) => {
               const Icon = tab.icon;
@@ -306,67 +309,69 @@ export const TeachingUtilitiesMarket = () => {
             {activeGameSubTab === 'iframe' && <IFrameGameViewer />}
           </div>
 
-          {/* ADDITIONAL 4 INTERACTIVE GAME CARDS */}
-          <div className="space-y-4 pt-4 border-t border-slate-800">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
-                🎁 Trò chơi Miễn phí khác <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">4 trò chơi</span>
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {interactiveGames.map((g) => (
-                <div key={g.id} className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl hover:border-amber-400/50 transition-all flex flex-col justify-between group">
-                  <div>
-                    <div className="relative h-44 w-full overflow-hidden bg-slate-950">
-                      <img src={g.img} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] uppercase shadow">
-                        {g.badge}
-                      </span>
-                      <button 
-                        onClick={() => alert(`Khung chỉnh sửa trò chơi ${g.title}`)}
-                        className="absolute top-3 right-3 px-3 py-1 rounded-xl bg-slate-900/90 text-amber-300 hover:bg-slate-800 font-extrabold text-xs shadow border border-amber-400/40"
-                      >
-                        ✏️ Sửa
-                      </button>
-                    </div>
-
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-extrabold text-slate-400 uppercase tracking-wider">{g.tag}</span>
-                        <span className="font-bold text-amber-400">🔥 {g.plays}</span>
-                      </div>
-                      <h4 className="text-base font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{g.title}</h4>
-                      <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{g.description}</p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 pt-0 flex items-center gap-2">
-                    <button 
-                      onClick={() => {
-                        try { soundFX.playClick(); } catch (e) {}
-                        setActivePlayGame(g);
-                      }}
-                      className="flex-1 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg flex items-center justify-center gap-1.5"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" /> Chơi ngay
-                    </button>
-                    <button 
-                      onClick={() => alert('Đã sao chép liên kết trò chơi!')}
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
       )}
 
-      {/* TAB 2: KHO CÂU HỎI CÁ NHÂN */}
+      {/* TAB 2: GAME TƯƠNG TÁC (CHỨA 4 GAME CARD VÒNG QUAY, KÉO CO, VẸO CỔ, CHÉM HOA QUẢ AI) */}
+      {activeTab === 'interactive' && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-black text-white flex items-center gap-2">
+              🎁 Game tương tác đối kháng <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">4 trò chơi</span>
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {interactiveGames.map((g) => (
+              <div key={g.id} className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl hover:border-amber-400/50 transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="relative h-44 w-full overflow-hidden bg-slate-950">
+                    <img src={g.img} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] uppercase shadow">
+                      {g.badge}
+                    </span>
+                    <button 
+                      onClick={() => setActivePlayGame(g)}
+                      className="absolute top-3 right-3 px-3 py-1 rounded-xl bg-slate-900/90 text-amber-300 hover:bg-slate-800 font-extrabold text-xs shadow border border-amber-400/40"
+                    >
+                      ✏️ Sửa
+                    </button>
+                  </div>
+
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-extrabold text-slate-400 uppercase tracking-wider">{g.tag}</span>
+                      <span className="font-bold text-amber-400">🔥 {g.plays}</span>
+                    </div>
+                    <h4 className="text-base font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{g.title}</h4>
+                    <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{g.description}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 pt-0 flex items-center gap-2">
+                  <button 
+                    onClick={() => {
+                      try { soundFX.playClick(); } catch (e) {}
+                      setActivePlayGame(g);
+                    }}
+                    className="flex-1 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-1.5 hover:brightness-110"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" /> Chơi ngay
+                  </button>
+                  <button 
+                    onClick={() => alert('Đã sao chép liên kết trò chơi!')}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: KHO CÂU HỎI CÁ NHÂN */}
       {activeTab === 'questions' && (
         <div className="space-y-6 animate-fadeIn">
           <div className="flex items-center justify-between">
@@ -393,7 +398,7 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       )}
 
-      {/* TAB 3: DANH SÁCH LỚP HỌC */}
+      {/* TAB 4: DANH SÁCH LỚP HỌC */}
       {activeTab === 'classes' && (
         <div className="space-y-6 animate-fadeIn">
           <div className="flex items-center justify-between">
@@ -421,7 +426,7 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       )}
 
-      {/* TAB 4: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG (CHỈ CÓ 4 LỚP: 6, 7, 8, 9) */}
+      {/* TAB 5: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG (CHỈ CÓ 4 LỚP: 6, 7, 8, 9) */}
       {activeTab === 'community' && (
         <div className="space-y-6 animate-fadeIn">
           
@@ -594,28 +599,9 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       )}
 
-      {/* PLAY GAME MODAL */}
+      {/* TUG OF WAR / GAME CANVAS MODAL MATCHING SCREENSHOT 3 */}
       {activePlayGame && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 space-y-4 animate-fadeIn shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-black text-white flex items-center gap-2">
-                🎮 {activePlayGame.title}
-              </h3>
-              <button onClick={() => setActivePlayGame(null)} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="h-[550px] w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
-              <iframe 
-                src={activePlayGame.gameUrl} 
-                title={activePlayGame.title} 
-                className="w-full h-full border-0"
-              />
-            </div>
-          </div>
-        </div>
+        <TugOfWarGameCanvas onClose={() => setActivePlayGame(null)} />
       )}
 
     </div>
