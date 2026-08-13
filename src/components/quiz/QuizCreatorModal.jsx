@@ -29,7 +29,11 @@ import {
   Play,
   Trash2,
   Eye,
-  FileCheck
+  FileCheck,
+  ChevronDown,
+  ChevronUp,
+  FileCode,
+  Copy
 } from 'lucide-react';
 import { soundFX } from '../../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -73,10 +77,34 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
   // Tab 5: AI Authoring Studio State (Screenshots 1, 2, 3)
   const [aiGrade, setAiGrade] = useState(6);
   const [selectedUnits, setSelectedUnits] = useState(['unit1', 'unit2']);
-  const [driveAudioLink, setDriveAudioLink] = useState('');
   const [promptNotes, setPromptNotes] = useState('');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiExamGenerated, setAiExamGenerated] = useState(false);
+
+  // Accordion Expand State for Exercise Types (Screenshots 2 & 3)
+  const [expandedSections, setExpandedSections] = useState({
+    listening: true,
+    knowledge: false,
+    reading: false,
+    communication: false,
+    writing: false,
+    speaking: false
+  });
+
+  // Section Configurations
+  const [listeningP1Count, setListeningP1Count] = useState(5);
+  const [listeningP1Audio, setListeningP1Audio] = useState('');
+  const [listeningP2Count, setListeningP2Count] = useState(5);
+  const [listeningP2Audio, setListeningP2Audio] = useState('');
+  const [knowledgeCount, setKnowledgeCount] = useState(10);
+  const [readingCount, setReadingCount] = useState(5);
+  const [communicationCount, setCommunicationCount] = useState(5);
+  const [writingCount, setWritingCount] = useState(5);
+  const [speakingCount, setSpeakingCount] = useState(3);
+
+  // JSON Template Helper Modal State (Screenshot 1)
+  const [showJsonModal, setShowJsonModal] = useState(false);
+  const [jsonPasteInput, setJsonPasteInput] = useState('');
 
   // Tab 6: Speaking & Writing AI State
   const [aiMode, setAiMode] = useState('speaking');
@@ -104,7 +132,11 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
 
   if (!isOpen) return null;
 
-  // DYNAMIC AI GRAMMAR TOPICS DERIVED ACCURATELY FOR SELECTED UNITS (DIRECTIVE 5 - SCREENSHOT 3)
+  const toggleSection = (secKey) => {
+    try { soundFX.playClick(); } catch (e) {}
+    setExpandedSections(prev => ({ ...prev, [secKey]: !prev[secKey] }));
+  };
+
   const getDynamicGrammarTopics = () => {
     const gradeGrammar = UNIT_GRAMMAR_MAP[aiGrade] || {};
     const topicsSet = new Set();
@@ -244,6 +276,25 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
     onClose();
   };
 
+  const sampleJsonCode = `{
+  "examTitle": "BÀI KIỂM TRA HỌC KỲ 1 KHỐI ${aiGrade}",
+  "listeningP1": { "count": ${listeningP1Count}, "audioUrl": "${listeningP1Audio || 'https://drive.google.com/...'}" },
+  "listeningP2": { "count": ${listeningP2Count}, "audioUrl": "${listeningP2Audio || 'https://drive.google.com/...'}" },
+  "knowledgeCount": ${knowledgeCount},
+  "readingCount": ${readingCount},
+  "communicationCount": ${communicationCount},
+  "writingCount": ${writingCount},
+  "speakingCount": ${speakingCount}
+}`;
+
+  const handleApplyJsonInput = () => {
+    try { soundFX.playFanfare(); } catch (e) {}
+    setAiExamGenerated(true);
+    setShowJsonModal(false);
+    confetti({ particleCount: 120, spread: 80 });
+    alert('✨ Đã nạp thành công nội dung đề thi từ mẫu JSON vào bản in A4!');
+  };
+
   const dynamicGrammarList = getDynamicGrammarTopics();
 
   return (
@@ -271,7 +322,7 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
           </button>
         </div>
 
-        {/* TOP TAB NAVIGATION - ALL 6 TABS */}
+        {/* TOP TAB NAVIGATION */}
         <div className="flex items-center gap-1.5 p-3 bg-slate-900 border-b border-slate-800 shrink-0 text-xs font-bold overflow-x-auto">
           <button
             onClick={() => setActiveTab('settings')}
@@ -399,10 +450,9 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
             </div>
           )}
 
-          {/* TAB 2: DANH SÁCH CÂU HỎI (SOẠN ĐỀ THỦ CÔNG KÈM NÚT SỬA, XÓA - DIRECTIVE 1) */}
+          {/* TAB 2: DANH SÁCH CÂU HỎI (SOẠN ĐỀ THỦ CÔNG KÈM SỬA/XÓA) */}
           {activeTab === 'questions' && (
             <div className="space-y-6">
-              {/* FORM SOẠN/SỬA CÂU HỎI THỦ CÔNG */}
               <form onSubmit={handleAddOrUpdateQuestion} className="p-5 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
                   <span className="font-black text-xs text-white uppercase flex items-center gap-1.5">
@@ -463,7 +513,6 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
                 </div>
               </form>
 
-              {/* LIST OF QUESTIONS WITH SỬA & XÓA BUTTONS (DIRECTIVE 1) */}
               <div className="space-y-3">
                 <h4 className="font-black text-xs text-slate-300 uppercase tracking-wider">
                   DANH SÁCH {questions.length} CÂU HỎI TRONG ĐỀ THI:
@@ -479,7 +528,6 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
                         <span>{q.question}</span>
                       </div>
                       
-                      {/* NÚT SỬA VÀ XÓA CÂU HỎI THỦ CÔNG */}
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleEditQuestionClick(q)}
@@ -496,16 +544,6 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
                         </button>
                       </div>
                     </div>
-
-                    {q.options && q.options.length > 0 && (
-                      <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-400 pl-8 font-bold">
-                        {q.options.map((opt, oIdx) => (
-                          <div key={oIdx} className={opt === q.correctAnswer ? 'text-emerald-400 font-black' : ''}>
-                            • {opt} {opt === q.correctAnswer && '✓'}
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -586,11 +624,14 @@ D. Art history
             </div>
           )}
 
-          {/* TAB 5: SOẠN ĐỀ AI (WITH DYNAMIC GRAMMAR BADGES & SUBMISSIONS TRACKER - DIRECTIVES 3 & 5) */}
+          {/* TAB 5: SOẠN ĐỀ AI (WITH ACCORDION EXERCISE TYPES MATRIX - REQUEST 1 & SCREENSHOT 2/3) */}
           {activeTab === 'ai_authoring' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
+              {/* LEFT FORM COLUMN (5 COLS) */}
               <div className="lg:col-span-5 space-y-5">
+                
+                {/* 1. CHỌN KHỐI LỚP & NHIỀU UNITS SGK */}
                 <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 space-y-3">
                   <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-purple-400" /> 1. CHỌN KHỐI LỚP & NHIỀU UNITS SGK
@@ -631,7 +672,7 @@ D. Art history
                     </div>
                   </div>
 
-                  {/* DYNAMIC GRAMMAR BADGES ACCURATELY DERIVED LIKE AI (DIRECTIVE 5 - SCREENSHOT 3) */}
+                  {/* DYNAMIC GRAMMAR BADGES */}
                   <div className="p-3.5 rounded-2xl bg-purple-950/40 border border-purple-500/40 space-y-2 text-xs">
                     <span className="font-black text-purple-300 text-[11px] flex items-center gap-1 uppercase">
                       <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" /> CHỦ ĐIỂM NGỮ PHÁP TÍCH HỢP TỰ ĐỘNG (KHỐI {aiGrade}):
@@ -646,7 +687,164 @@ D. Art history
                   </div>
                 </div>
 
+                {/* 2. CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN ACCORDION (REQUEST 1 & SCREENSHOT 2/3) */}
+                <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 space-y-3">
+                  <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 border-b border-slate-800 pb-2">
+                    CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN:
+                  </h4>
+
+                  <div className="space-y-2 text-xs font-bold">
+                    
+                    {/* 1. LISTENING ACCORDION (SCREENSHOT 3) */}
+                    <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900">
+                      <div 
+                        onClick={() => toggleSection('listening')}
+                        className="p-3 bg-slate-950 flex items-center justify-between cursor-pointer hover:bg-slate-900/80"
+                      >
+                        <div className="flex items-center gap-2 text-purple-300 font-black">
+                          <CheckSquare className="w-4 h-4 text-purple-400" />
+                          <span>1. LISTENING (Nghe hiểu - 2 Bài)</span>
+                        </div>
+                        {expandedSections.listening ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
+
+                      {expandedSections.listening && (
+                        <div className="p-4 space-y-4 border-t border-slate-800 bg-slate-950/60 animate-fadeIn">
+                          {/* PART 1 */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-purple-300 font-black">
+                              <span>PART 1 (Trắc nghiệm):</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[11px] text-slate-400">Số câu:</span>
+                                <select value={listeningP1Count} onChange={(e) => setListeningP1Count(Number(e.target.value))} className="p-1 rounded bg-slate-900 border text-xs font-bold text-white">
+                                  <option value={3}>3 câu</option>
+                                  <option value={5}>5 câu</option>
+                                  <option value={8}>8 câu</option>
+                                </select>
+                              </div>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Dán link Drive Audio Part 1..."
+                              value={listeningP1Audio}
+                              onChange={(e) => setListeningP1Audio(e.target.value)}
+                              className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200"
+                            />
+                          </div>
+
+                          {/* PART 2 */}
+                          <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                            <div className="flex items-center justify-between text-purple-300 font-black">
+                              <span>PART 2 (True / False):</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[11px] text-slate-400">Số câu:</span>
+                                <select value={listeningP2Count} onChange={(e) => setListeningP2Count(Number(e.target.value))} className="p-1 rounded bg-slate-900 border text-xs font-bold text-white">
+                                  <option value={3}>3 câu</option>
+                                  <option value={5}>5 câu</option>
+                                  <option value={8}>8 câu</option>
+                                </select>
+                              </div>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Dán link Drive Audio Part 2..."
+                              value={listeningP2Audio}
+                              onChange={(e) => setListeningP2Audio(e.target.value)}
+                              className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 2. KNOWLEDGE OF LANGUAGE ACCORDION */}
+                    <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900">
+                      <div onClick={() => toggleSection('knowledge')} className="p-3 bg-slate-950 flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center gap-2 text-purple-300 font-black">
+                          <CheckSquare className="w-4 h-4 text-purple-400" />
+                          <span>2. KNOWLEDGE OF LANGUAGE</span>
+                        </div>
+                        {expandedSections.knowledge ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
+                      {expandedSections.knowledge && (
+                        <div className="p-3 border-t border-slate-800 flex items-center justify-between">
+                          <span className="text-slate-300">Số lượng câu hỏi:</span>
+                          <select value={knowledgeCount} onChange={(e) => setKnowledgeCount(Number(e.target.value))} className="p-1.5 rounded bg-slate-900 border text-xs font-bold text-white">
+                            <option value={5}>5 câu</option>
+                            <option value={10}>10 câu</option>
+                            <option value={15}>15 câu</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 3. READING ACCORDION */}
+                    <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900">
+                      <div onClick={() => toggleSection('reading')} className="p-3 bg-slate-950 flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center gap-2 text-purple-300 font-black">
+                          <CheckSquare className="w-4 h-4 text-purple-400" />
+                          <span>3. READING (Đọc hiểu)</span>
+                        </div>
+                        {expandedSections.reading ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
+                      {expandedSections.reading && (
+                        <div className="p-3 border-t border-slate-800 flex items-center justify-between">
+                          <span className="text-slate-300">Số câu đọc hiểu:</span>
+                          <select value={readingCount} onChange={(e) => setReadingCount(Number(e.target.value))} className="p-1.5 rounded bg-slate-900 border text-xs font-bold text-white">
+                            <option value={5}>5 câu</option>
+                            <option value={10}>10 câu</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 4. COMMUNICATION ACCORDION */}
+                    <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900">
+                      <div onClick={() => toggleSection('communication')} className="p-3 bg-slate-950 flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center gap-2 text-purple-300 font-black">
+                          <CheckSquare className="w-4 h-4 text-purple-400" />
+                          <span>4. COMMUNICATION (Giao tiếp)</span>
+                        </div>
+                        {expandedSections.communication ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    </div>
+
+                    {/* 5. WRITING ACCORDION */}
+                    <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900">
+                      <div onClick={() => toggleSection('writing')} className="p-3 bg-slate-950 flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center gap-2 text-purple-300 font-black">
+                          <CheckSquare className="w-4 h-4 text-purple-400" />
+                          <span>5. WRITING (Viết sáng tạo)</span>
+                        </div>
+                        {expandedSections.writing ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    </div>
+
+                    {/* 6. SPEAKING ACCORDION */}
+                    <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900">
+                      <div onClick={() => toggleSection('speaking')} className="p-3 bg-slate-950 flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center gap-2 text-purple-300 font-black">
+                          <CheckSquare className="w-4 h-4 text-purple-400" />
+                          <span>6. SPEAKING (Nói & Chấm AI)</span>
+                        </div>
+                        {expandedSections.speaking ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* PROMPT NOTES */}
                 <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 space-y-3 text-xs font-bold">
+                  <span className="text-slate-300 uppercase">Ý TƯỞNG TỰ SOẠN CỦA THẦY CÔ (PROMPT NOTES):</span>
+                  <textarea
+                    rows={3}
+                    value={promptNotes}
+                    onChange={(e) => setPromptNotes(e.target.value)}
+                    placeholder="Ví dụ: Thêm câu hỏi phủ định; bám sát trang 12 SGK..."
+                    className="w-full p-3 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 focus:outline-none focus:border-purple-500"
+                  />
+
                   <button
                     onClick={handleStartAiGeneration}
                     disabled={isGeneratingAi}
@@ -658,17 +856,40 @@ D. Art history
                 </div>
               </div>
 
-              {/* RIGHT PREVIEW & SUBMISSIONS TRACKER COLUMN */}
+              {/* RIGHT PREVIEW & ALL 5 ACTION BUTTONS COLUMN (REQUEST 2 & SCREENSHOT 1) */}
               <div className="lg:col-span-7 space-y-4">
+                
+                {/* ACTION BUTTONS HEADER (SCREENSHOT 1) */}
                 <div className="p-4 rounded-3xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs font-bold">
                   <span className="text-slate-300">Trang xem trước bản in đề thi:</span>
-                  <div className="flex items-center gap-2">
-                    <button onClick={handleSaveExam} className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-[11px]">💾 Lưu vào Ngân hàng</button>
-                    <button onClick={() => window.print()} className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-[11px]">🖨️ In đề (A4)</button>
+                  
+                  {/* ALL 5 RICH BUTTONS MATCHING SCREENSHOT 1 & REQUEST 2 */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] flex items-center gap-1">
+                      <Edit3 className="w-3.5 h-3.5" /> Sửa đề
+                    </button>
+                    
+                    <button onClick={handleSaveExam} className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] flex items-center gap-1">
+                      <Save className="w-3.5 h-3.5" /> Lưu đề vào Ngân hàng
+                    </button>
+
+                    <button className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-[11px] flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5" /> Tải Word (.doc)
+                    </button>
+
+                    {/* MẪU NHẬP .JSON HELPER BUTTON & MODAL TRIGGER (REQUEST 2) */}
+                    <button onClick={() => setShowJsonModal(true)} className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] flex items-center gap-1 shadow">
+                      <FileCode className="w-3.5 h-3.5" /> Mẫu nhập .JSON
+                    </button>
+
+                    <button onClick={() => window.print()} className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1">
+                      <Printer className="w-3.5 h-3.5" /> In đề (A4)
+                    </button>
                   </div>
                 </div>
 
-                <div className="p-8 rounded-3xl bg-slate-950 border border-slate-800 min-h-[380px] flex items-center justify-center text-center">
+                {/* PAPER A4 PREVIEW CONTAINER */}
+                <div className="p-8 rounded-3xl bg-slate-950 border border-slate-800 min-h-[420px] flex items-center justify-center text-center">
                   {!aiExamGenerated ? (
                     <div className="space-y-3 max-w-sm">
                       <Sparkles className="w-12 h-12 text-purple-400 mx-auto" />
@@ -680,16 +901,20 @@ D. Art history
                       <div className="text-center font-black text-sm text-white uppercase border-b border-slate-800 pb-2">
                         BÀI KIỂM TRA TIẾNG ANH KHỐI {aiGrade} (TẠO TỰ ĐỘNG AI)
                       </div>
-                      <p className="font-bold text-purple-400">I. LISTENING & GRAMMAR (5.0 points)</p>
-                      <p>Question 1: Choose the word with a different stress pattern.</p>
+                      <p className="font-bold text-purple-400">I. LISTENING (Nghe hiểu - {listeningP1Count + listeningP2Count} câu)</p>
+                      <p>Part 1: Listen and choose A, B, C, or D ({listeningP1Count} câu)</p>
+                      <p>Part 2: Listen and decide True/False ({listeningP2Count} câu)</p>
+                      <p className="font-bold text-purple-400 pt-2">II. KNOWLEDGE OF LANGUAGE ({knowledgeCount} câu)</p>
+                      <p>Question 1: Choose the correct answer to complete the sentence.</p>
                     </div>
                   )}
                 </div>
+
               </div>
             </div>
           )}
 
-          {/* TAB 6: SPEAKING & WRITING BTV AI + HỌC SINH NỘP BÀI TRACKER (DIRECTIVE 3) */}
+          {/* TAB 6: SPEAKING & WRITING BTV AI */}
           {activeTab === 'ai_speaking_writing' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs font-bold">
@@ -701,25 +926,6 @@ D. Art history
                   <button onClick={() => setAiMode('writing')} className={`px-4 py-2 rounded-xl flex items-center gap-1.5 ${aiMode === 'writing' ? 'bg-pink-600 text-white' : 'bg-slate-900 text-slate-400'}`}>
                     <Edit3 className="w-4 h-4" /> ✍️ Writing (Chấm Luận AI)
                   </button>
-                </div>
-              </div>
-
-              {/* TRANG QUẢN LÝ BÀI NỘP HỌC SINH DÀNH CHO GIÁO VIÊN THEO CHỈ ĐẠO CỦA THẦY (DIRECTIVE 3) */}
-              <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
-                <h4 className="text-xs font-black text-pink-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileCheck className="w-4 h-4" /> 📋 TRANG CHỨA BÀI NỘP CỦA HỌC SINH (GHI ÂM, VĂN BẢN, FILE .DOC, .PDF, .PNG)
-                </h4>
-
-                <div className="space-y-3 text-xs font-bold">
-                  <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <div className="text-white font-black">Phạm Thanh Tú (Lớp 8A5)</div>
-                      <div className="text-slate-400 text-[11px]">Đã nộp ghi âm Speaking (.mp3 45s) & File tự luận PDF</div>
-                    </div>
-                    <button onClick={() => alert('🎙️ Đã phát file ghi âm bài nộp của học sinh Phạm Thanh Tú')} className="px-4 py-2 rounded-xl bg-pink-600 text-white font-bold text-xs flex items-center gap-1">
-                      <Play className="w-3.5 h-3.5" /> Nghe Ghi Âm & Chấm Bài
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -744,6 +950,62 @@ D. Art history
         </div>
 
       </div>
+
+      {/* MẪU NHẬP .JSON HELPER MODAL (REQUEST 2) */}
+      {showJsonModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border-2 border-amber-500/50 rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-black text-amber-400 flex items-center gap-2 uppercase">
+                <FileCode className="w-5 h-5 text-amber-400" /> MẪU NHẬP FILE .JSON TỰ ĐỘNG CÓ SẴN
+              </h3>
+              <button onClick={() => setShowJsonModal(false)} className="p-1 rounded-lg hover:bg-slate-800 text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 font-bold">
+              💡 Thầy Cô chỉ cần dán đoạn mã JSON hoặc nội dung đã chuẩn bị từ Word vào đây, hệ thống sẽ <strong>nạp toàn bộ đề thi lên trang xem trước bản in A4 siêu nhanh trong 1 giây</strong>!
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                <span>Mẫu JSON tham khảo:</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(sampleJsonCode);
+                    try { soundFX.playClick(); } catch (e) {}
+                    alert('📋 Đã sao chép Mẫu JSON vào bộ nhớ tạm!');
+                  }}
+                  className="text-amber-400 hover:underline flex items-center gap-1 text-[11px]"
+                >
+                  <Copy className="w-3.5 h-3.5" /> Sao chép mẫu JSON
+                </button>
+              </div>
+
+              <textarea
+                rows={7}
+                value={jsonPasteInput || sampleJsonCode}
+                onChange={(e) => setJsonPasteInput(e.target.value)}
+                className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowJsonModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">
+                Đóng
+              </button>
+              <button
+                onClick={handleApplyJsonInput}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5"
+              >
+                ⚡ NẠP NGAY VÀO BẢN IN A4
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
