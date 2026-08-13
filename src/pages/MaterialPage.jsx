@@ -1310,9 +1310,9 @@ export const MaterialPage = () => {
 
       </div>
 
-      {/* Reader Modal */}
+      {/* Reader Modal (z-[100] floating above Navbar z-50) */}
       {activeReaderArticle && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-4xl w-full border border-slate-800 overflow-hidden shadow-2xl space-y-0 relative animate-fadeIn max-h-[90vh] overflow-y-auto">
             <div className="p-6 pb-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
               <div className="space-y-1">
