@@ -78,13 +78,7 @@ export const Navbar = () => {
     { 
       path: '/exam-testing', 
       label: 'Thi Thử', 
-      icon: Zap,
-      subMenus: [
-        { label: 'Thi Thử Khối 6', path: '/exam-testing?grade=6' },
-        { label: 'Thi Thử Khối 7', path: '/exam-testing?grade=7' },
-        { label: 'Thi Thử Khối 8', path: '/exam-testing?grade=8' },
-        { label: 'Thi Thử Khối 9', path: '/exam-testing?grade=9' }
-      ]
+      icon: Zap
     },
     { 
       path: '/lop-dao-tao', 
