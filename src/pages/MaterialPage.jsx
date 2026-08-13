@@ -240,7 +240,7 @@ export const MaterialPage = () => {
     alert('✨ ĐÃ CHÈN KHUNG ẨN ĐÁP ÁN TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
   };
 
-  // UPLOAD AUDIO FILE FROM COMPUTER DIRECTLY (TRANSPARENT NO-BORDER PLAYER WITH HEADPHONE ICON)
+  // UPLOAD AUDIO FILE FROM COMPUTER DIRECTLY (TRANSPARENT AUDIO PLAYER NO ICON NO TITLE)
   const handleFileUploadAudioFile = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -250,8 +250,7 @@ export const MaterialPage = () => {
         const base64Audio = event.target.result;
         const audioHtml = `
           <br/>
-          <div style="display: flex; align-items: center; gap: 12px; margin: 12px 0; background: transparent; border: none; padding: 4px 0;">
-            <span style="font-size: 22px; color: #a855f7; display: inline-flex; align-items: center;">🎧</span>
+          <div style="margin: 12px 0; background: transparent; border: none; padding: 4px 0;">
             <audio controls src="${base64Audio}" style="width: 100%; max-width: 650px; background: transparent; outline: none; border-radius: 9999px;" />
           </div>
           <br/>
@@ -263,7 +262,7 @@ export const MaterialPage = () => {
     }
   };
 
-  // INSERT AUDIO PLAYER FROM LINK (TRANSPARENT NO-BORDER PLAYER WITH HEADPHONE ICON)
+  // INSERT AUDIO PLAYER FROM LINK (TRANSPARENT AUDIO PLAYER NO ICON NO TITLE)
   const handleInsertAudioPlayerAtCursor = () => {
     const audioUrl = prompt('Nhập link Audio MP3 hoặc link Google Drive bài nghe:');
     if (!audioUrl || !audioUrl.trim()) return;
@@ -276,8 +275,7 @@ export const MaterialPage = () => {
 
     const audioHtml = `
       <br/>
-      <div style="display: flex; align-items: center; gap: 12px; margin: 12px 0; background: transparent; border: none; padding: 4px 0;">
-        <span style="font-size: 22px; color: #a855f7; display: inline-flex; align-items: center;">🎧</span>
+      <div style="margin: 12px 0; background: transparent; border: none; padding: 4px 0;">
         <audio controls src="${directAudio}" style="width: 100%; max-width: 650px; background: transparent; outline: none; border-radius: 9999px;" />
       </div>
       <br/>
@@ -314,6 +312,7 @@ export const MaterialPage = () => {
     div.innerHTML = text;
 
     const formattedHtml = div.innerHTML;
+    setFormContent(formattedHtml);
     if (contentEditableRef.current) {
       contentEditableRef.current.innerHTML = formattedHtml;
     }
@@ -415,17 +414,44 @@ export const MaterialPage = () => {
     }, 1200);
   };
 
-  // SMART PASTING SANITIZER: EXTRACT LAZY IMAGES & FIX ACCENTS
+  // SMART PASTING SANITIZER: SUPPORT DIRECT SCREENSHOT IMAGE PASTE (WIN + SHIFT + S) & WEB ARTICLES
   const handlePasteContent = (e) => {
     e.preventDefault();
     soundFX.playClick();
 
     const clipboardData = e.clipboardData || window.clipboardData;
+    if (!clipboardData) return;
+
+    // 1. CHECK IF CLIPBOARD HAS SCREENSHOT / IMAGE FILES DIRECTLY (WIN + SHIFT + S / PRINT SCREEN / COPY IMAGE)
+    const items = clipboardData.items;
+    let pastedImageFile = null;
+
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          pastedImageFile = items[i].getAsFile();
+          break;
+        }
+      }
+    }
+
+    if (pastedImageFile) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Img = event.target.result;
+        const imgHtml = `<br/><img src="${base64Img}" alt="Ảnh dán chụp màn hình" style="max-width: 100%; border-radius: 16px; margin: 14px auto; border: 1px solid #475569; display: block;" /><br/>`;
+        insertHtmlAtCursor(imgHtml);
+        alert('✨ ĐÃ DÁN HÌNH ẢNH CHỤP MÀN HÌNH (WIN + SHIFT + S) THÀNH CÔNG VÀO BÀI VIẾT!');
+      };
+      reader.readAsDataURL(pastedImageFile);
+      return;
+    }
+
+    // 2. REGULAR HTML / TEXT PASTING FROM WEBSITES
     let html = clipboardData.getData('text/html');
     const text = clipboardData.getData('text/plain');
 
     if (html) {
-      // Normalize Unicode NFC
       html = html.normalize('NFC');
       const div = document.createElement('div');
       div.innerHTML = html;
@@ -440,8 +466,6 @@ export const MaterialPage = () => {
 
         if (realSrc && !realSrc.startsWith('data:image/svg')) {
           img.setAttribute('src', realSrc);
-        } else if (img.getAttribute('data-src')) {
-          img.setAttribute('src', img.getAttribute('data-src'));
         }
 
         img.removeAttribute('data-src');
@@ -450,7 +474,7 @@ export const MaterialPage = () => {
 
         img.style.maxWidth = '100%';
         img.style.borderRadius = '16px';
-        img.style.margin = '12px 0';
+        img.style.margin = '12px auto';
         img.style.border = '1px solid #475569';
         img.style.display = 'block';
       });
@@ -461,9 +485,6 @@ export const MaterialPage = () => {
         el.style.backgroundColor = 'transparent';
         el.style.background = 'transparent';
         el.style.fontFamily = "'Be Vietnam Pro', sans-serif";
-        if (editorBgMode === 'dark') {
-          el.style.color = '#f8fafc';
-        }
       });
 
       html = div.innerHTML;
@@ -1003,7 +1024,7 @@ export const MaterialPage = () => {
 
               </div>
 
-              {/* CONTENTEDITABLE CONTAINER WITH CURSOR MEMORY */}
+              {/* CONTENTEDITABLE CONTAINER WITH NATIVE SMOOTH CARET CURSOR */}
               <div
                 ref={contentEditableRef}
                 contentEditable={true}
@@ -1017,7 +1038,6 @@ export const MaterialPage = () => {
                   handleSaveCursorPosition();
                   setFormContent(e.currentTarget.innerHTML);
                 }}
-                dangerouslySetInnerHTML={{ __html: formContent }}
                 className={`w-full min-h-[300px] max-h-[650px] overflow-y-auto p-5 text-sm font-sans leading-relaxed rounded-2xl border transition-all space-y-3 prose max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-500 [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block ${
                   editorBgMode === 'paper'
                     ? 'bg-[#fefea2] text-slate-950 border-amber-300 prose-slate [&_*]:!bg-transparent'
