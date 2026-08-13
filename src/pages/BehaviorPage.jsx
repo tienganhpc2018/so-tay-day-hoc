@@ -7,6 +7,7 @@ import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { DuckRaceGameCanvas } from '../components/behavior/DuckRaceGameCanvas';
 import { AddClassModal } from '../components/behavior/AddClassModal';
+import { TetPickNameModal } from '../components/behavior/TetPickNameModal';
 import { 
   Users, 
   Dices, 
@@ -61,6 +62,7 @@ export const BehaviorPage = () => {
 
   const [activeModal, setActiveModal] = useState(null); 
   const [showAddClassModal, setShowAddClassModal] = useState(false);
+  const [showTetModal, setShowTetModal] = useState(false);
 
   // Dynamic Roster State
   const [students, setStudents] = useState([
@@ -78,7 +80,7 @@ export const BehaviorPage = () => {
   // TRACK CALLED STUDENTS
   const [calledStudentIds, setCalledStudentIds] = useState([]);
 
-  // TRACK OPENED BLIND BAG POUCHES (DIRECTIVE BY THẦY MATCHING SCREENSHOT 2: "số được chọn rồi sẽ tự mờ đi, không chọn lại được nữa")
+  // TRACK OPENED BLIND BAG POUCHES
   const [openedPouchNumbers, setOpenedPouchNumbers] = useState([]);
 
   // Active (Present) & Uncalled Students Only
@@ -106,10 +108,6 @@ export const BehaviorPage = () => {
     { id: 'm4', name: 'Nói chuyện riêng', points: 3 }
   ]);
 
-  const [showAddCriteriaModal, setShowAddCriteriaModal] = useState(false);
-  const [newCriteriaName, setNewCriteriaName] = useState('');
-  const [newCriteriaPoints, setNewCriteriaPoints] = useState(5);
-
   // ANNOUNCEMENT POPUP STATE
   const [announcementData, setAnnouncementData] = useState(null);
 
@@ -123,9 +121,6 @@ export const BehaviorPage = () => {
   const [blindBagWinner, setBlindBagWinner] = useState(null);
 
   // Group Division State
-  const [numGroups, setNumGroups] = useState(3);
-  const [studentsPerGroup, setStudentsPerGroup] = useState(3);
-  const [showImagesInGroup, setShowImagesInGroup] = useState(true);
   const [groupedStudents, setGroupedStudents] = useState([]);
   const [selectedRepresentative, setSelectedRepresentative] = useState(null);
 
@@ -141,7 +136,7 @@ export const BehaviorPage = () => {
     setActiveModal('announcement');
   };
 
-  // Create New Class Handler (DIRECTIVE BY THẦY MATCHING SCREENSHOT 1)
+  // Create New Class Handler
   const handleAddNewClass = (newClassData) => {
     setSelectedClass(newClassData.className);
     setStudents(newClassData.students);
@@ -150,20 +145,32 @@ export const BehaviorPage = () => {
     triggerAnnouncement('🎉 ĐÃ TẠO LỚP HỌC MỚI', `Tạo lớp ${newClassData.fullClassName} với ${newClassData.students.length} học sinh thành công!`);
   };
 
-  // Add Custom Criterion
-  const handleAddCriteria = (e) => {
-    e.preventDefault();
-    if (!newCriteriaName.trim()) return;
-
+  // Divide Groups Handler
+  const handleDivideGroups = () => {
     soundFX.playClick();
-    const newCrit = { id: `crit_${Date.now()}`, name: newCriteriaName, points: Number(newCriteriaPoints) };
+    const available = students.filter(s => s.status !== 'Absent_Perm' && s.status !== 'Absent_NoPerm');
+    const shuffled = [...available].sort(() => 0.5 - Math.random());
+    const groupCount = 4;
+    const groups = Array.from({ length: groupCount }).map((_, idx) => ({
+      id: `grp_${idx + 1}`,
+      name: `Tổ ${idx + 1} (Nhóm ${idx + 1})`,
+      members: []
+    }));
 
-    if (rewardTab === 'plus') setPlusCriteriaList([...plusCriteriaList, newCrit]);
-    else setMinusCriteriaList([...minusCriteriaList, newCrit]);
+    shuffled.forEach((st, idx) => {
+      groups[idx % groupCount].members.push(st);
+    });
 
-    setNewCriteriaName('');
-    setShowAddCriteriaModal(false);
-    triggerAnnouncement('✨ ĐÃ THÊM TIÊU CHÍ MỚI', `Thêm tiêu chí "${newCriteriaName}" (${newCriteriaPoints} điểm) thành công!`);
+    setGroupedStudents(groups);
+  };
+
+  const handlePickRepresentative = () => {
+    if (groupedStudents.length === 0) return;
+    soundFX.playClick();
+    const allMembers = groupedStudents.flatMap(g => g.members);
+    const randomWinner = allMembers[Math.floor(Math.random() * allMembers.length)];
+    setSelectedRepresentative(randomWinner);
+    triggerAnnouncement('🎯 CHỌN ĐẠI DIỆN TRÌNH BÀY', `Đại diện trình bày được chọn: ${randomWinner.full_name}!`, randomWinner);
   };
 
   // Change Student Avatar
@@ -241,7 +248,7 @@ export const BehaviorPage = () => {
     }, 240);
   };
 
-  // TÚI MÙ (BLIND BAG GAME) WITH FADED / GREYED OUT OPENED POUCHES (DIRECTIVE BY THẦY MATCHING SCREENSHOT 2)
+  // TÚI MÙ (BLIND BAG GAME)
   const handleOpenBlindBagPouch = (pouchNum) => {
     if (openedPouchNumbers.includes(pouchNum)) {
       triggerAnnouncement('⚠️ TÚI MÙ ĐÃ MỞ', `Túi mù #${pouchNum} đã được mở trước đó, vui lòng nhấp chọn túi mù khác!`);
@@ -255,7 +262,7 @@ export const BehaviorPage = () => {
     }
 
     setSelectedPouchNumber(pouchNum);
-    setOpenedPouchNumbers(prev => [...prev, pouchNum]); // Mark pouch as opened (greyed out in Screenshot 2)
+    setOpenedPouchNumbers(prev => [...prev, pouchNum]);
     setBlindBagStep(2);
 
     setTimeout(() => {
@@ -299,12 +306,12 @@ export const BehaviorPage = () => {
       {/* HERO BANNER */}
       <PageHeroBanner
         title={`Sổ Nề Nếp & Quản Lý Lớp Chủ Nhiệm (${academicYear}) 📋`}
-        subtitle={`Tạo Lớp Học Mới (Ảnh 1), Túi Mù mờ số đã chọn (Ảnh 2) & Cài đặt Đua Vịt tách riêng (Ảnh 3) Lớp ${selectedClass}.`}
+        subtitle={`Kéo Slider chọn con vịt (Ảnh 1), Mờ Túi Mù đã chọn (Ảnh 2) & Cây Mai Hái Lộc Tết (Ảnh 3,4,5) Lớp ${selectedClass}.`}
         badge={`QUẢN LÝ LỚP CHỦ NHIỆM • LỚP ${selectedClass}`}
         bgImage="/images/hero_library_bg.jpg"
       />
 
-      {/* 1. TOP TOOL ACTION PILLS BAR (MATCHING SCREENSHOT 1 100%) */}
+      {/* 1. TOP TOOL ACTION PILLS BAR */}
       <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
@@ -338,7 +345,7 @@ export const BehaviorPage = () => {
           </div>
         </div>
 
-        {/* PILLS ROW */}
+        {/* PILLS ROW WITH FULLY ACTIVE TABS */}
         <div className="flex flex-wrap gap-2 text-xs font-black">
           
           <button
@@ -367,12 +374,12 @@ export const BehaviorPage = () => {
 
           <button
             onClick={() => {
-              setThemeMode(themeMode === 'default' ? 'tet' : 'default');
-              triggerAnnouncement('🌸 CHẾ ĐỘ PHONG BÌ TẾT', 'Đã bật không khí Tết Nguyên Đán rực rỡ!');
+              soundFX.playClick();
+              setShowTetModal(true); // MATCHING SCREENSHOTS 3, 4 & 5 DIRECTIVE
             }}
-            className="px-4 py-2 rounded-full bg-amber-400 text-slate-950 hover:bg-amber-300 shadow"
+            className="px-5 py-2 rounded-full bg-gradient-to-r from-red-600 to-rose-500 text-amber-300 shadow-lg animate-pulse"
           >
-            Tết 🌸
+            Tết (Hái hoa dân chủ) 🌸
           </button>
 
           <button
@@ -425,14 +432,14 @@ export const BehaviorPage = () => {
             }}
             className="px-4 py-2 rounded-full bg-amber-400 text-slate-950 hover:bg-amber-300 shadow"
           >
-            Chia Nhóm
+            Chia Nhóm & Theo Tổ 🐝
           </button>
 
           <button
             onClick={() => { soundFX.playClick(); setActiveModal('duck_race'); }}
             className="px-4 py-2 rounded-full bg-amber-400 text-slate-950 hover:bg-amber-300 shadow"
           >
-            Bee Race (Đua Vịt) 🐥
+            Bee Race (Đua Vịt Slider) 🐥
           </button>
 
           <button
@@ -510,7 +517,18 @@ export const BehaviorPage = () => {
         </div>
       </div>
 
-      {/* MODAL: TÚI MÙ WITH AUTO-DIMMING OPENED POUCHES (MATCHING SCREENSHOT 2 DIRECTIVE) */}
+      {/* TAB TẾT HÁI HOA DÂN CHỦ MODAL (MATCHING SCREENSHOTS 3, 4 & 5 100%) */}
+      <TetPickNameModal
+        isOpen={showTetModal}
+        onClose={() => setShowTetModal(false)}
+        students={students}
+        onRewardWinner={(winner, pts) => {
+          soundFX.playClick();
+          handleApplyPoints(pts, 'Thưởng Lộc Tết Hái hoa dân chủ đầu xuân');
+        }}
+      />
+
+      {/* MODAL: TÚI MÙ WITH AUTO-DIMMING OPENED POUCHES */}
       {activeModal === 'blind_bag_grid' && (
         <div className="fixed top-14 inset-x-0 bottom-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-start justify-center p-3 pt-3 overflow-y-auto font-sans">
           <div className="bg-[#15803d] border-4 border-amber-400 rounded-3xl max-w-5xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn max-h-[92vh] flex flex-col text-white relative">
@@ -524,7 +542,6 @@ export const BehaviorPage = () => {
               </button>
             </div>
 
-            {/* STEP 1: 32 POUCHES GRID (OPENED POUCHES ARE FADED/GREYED OUT IN SCREENSHOT 2) */}
             {blindBagStep === 1 && (
               <div className="flex-1 overflow-y-auto space-y-3">
                 <div className="flex items-center justify-between">
@@ -545,7 +562,7 @@ export const BehaviorPage = () => {
                   {Array.from({ length: 32 }).map((_, idx) => {
                     const pouchNum = idx + 1;
                     const isPink = pouchNum % 2 !== 0;
-                    const isOpened = openedPouchNumbers.includes(pouchNum); // DIRECTIVE BY THẦY MATCHING SCREENSHOT 2
+                    const isOpened = openedPouchNumbers.includes(pouchNum);
 
                     return (
                       <div
@@ -575,7 +592,6 @@ export const BehaviorPage = () => {
               </div>
             )}
 
-            {/* STEP 2: POUCH TEARING ANIMATION */}
             {blindBagStep === 2 && (
               <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6 animate-pulse">
                 <div className="w-40 h-40 rounded-3xl bg-rose-500 border-4 border-amber-300 shadow-2xl flex flex-col items-center justify-center space-y-2 animate-bounce">
@@ -586,7 +602,6 @@ export const BehaviorPage = () => {
               </div>
             )}
 
-            {/* STEP 3: BIG NAME REVEAL */}
             {blindBagStep === 3 && blindBagWinner && (
               <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6 bg-slate-900 rounded-3xl border-2 border-amber-400 shadow-2xl animate-fadeIn text-center">
                 <span className="text-xs font-black text-amber-400 uppercase tracking-widest">Capybara May Mắn</span>
@@ -622,14 +637,14 @@ export const BehaviorPage = () => {
         </div>
       )}
 
-      {/* ADD CLASS MODAL (MATCHING SCREENSHOT 1 100%) */}
+      {/* ADD CLASS MODAL */}
       <AddClassModal
         isOpen={showAddClassModal}
         onClose={() => setShowAddClassModal(false)}
         onAddClass={handleAddNewClass}
       />
 
-      {/* DUCK RACE GAME CANVAS (MATCHING SCREENSHOT 3 100%) */}
+      {/* DUCK RACE GAME CANVAS WITH RANGE SLIDER (MATCHING SCREENSHOT 1 100%) */}
       {activeModal === 'duck_race' && (
         <DuckRaceGameCanvas
           students={students}
@@ -639,6 +654,38 @@ export const BehaviorPage = () => {
             handleApplyPoints(pts, `Thưởng chiến thắng Game Đua Vịt (#${winner.rank})`);
           }}
         />
+      )}
+
+      {/* MODAL: SƠ ĐỒ LỚP HỌC */}
+      {activeModal === 'seating_map' && (
+        <div className="fixed top-16 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto font-sans">
+          <div className="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn text-white">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-black text-amber-400 uppercase flex items-center gap-2">
+                🏫 SƠ ĐỒ CHỖ NGỒI LỚP HỌC {selectedClass}
+              </h3>
+              <button onClick={() => setActiveModal(null)} className="p-1 rounded-lg bg-slate-800 text-slate-300">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-center text-sm uppercase tracking-widest">
+              BẢNG ĐEN GIẢNG BÀI CỦA GIÁO VIÊN
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              {students.map((st, idx) => (
+                <div key={st.id} className="p-3 rounded-2xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center space-y-1.5">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border border-amber-400">
+                    <img src={st.avatar} alt={st.full_name} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-xs font-bold line-clamp-1">{st.full_name}</span>
+                  <span className="text-[10px] text-amber-400 font-black">Bàn {Math.floor(idx / 2) + 1}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* CENTERED ANNOUNCEMENT POPUP MODAL */}
@@ -755,35 +802,33 @@ export const BehaviorPage = () => {
         </div>
       )}
 
-      {/* MODAL 3: GROUP DIVISION */}
+      {/* MODAL 3: GROUP DIVISION & tổ */}
       {activeModal === 'group_division' && (
-        <div className="fixed top-16 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto">
+        <div className="fixed top-16 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto font-sans">
           <div className="bg-white text-slate-900 rounded-3xl max-w-5xl w-full p-6 space-y-6 shadow-2xl animate-fadeIn max-h-[88vh] flex flex-col font-sans">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
-              <h3 className="text-base font-black text-slate-900">🐝 HỆ THỐNG CHIA NHÓM HỌC TẬP</h3>
+              <h3 className="text-base font-black text-slate-900">🐝 HỆ THỐNG CHIA NHÓM & TỔ HỌC TẬP TỰ ĐỘNG</h3>
               <button onClick={() => setActiveModal(null)} className="p-1.5 rounded-xl bg-slate-100 text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {groupedStudents.map((grp) => (
-                  <div key={grp.id} className="p-5 rounded-3xl border-2 border-amber-400 bg-slate-50 space-y-4 shadow-lg">
-                    <h4 className="text-base font-black text-slate-900 border-b-2 border-amber-400 pb-2">{grp.name}</h4>
-                    <div className="space-y-3">
+                  <div key={grp.id} className="p-4 rounded-3xl border-2 border-amber-400 bg-slate-50 space-y-3 shadow-lg">
+                    <h4 className="text-sm font-black text-slate-900 border-b-2 border-amber-400 pb-2">{grp.name}</h4>
+                    <div className="space-y-2">
                       {grp.members.map((mem) => {
                         const isSelectedPresenter = selectedRepresentative?.id === mem.id;
                         return (
-                          <div key={mem.id} className={`p-3 rounded-2xl border flex items-center gap-3 font-bold text-xs ${
+                          <div key={mem.id} className={`p-2.5 rounded-2xl border flex items-center gap-2.5 font-bold text-xs ${
                             isSelectedPresenter ? 'bg-rose-600 text-white border-rose-600 animate-pulse scale-105 shadow-xl' : 'bg-white text-slate-900 border-slate-200'
                           }`}>
-                            {showImagesInGroup && (
-                              <div className="w-10 h-10 rounded-full overflow-hidden border border-amber-400 shrink-0">
-                                <img src={mem.avatar} alt={mem.full_name} className="w-full h-full object-cover" />
-                              </div>
-                            )}
-                            <span>{mem.full_name}</span>
+                            <div className="w-8 h-8 rounded-full overflow-hidden border border-amber-400 shrink-0">
+                              <img src={mem.avatar} alt={mem.full_name} className="w-full h-full object-cover" />
+                            </div>
+                            <span className="line-clamp-1">{mem.full_name}</span>
                           </div>
                         );
                       })}
@@ -793,11 +838,81 @@ export const BehaviorPage = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 shrink-0">
+            <div className="flex justify-between items-center shrink-0 border-t border-slate-200 pt-3">
+              <button onClick={handleDivideGroups} className="px-5 py-2.5 rounded-full bg-slate-900 text-white font-black text-xs shadow">
+                🔄 Chia Lại Nhóm Mới
+              </button>
+
               <button onClick={handlePickRepresentative} className="px-6 py-2.5 rounded-full bg-gradient-to-r from-rose-600 to-amber-500 text-white font-black text-xs shadow-lg animate-pulse">
-                🎯 Chọn Đại Diện Trình Bày (Ngẫu Nhiên 1 Bạn)
+                🎯 Chọn Đại Diện Trình Bày Ngẫu Nhiên
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: GỌI NHIỀU */}
+      {activeModal === 'call_multiple' && (
+        <div className="fixed top-14 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto font-sans">
+          <div className="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl animate-fadeIn max-h-[88vh] flex flex-col text-white">
+            
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+              <h3 className="text-base font-black text-amber-400 uppercase flex items-center gap-2">
+                👥 QUẢN LÝ GỌI NHIỀU HỌC SINH (FULL DANH SÁCH LỚP)
+              </h3>
+              <button onClick={() => setActiveModal(null)} className="p-1.5 rounded-xl bg-slate-800 text-slate-300">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {students.map((st) => {
+                  const isAbsent = st.status === 'Absent_Perm' || st.status === 'Absent_NoPerm';
+                  const isCalled = calledStudentIds.includes(st.id);
+                  const isShufflingThis = shufflingStudent?.id === st.id;
+
+                  return (
+                    <div
+                      key={st.id}
+                      className={`p-3 rounded-2xl border transition-all flex flex-col items-center text-center space-y-2 relative ${
+                        isShufflingThis
+                          ? 'bg-rose-600 text-white border-rose-400 scale-110 shadow-2xl animate-bounce z-10'
+                          : isAbsent
+                          ? 'bg-rose-950/80 border-rose-700 opacity-40'
+                          : isCalled
+                          ? 'bg-slate-950 border-slate-800 opacity-50'
+                          : 'bg-slate-950 border-slate-800'
+                      }`}
+                    >
+                      <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-amber-400">
+                        <img src={st.avatar} alt={st.full_name} className="w-full h-full object-cover" />
+                      </div>
+                      <span className="text-xs font-black line-clamp-2">{st.full_name}</span>
+                      {isCalled && <span className="text-[9px] text-purple-400 font-bold">[ ĐÃ GỌI ]</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between shrink-0 pt-3 border-t border-slate-800">
+              <button
+                onClick={() => setCalledStudentIds([])}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs"
+              >
+                🔄 Đặt Lại Danh Sách
+              </button>
+
+              <button
+                onClick={handlePickMultipleWithSuspense}
+                disabled={isShuffling}
+                className="px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-xl flex items-center gap-2 animate-bounce"
+              >
+                <Dices className="w-5 h-5 fill-slate-950" /> {isShuffling ? 'Đang Hồi Hộp Quay (6 Giây)...' : '🚀 BẮT ĐẦU VÒNG QUAY GỌI 3 HỌC SINH'}
+              </button>
+            </div>
+
           </div>
         </div>
       )}

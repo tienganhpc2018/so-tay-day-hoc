@@ -22,21 +22,17 @@ export const DuckRaceGameCanvas = ({ students = [], onClose, onRewardWinner }) =
   // Filter present students
   const activeStudents = students.filter(s => s.status !== 'Absent_Perm' && s.status !== 'Absent_NoPerm');
 
-  // SCREEN MODE: 'setup' (Cài đặt) or 'racing' (Vào đường đua chờ lệnh - DIRECTIVE BY THẦY)
+  // SCREEN MODE: 'setup' (Cài đặt trượt slider - Screenshot 1) or 'racing' (Vào đường đua chờ lệnh - Screenshot 1)
   const [screenMode, setScreenMode] = useState('setup');
 
-  // Race Setup States
-  const [numDucks, setNumDucks] = useState(activeStudents.length || 10);
-  const [raceDuration, setRaceDuration] = useState(15);
-  const [timerText, setTimerText] = useState('00:00:15');
+  // Race Setup States (Matching Screenshot 1 100%)
+  const [numDucks, setNumDucks] = useState(4); // Default range slider value (Screenshot 1 shows green bubble 4)
+  const [raceDuration, setRaceDuration] = useState(12); // Default 12s matching Screenshot 1 (00:00:12)
+  const [timerText, setTimerText] = useState('00:00:12');
   const [useStudentNames, setUseStudentNames] = useState(true);
   const [isRacing, setIsRacing] = useState(false);
   const [raceFinished, setRaceFinished] = useState(false);
   const [rankings, setRankings] = useState([]);
-
-  // 2 QUICK NUMBER SELECTOR ROWS (DIRECTIVE BY THẦY)
-  const row1Numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const row2Numbers = [12, 15, 18, 20, 25, 30, 35, 40, 45, 50];
 
   // Canvas & Animation refs
   const canvasRef = useRef(null);
@@ -214,9 +210,9 @@ export const DuckRaceGameCanvas = ({ students = [], onClose, onRewardWinner }) =
               🐤
             </div>
             <div>
-              <h3 className="text-base font-black text-white">TRÒ CHƠI ĐUA VỊT DUCK RACE NÂNG CAO</h3>
+              <h3 className="text-base font-black text-white">TRÒ CHƠI ĐUA VỊT DUCK RACE (MATCHING SCREENSHOT 1)</h3>
               <span className="text-[11px] text-slate-400 font-bold">
-                {screenMode === 'setup' ? 'Màn hình cài đặt thông số cuộc đua' : `Màn hình đường đua (${numDucks} con vịt - ${raceDuration} giây)`}
+                {screenMode === 'setup' ? 'Cài đặt số lượng vịt bằng thanh trượt & thời gian' : `Đang chọn ${numDucks} con vịt - Thời gian ${raceDuration}s`}
               </span>
             </div>
           </div>
@@ -226,123 +222,102 @@ export const DuckRaceGameCanvas = ({ students = [], onClose, onRewardWinner }) =
           </button>
         </div>
 
-        {/* SCREEN 1: SEPARATE SETUP DASHBOARD (MATCHING SCREENSHOT 3 DIRECTIVE) */}
+        {/* SCREEN 1: RANGE SLIDER SETUP DASHBOARD (MATCHING SCREENSHOT 1 100%) */}
         {screenMode === 'setup' && (
           <div className="space-y-6 animate-fadeIn py-2">
-            <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 space-y-5">
-              
+            
+            {/* DIGITAL TIMER SETUP (MATCHING SCREENSHOT 1 TOP DISPLAY 00:00:12) */}
+            <div className="bg-slate-950 border-2 border-emerald-500 rounded-3xl p-6 text-center space-y-2 shadow-inner">
+              <span className="text-xs text-emerald-400 font-black uppercase tracking-wider">ĐỒNG HỒ ĐẾM GIỜ ĐĂNG KÝ BẮT ĐẦU ĐUA</span>
+              <div className="text-5xl font-black text-white font-mono tracking-widest">
+                00:00:{raceDuration.toString().padStart(2, '0')}
+              </div>
+            </div>
+
+            {/* KEYPAD & TIMER QUICK BUTTONS MATCHING SCREENSHOT 1 */}
+            <div className="p-4 rounded-3xl bg-slate-950 border border-slate-800 space-y-3">
+              <span className="text-xs font-black text-slate-400 uppercase">CHỌN THỜI GIAN NHANH (GIÂY):</span>
+              <div className="grid grid-cols-6 gap-2 text-xs font-black">
+                {[5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 45, 60].map((s) => (
+                  <button
+                    key={`time_${s}`}
+                    onClick={() => { soundFX.playClick(); setRaceDuration(s); setTimerText(`00:00:${s.toString().padStart(2, '0')}`); }}
+                    className={`p-3 rounded-xl border transition-all ${
+                      raceDuration === s ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-lg' : 'bg-slate-900 text-white border-slate-800 hover:bg-slate-800'
+                    }`}
+                  >
+                    {s}s
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* RANGE SLIDER 1 TO 100 DUCKS WITH GREEN NUMBER BUBBLE (MATCHING SCREENSHOT 1 100%) */}
+            <div className="p-6 rounded-3xl bg-slate-950 border-2 border-amber-400/60 space-y-4 shadow-xl">
               <div className="flex items-center justify-between">
-                <span className="text-amber-400 font-black uppercase text-xs tracking-wider flex items-center gap-2">
-                  <Zap className="w-4 h-4" /> BẢNG CÀI ĐẶT SỐ LƯỢNG VỊT ĐUA (2 DÃY SỐ):
+                <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                  <Zap className="w-4 h-4" /> KÉO THANH TRƯỢT CHỌN SỐ LƯỢNG VỊT ĐUA (1 TỚI 100 CON):
                 </span>
 
                 <button
-                  onClick={() => { soundFX.playClick(); setNumDucks(activeStudents.length || 10); setUseStudentNames(true); }}
-                  className={`px-4 py-2 rounded-xl text-xs font-black border transition-all ${
-                    useStudentNames && numDucks === activeStudents.length
-                      ? 'bg-amber-400 text-slate-950 border-amber-400'
-                      : 'bg-slate-900 text-slate-300 border-slate-700'
-                  }`}
+                  type="button"
+                  onClick={() => setUseStudentNames(!useStudentNames)}
+                  className="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs"
                 >
-                  🏫 Theo Sĩ Số Lớp ({activeStudents.length} HS)
+                  {useStudentNames ? 'Tên Học Sinh' : 'Số Thứ Tự'}
                 </button>
               </div>
 
-              {/* DÃY SỐ 1: 1 - 10 */}
-              <div className="space-y-2">
-                <span className="text-xs text-slate-400 uppercase font-bold">Dãy 1 (Số nhỏ 1 - 10 con):</span>
-                <div className="flex flex-wrap gap-2">
-                  {row1Numbers.map((n) => (
-                    <button
-                      key={`r1_${n}`}
-                      onClick={() => {
-                        soundFX.playClick();
-                        setNumDucks(n);
-                        setUseStudentNames(false);
-                      }}
-                      className={`w-11 h-11 rounded-2xl font-black text-sm transition-all flex items-center justify-center shadow ${
-                        numDucks === n && !useStudentNames
-                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white scale-110 border border-emerald-400 shadow-emerald-500/30'
-                          : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800'
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
+              {/* SLIDER CONTAINER WITH GREEN NUMBER BUBBLE (SCREENSHOT 1) */}
+              <div className="relative pt-6 pb-2 px-2">
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  value={numDucks}
+                  onChange={(e) => {
+                    soundFX.playClick();
+                    setNumDucks(Number(e.target.value));
+                  }}
+                  className="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                />
+
+                {/* GREEN NUMBER BUBBLE INDICATOR MATCHING SCREENSHOT 1 */}
+                <div
+                  className="absolute -top-3 w-10 h-10 rounded-full bg-emerald-500 border-2 border-white text-slate-950 font-black text-sm flex items-center justify-center shadow-2xl transition-all pointer-events-none transform -translate-x-1/2"
+                  style={{ left: `${((numDucks - 1) / 99) * 94 + 3}%` }}
+                >
+                  {numDucks}
                 </div>
               </div>
 
-              {/* DÃY SỐ 2: 12 - 50 */}
-              <div className="space-y-2">
-                <span className="text-xs text-slate-400 uppercase font-bold">Dãy 2 (Số lớn 12 - 50 con):</span>
-                <div className="flex flex-wrap gap-2">
-                  {row2Numbers.map((n) => (
-                    <button
-                      key={`r2_${n}`}
-                      onClick={() => {
-                        soundFX.playClick();
-                        setNumDucks(n);
-                        setUseStudentNames(false);
-                      }}
-                      className={`w-11 h-11 rounded-2xl font-black text-sm transition-all flex items-center justify-center shadow ${
-                        numDucks === n && !useStudentNames
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 scale-110 border border-amber-400 shadow-amber-500/30'
-                          : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800'
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex justify-between text-[11px] font-bold text-slate-400 px-1">
+                <span>1 Con</span>
+                <span>50 Con</span>
+                <span>100 Con</span>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-                  <span className="text-xs text-slate-400 font-bold">CÀI THỜI GIAN ĐUA:</span>
-                  <select
-                    value={raceDuration}
-                    onChange={(e) => setRaceDuration(Number(e.target.value))}
-                    className="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-white font-black text-xs"
-                  >
-                    <option value={10}>10 Giây</option>
-                    <option value={15}>15 Giây (Chuẩn)</option>
-                    <option value={30}>30 Giây</option>
-                    <option value={45}>45 Giây</option>
-                  </select>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-                  <span className="text-xs text-slate-400 font-bold">HIỂN THỊ TÊN / SỐ THỨ TỰ:</span>
-                  <button
-                    type="button"
-                    onClick={() => setUseStudentNames(!useStudentNames)}
-                    className="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 font-black text-xs text-left"
-                  >
-                    {useStudentNames ? 'Tên Học Sinh Trong Lớp' : 'Số Thứ Tự Con Vịt (1..N)'}
-                  </button>
-                </div>
-              </div>
-
             </div>
 
-            {/* CONFIRM & GO TO TRACK BUTTON */}
-            <button
-              onClick={() => {
-                soundFX.playClick();
-                setScreenMode('racing');
-              }}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 text-slate-950 font-black text-sm shadow-xl flex items-center justify-center gap-2 animate-bounce"
-            >
-              🚀 XÁC NHẬN CÀI ĐẶT & VÀO ĐƯỜNG ĐUA <ArrowRight className="w-5 h-5" />
-            </button>
+            {/* GREEN "SET" CONFIRMATION BUTTON MATCHING SCREENSHOT 1 */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => {
+                  soundFX.playClick();
+                  setScreenMode('racing');
+                }}
+                className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-base shadow-2xl flex items-center justify-center gap-2 animate-bounce"
+              >
+                <Check className="w-6 h-6 stroke-[3]" /> SET (XÁC NHẬN VÀO ĐƯỜNG ĐUA)
+              </button>
+            </div>
+
           </div>
         )}
 
-        {/* SCREEN 2: FULL SCREEN CLEAN TRACK & RACE ENGINE (DIRECTIVE BY THẦY) */}
+        {/* SCREEN 2: FULL SCREEN CLEAN TRACK & RACE ENGINE */}
         {screenMode === 'racing' && (
           <div className="space-y-4 flex-1 flex flex-col animate-fadeIn">
             
-            {/* TOP TIMER BAR */}
             <div className="flex items-center justify-between bg-slate-950 border-2 border-emerald-500 rounded-2xl p-4 shadow-inner shrink-0">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-black text-emerald-400 uppercase">ĐỒNG HỒ ĐẾM GIỜ BẮT ĐẦU ĐUA:</span>
@@ -357,7 +332,6 @@ export const DuckRaceGameCanvas = ({ students = [], onClose, onRewardWinner }) =
               </button>
             </div>
 
-            {/* CANVAS FULL TRACK */}
             <div className="flex-1 bg-slate-950 rounded-2xl border-2 border-slate-800 overflow-hidden relative min-h-[360px]">
               <canvas
                 ref={canvasRef}
@@ -367,7 +341,6 @@ export const DuckRaceGameCanvas = ({ students = [], onClose, onRewardWinner }) =
               />
             </div>
 
-            {/* RACE CONTROLS */}
             <div className="flex items-center justify-between shrink-0 pt-1 text-xs font-bold">
               <button
                 onClick={resetRace}
@@ -386,7 +359,6 @@ export const DuckRaceGameCanvas = ({ students = [], onClose, onRewardWinner }) =
               </button>
             </div>
 
-            {/* RANKINGS & LEADERBOARD TABLE */}
             {raceFinished && rankings.length > 0 && (
               <div className="p-4 rounded-2xl bg-slate-950 border border-amber-500/50 space-y-3 shrink-0 max-h-60 overflow-y-auto">
                 <h4 className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
