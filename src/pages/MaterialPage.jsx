@@ -22,12 +22,11 @@ import {
   FileText,
   Download,
   Wand2,
-  Image,
   Upload,
   Link as LinkIcon,
-  Camera,
-  Layers,
-  Sparkle
+  Eraser,
+  RefreshCw,
+  Sun
 } from 'lucide-react';
 
 export const MaterialPage = () => {
@@ -46,7 +45,7 @@ export const MaterialPage = () => {
 
   const [formTitle, setFormTitle] = useState('');
   const [formGrade, setFormGrade] = useState(8);
-  const [formUnit, setFormUnit] = useState('Unit 1: Leisure Time / My New School');
+  const [formUnit, setFormUnit] = useState('Unit 1: My New School / Leisure Time');
   const [formThumbnail, setFormThumbnail] = useState('https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop');
   const [formDescription, setFormDescription] = useState('');
   const [formContent, setFormContent] = useState('');
@@ -100,31 +99,27 @@ export const MaterialPage = () => {
     setArticlesList(categoryArticles);
   };
 
-  // DYNAMIC TOPIC AI IMAGE GENERATOR (PERFECT MATCHING THẦY'S EXACT TITLE TOPIC)
+  // SMART AI IMAGE GENERATOR (ANALYZES BOTH TITLE AND CONTENT KEYWORDS TO CREATE PERFECT MATCHING THUMBNAILS!)
   const handleAutoGenerateAiImageForTitle = () => {
-    if (!formTitle.trim()) {
-      alert('Vui lòng nhập Tiêu đề bài viết trước để AI sinh ảnh đúng chủ đề!');
-      return;
-    }
-
     soundFX.playClick();
     setIsGeneratingAiImage(true);
 
-    // Topic keywords map
-    const titleLower = formTitle.toLowerCase();
-    let topicKeyword = 'english student classroom';
+    const fullText = (formTitle + ' ' + formContent.replace(/<[^>]*>?/gm, '')).toLowerCase();
+    let topicKeyword = '3d pixar style english education school';
 
-    if (titleLower.includes('countryside') || titleLower.includes('nông thôn')) topicKeyword = 'vietnam countryside nature farm';
-    else if (titleLower.includes('leisure') || titleLower.includes('rảnh rỗi')) topicKeyword = 'teenagers origami craft hobby';
-    else if (titleLower.includes('healthy') || titleLower.includes('sức khỏe')) topicKeyword = 'healthy food fruits salad exercise';
-    else if (titleLower.includes('music') || titleLower.includes('âm nhạc')) topicKeyword = 'music instruments art students';
-    else if (titleLower.includes('food') || titleLower.includes('ăn uống')) topicKeyword = 'vietnamese food pho cooking';
-    else if (titleLower.includes('environment') || titleLower.includes('môi trường')) topicKeyword = 'green environment trees recycling';
-    else if (titleLower.includes('space') || titleLower.includes('vũ trụ')) topicKeyword = 'space astronaut planet rocket';
-    else if (titleLower.includes('science') || titleLower.includes('khoa học')) topicKeyword = 'science technology robot AI';
+    if (fullText.includes('lighthouse') || fullText.includes('hải đăng')) topicKeyword = 'sea lighthouse beacon island 3d pixar';
+    else if (fullText.includes('hospitable') || fullText.includes('hiếu khách')) topicKeyword = 'friendly welcoming people village 3d pixar';
+    else if (fullText.includes('football') || fullText.includes('cahn') || fullText.includes('bàn thắng') || fullText.includes('trận đấu')) topicKeyword = 'stadium football soccer players 3d pixar';
+    else if (fullText.includes('countryside') || fullText.includes('nông thôn')) topicKeyword = 'vietnam countryside nature farm 3d pixar';
+    else if (fullText.includes('leisure') || fullText.includes('rảnh rỗi')) topicKeyword = 'teenagers origami craft hobby 3d pixar';
+    else if (fullText.includes('healthy') || fullText.includes('sức khỏe')) topicKeyword = 'healthy food fruits exercise 3d pixar';
+    else if (fullText.includes('music') || fullText.includes('âm nhạc')) topicKeyword = 'music instruments art students 3d pixar';
+    else if (fullText.includes('food') || fullText.includes('ăn uống')) topicKeyword = 'vietnamese food cooking 3d pixar';
+    else if (fullText.includes('environment') || fullText.includes('môi trường')) topicKeyword = 'green environment trees 3d pixar';
+    else if (fullText.includes('space') || fullText.includes('vũ trụ')) topicKeyword = 'space planet astronaut rocket 3d pixar';
+    else if (fullText.includes('science') || fullText.includes('khoa học')) topicKeyword = 'science technology robot AI 3d pixar';
 
-    // Generate dynamic 3D Pixar cute image URL based on title topic
-    const dynamicAiUrl = `https://image.pollinations.ai/prompt/cute%203d%20pixar%20style%20educational%20illustration%20for%20${encodeURIComponent(topicKeyword)}?width=800&height=450&nologo=true`;
+    const dynamicAiUrl = `https://image.pollinations.ai/prompt/cute%20high%20quality%203d%20pixar%20illustration%20for%20${encodeURIComponent(topicKeyword)}?width=800&height=450&nologo=true`;
 
     setFormThumbnail(dynamicAiUrl);
 
@@ -132,8 +127,85 @@ export const MaterialPage = () => {
       setIsGeneratingAiImage(false);
       soundFX.playFanfare();
       confetti({ particleCount: 100, spread: 70 });
-      alert(`✨ AI ĐÃ TẠO XONG ẢNH BÌA 3D PIXAR THEO ĐÚNG CHỦ ĐỀ TRONG TIÊU ĐỀ THẦY ĐẶT!`);
+      alert(`✨ AI ĐÃ PHÂN TÍCH TIÊU ĐỀ & NỘI DUNG VÀ VẼ XONG ẢNH BÌA 3D PIXAR PHÙ HỢP CỰC CHUẨN!`);
     }, 1200);
+  };
+
+  // SMART PASTING SANITIZER: EXTRACT LAZY IMAGES & STRIP YELLOW/WHITE BACKGROUNDS
+  const handlePasteContent = (e) => {
+    e.preventDefault();
+    soundFX.playClick();
+
+    const clipboardData = e.clipboardData || window.clipboardData;
+    let html = clipboardData.getData('text/html');
+    const text = clipboardData.getData('text/plain');
+
+    if (html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+
+      // Extract lazy load image src (data-src, data-original -> src)
+      const imgs = div.querySelectorAll('img');
+      imgs.forEach(img => {
+        const realSrc = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('data-lazy-src') || img.getAttribute('src');
+        if (realSrc) {
+          img.setAttribute('src', realSrc);
+          img.removeAttribute('data-src');
+          img.removeAttribute('data-original');
+          img.removeAttribute('data-lazy-src');
+        }
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = '16px';
+        img.style.margin = '12px 0';
+        img.style.border = '1px solid #334155';
+        img.style.display = 'block';
+      });
+
+      // Strip ugly yellow/white inline backgrounds & hardcoded black text colors
+      const allElements = div.querySelectorAll('*');
+      allElements.forEach(el => {
+        el.style.backgroundColor = 'transparent';
+        el.style.background = 'transparent';
+        if (el.style.color === 'black' || el.style.color === '#000' || el.style.color === '#000000' || el.style.color === 'rgb(0, 0, 0)') {
+          el.style.color = 'inherit';
+        }
+      });
+
+      html = div.innerHTML;
+      document.execCommand('insertHTML', false, html);
+    } else if (text) {
+      document.execCommand('insertText', false, text);
+    }
+
+    if (contentEditableRef.current) {
+      setFormContent(contentEditableRef.current.innerHTML);
+    }
+  };
+
+  // CLEANUP BUTTON FOR EXISTING PASTED TEXT (STRIPS WHITE BACKGROUNDS & HARDCODED COLORS)
+  const handleCleanPastedBackgrounds = () => {
+    if (!formContent.trim()) return;
+    soundFX.playClick();
+
+    const div = document.createElement('div');
+    div.innerHTML = formContent;
+
+    const allEls = div.querySelectorAll('*');
+    allEls.forEach(el => {
+      el.style.backgroundColor = 'transparent';
+      el.style.background = 'transparent';
+      if (el.style.color === 'black' || el.style.color === '#000' || el.style.color === '#000000' || el.style.color === 'rgb(0, 0, 0)') {
+        el.style.color = 'inherit';
+      }
+    });
+
+    const cleanedHtml = div.innerHTML;
+    setFormContent(cleanedHtml);
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML = cleanedHtml;
+    }
+
+    alert('✨ ĐÃ TỰ ĐỘNG CHUẨN HÓA LÀM SẠCH NỀN TRẮNG/VÀNG VÀ CHUYỂN THÀNH CHỮ NỔI CHẾ ĐỘ TỐI TRONG SUỐT!');
   };
 
   const handleStartCreateNew = () => {
@@ -192,13 +264,16 @@ export const MaterialPage = () => {
       return;
     }
     soundFX.playClick();
-    const imgHtml = `<br/><img src="${insertImageUrl}" alt="Ảnh bài viết" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155;" /><br/>`;
+    const imgHtml = `<br/><img src="${insertImageUrl}" alt="Ảnh bài viết" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155; display: block;" /><br/>`;
     setFormContent(prev => prev + imgHtml);
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML += imgHtml;
+    }
     setInsertImageUrl('');
     alert('✨ Đã chèn hình ảnh thành công vào nội dung bài viết!');
   };
 
-  // Direct Image File Upload Simulation
+  // Upload Local Image File
   const handleFileUploadImage = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -206,8 +281,11 @@ export const MaterialPage = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64Img = event.target.result;
-        const imgHtml = `<br/><img src="${base64Img}" alt="Ảnh dán" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155;" /><br/>`;
+        const imgHtml = `<br/><img src="${base64Img}" alt="Ảnh dán" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155; display: block;" /><br/>`;
         setFormContent(prev => prev + imgHtml);
+        if (contentEditableRef.current) {
+          contentEditableRef.current.innerHTML += imgHtml;
+        }
         alert('✨ Đã tải lên và dán ảnh đính kèm thành công vào nội dung bài viết!');
       };
       reader.readAsDataURL(file);
@@ -224,6 +302,8 @@ export const MaterialPage = () => {
     soundFX.playClick();
 
     const catKey = (activeCategory || 'vocabulary').toLowerCase();
+    const finalContent = contentEditableRef.current ? contentEditableRef.current.innerHTML : formContent;
+
     const articlePayload = {
       id: editingArticleId || `art-custom-${Date.now()}`,
       title: formTitle,
@@ -235,7 +315,7 @@ export const MaterialPage = () => {
       author: 'Thầy Nguyễn Văn Hải',
       thumbnail: formThumbnail,
       description: formDescription || 'Bài viết hướng dẫn bám sát sách giáo khoa Tiếng Anh THCS Global Success.',
-      content: formContent || '<p>Nội dung bài viết đang được cập nhật...</p>',
+      content: finalContent || '<p>Nội dung bài viết đang được cập nhật...</p>',
       audioUrl: formAudioUrl,
       fileUrl: formFileUrl
     };
@@ -267,7 +347,7 @@ export const MaterialPage = () => {
       {/* 1. HERO BANNER */}
       <PageHeroBanner
         title="Thư Mục Học Liệu & Studio Soạn Bài Động 📚"
-        subtitle="Quản lý, soạn mới, sửa bài, dán hình ảnh trực tiếp và sinh ảnh AI 3D Pixar chuẩn tiêu đề cho 6 danh mục Global Success."
+        subtitle="Quản lý, soạn mới, sửa bài, dán hình ảnh nguyên bản từ web và sinh ảnh AI 3D Pixar chuẩn tiêu đề & nội dung."
         badge="STUDIO SOẠN BÀI • GLOBAL SUCCESS KHỐI 6 - 9"
         bgImage="/images/hero_library_bg.jpg"
         actions={
@@ -334,7 +414,7 @@ export const MaterialPage = () => {
         })}
       </div>
 
-      {/* 3. INLINE EDITOR FORM PANEL WITH DYNAMIC AI IMAGE & RICH CONTENT IMAGE EMBEDDING */}
+      {/* 3. INLINE EDITOR FORM PANEL WITH SMART PASTE & AI IMAGE GENERATOR */}
       {showEditorForm && (
         <div ref={editorRef} className="glass-panel p-6 sm:p-8 space-y-6 border-2 border-indigo-500/60 bg-slate-900/95 shadow-2xl animate-fadeIn">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -352,28 +432,28 @@ export const MaterialPage = () => {
 
           <form onSubmit={handleSaveArticleForm} className="space-y-5 text-xs font-bold">
             
-            {/* 1. TITLE & TOPIC */}
+            {/* TITLE & TOPIC */}
             <div>
               <label className="block text-slate-300 mb-1">TIÊU ĐỀ BÀI VIẾT / BÀI HỌC *</label>
               <input
                 type="text"
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="Nhập tiêu đề bài viết (Ví dụ: Mẹo Học Từ Vựng Cốt Lõi Khối 8 Unit 2: Life in the countryside...)"
+                placeholder="Nhập tiêu đề bài viết..."
                 className="w-full glass-input p-3 text-xs font-extrabold text-white"
                 required
               />
             </div>
 
-            {/* 2. DYNAMIC TOPIC AI IMAGE GENERATOR */}
+            {/* DYNAMIC TOPIC & CONTENT AI IMAGE GENERATOR */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div>
                   <label className="text-indigo-400 font-extrabold flex items-center gap-1.5">
                     <ImageIcon className="w-4 h-4 text-indigo-400" />
-                    ẢNH BÌA AI 3D PIXAR SINH ĐÚNG CHỦ ĐỀ TIÊU ĐỀ BÀI VIẾT:
+                    ẢNH BÌA AI 3D PIXAR CUTE PHÂN TÍCH TỰ ĐỘNG THEO NỘI DUNG BÀI VIẾT:
                   </label>
-                  <p className="text-[11px] text-slate-400 font-normal">AI sẽ phân tích tiêu đề Thầy đặt để vẽ 1 bức ảnh 3D Pixar cute độc nhất cho bài viết!</p>
+                  <p className="text-[11px] text-slate-400 font-normal">AI sẽ tự động đọc cả Tiêu đề lẫn Nội dung Thầy vừa dán để tạo 1 bức ảnh 3D Pixar khớp nhất!</p>
                 </div>
 
                 <button
@@ -383,11 +463,10 @@ export const MaterialPage = () => {
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-extrabold flex items-center gap-1.5 shadow hover:scale-105 transition-all shrink-0"
                 >
                   <Wand2 className="w-4 h-4 animate-spin" />
-                  {isGeneratingAiImage ? 'AI Đang Vẽ Ảnh 3D...' : '✨ AI Tự Tạo Ảnh Đúng Tiêu Đề'}
+                  {isGeneratingAiImage ? 'AI Đang Vẽ Ảnh 3D...' : '✨ AI Sinh Ảnh Khớp Bài Viết'}
                 </button>
               </div>
 
-              {/* Image Preview & URL */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center pt-2">
                 <div className="sm:col-span-4 h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
                   <img src={formThumbnail} alt="Thumbnail preview" className="w-full h-full object-cover" />
@@ -405,7 +484,7 @@ export const MaterialPage = () => {
               </div>
             </div>
 
-            {/* 3. KHỐI LỚP & UNIT MENU SỔ XUỐNG (<SELECT>) */}
+            {/* KHỐI LỚP & UNIT MENU SỔ XUỐNG */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-slate-300 mb-1">KHỐI LỚP</label>
@@ -448,51 +527,43 @@ export const MaterialPage = () => {
               />
             </div>
 
-            {/* 4. VISUAL RICH TEXT CONTENT EDITOR (SUPPORTS DIRECT COPY/PASTE OF TEXT & IMAGES FROM ANY WEBSITE) */}
+            {/* SMART VISUAL RICH TEXT CONTENT EDITOR (WITH PASTE SANITIZER & CLEANUP BUTTON) */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
                 <div>
                   <label className="text-indigo-400 font-extrabold flex items-center gap-1.5 text-xs">
                     <FileText className="w-4 h-4 text-indigo-400" />
-                    KHUNG SOẠN THẢO QUAN SÁT TRỰC QUAN (HỖ TRỢ DÁN TRỰC TIẾP CHỮ + HÌNH ÁNH TỪ BẤT KỲ TRANG WEB NÀO):
+                    KHUNG SOẠN THẢO TRỰC QUAN (HỖ TRỢ DÁN TRỰC TIẾP CHỮ + TẤT CẢ HÌNH ÁNH):
                   </label>
-                  <p className="text-[11px] text-slate-400 font-normal">Thầy chỉ cần bôi đen copy bài viết ở bất kỳ trang web nào (gồm cả chữ + hình ảnh) rồi nhấn <strong>Ctrl + V</strong> dán trực tiếp vào đây!</p>
+                  <p className="text-[11px] text-slate-400 font-normal">Thầy bôi đen copy đoạn văn kèm ảnh trên web ➔ Nhấn <strong>Ctrl + V</strong> dán vào đây! Chữ và ảnh sẽ hiện ra nguyên bản.</p>
                 </div>
 
-                {/* Inline Image Uploader & Link Insertion Toolbar */}
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleCleanPastedBackgrounds}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-500/40 font-extrabold text-[11px] flex items-center gap-1 hover:bg-indigo-900"
+                    title="Xóa nền vàng/nền trắng khi dán từ web khác"
+                  >
+                    <Eraser className="w-3.5 h-3.5" /> ✨ Chuẩn Hóa Nền Trong Suốt
+                  </button>
+
                   <label className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 font-extrabold text-[11px] cursor-pointer flex items-center gap-1">
-                    <Upload className="w-3.5 h-3.5" /> 📷 Upload Ảnh Vào Bài
+                    <Upload className="w-3.5 h-3.5" /> 📷 Upload Ảnh
                     <input type="file" accept="image/*" onChange={handleFileUploadImage} className="hidden" />
                   </label>
-
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="url"
-                      value={insertImageUrl}
-                      onChange={(e) => setInsertImageUrl(e.target.value)}
-                      placeholder="Dán link ảnh tại đây..."
-                      className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] w-36 text-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleInsertInlineImage}
-                      className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[11px]"
-                    >
-                      + Chèn Ảnh
-                    </button>
-                  </div>
                 </div>
               </div>
 
-              {/* VISUAL CONTENTEDITABLE CONTAINER */}
+              {/* VISUAL CONTENTEDITABLE CONTAINER WITH PASTE SANITIZER */}
               <div
                 ref={contentEditableRef}
                 contentEditable={true}
+                onPaste={handlePasteContent}
                 onInput={(e) => setFormContent(e.currentTarget.innerHTML)}
                 onBlur={(e) => setFormContent(e.currentTarget.innerHTML)}
                 dangerouslySetInnerHTML={{ __html: formContent }}
-                className="w-full min-h-[220px] max-h-[500px] overflow-y-auto glass-input p-4 text-xs font-serif leading-relaxed text-slate-100 bg-slate-900/90 rounded-2xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 space-y-3 prose prose-invert max-w-none [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
+                className="w-full min-h-[260px] max-h-[550px] overflow-y-auto glass-input p-4 text-xs font-serif leading-relaxed text-slate-100 bg-slate-900/95 rounded-2xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 space-y-3 prose prose-invert max-w-none [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block [&_*]:!bg-transparent"
                 style={{ wordBreak: 'break-word' }}
               />
             </div>
@@ -664,7 +735,7 @@ export const MaterialPage = () => {
 
       </div>
 
-      {/* Reader Modal */}
+      {/* Reader Modal (Strips hardcoded yellow/white backgrounds from pasted content) */}
       {activeReaderArticle && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-4xl w-full border border-slate-800 overflow-hidden shadow-2xl space-y-0 relative animate-fadeIn max-h-[90vh] overflow-y-auto">
@@ -702,8 +773,9 @@ export const MaterialPage = () => {
                 </div>
               )}
 
+              {/* CLEANED ARTICLE CONTENT READER - ALL INLINE BACKGROUNDS SET TO TRANSPARENT */}
               <div 
-                className="text-sm font-serif text-slate-200 leading-relaxed space-y-4 prose prose-invert max-w-none"
+                className="text-sm font-serif text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
                 dangerouslySetInnerHTML={{ __html: activeReaderArticle.content }}
               />
 
