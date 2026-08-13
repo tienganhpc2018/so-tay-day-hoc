@@ -25,8 +25,9 @@ import {
   Image,
   Upload,
   Link as LinkIcon,
-  ChevronUp,
-  ChevronDown
+  Camera,
+  Layers,
+  Sparkle
 } from 'lucide-react';
 
 export const MaterialPage = () => {
@@ -39,31 +40,42 @@ export const MaterialPage = () => {
   const [selectedGrade, setSelectedGrade] = useState(8);
   const [articlesList, setArticlesList] = useState([]);
 
-  // INLINE EDITOR FORM STATE (DIRECTLY EMBEDDED ON PAGE)
+  // INLINE EDITOR FORM STATE
   const [showEditorForm, setShowEditorForm] = useState(false);
   const [editingArticleId, setEditingArticleId] = useState(null);
 
   const [formTitle, setFormTitle] = useState('');
   const [formGrade, setFormGrade] = useState(8);
-  const [formUnit, setFormUnit] = useState('Unit 1');
+  const [formUnit, setFormUnit] = useState('Unit 1: Leisure Time / My New School');
   const [formThumbnail, setFormThumbnail] = useState('https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop');
   const [formDescription, setFormDescription] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formAudioUrl, setFormAudioUrl] = useState('');
   const [formFileUrl, setFormFileUrl] = useState('');
+  const [isGeneratingAiImage, setIsGeneratingAiImage] = useState(false);
+
+  // Custom Image Insert input helper
+  const [insertImageUrl, setInsertImageUrl] = useState('');
 
   // Reader Modal State
   const [activeReaderArticle, setActiveReaderArticle] = useState(null);
 
   const editorRef = useRef(null);
+  const contentEditableRef = useRef(null);
 
-  const presetAiThumbnails = [
-    { title: '3D Pixar Học Sinh Trắc Nghiệm', url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop' },
-    { title: 'Vòng Quay May Mắn 3D', url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=600&auto=format&fit=crop' },
-    { title: 'Kéo Co Đấu Trí 3D', url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600&auto=format&fit=crop' },
-    { title: 'Chém Hoa Quả AI 3D', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop' },
-    { title: 'Mặt Cắt Kỹ Thuật 3D', url: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=600&auto=format&fit=crop' },
-    { title: 'Hình Học Tương Tác 3D', url: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=600&auto=format&fit=crop' }
+  const availableGlobalSuccessUnits = [
+    'Unit 1: My New School / Leisure Time',
+    'Unit 2: Life in Countryside / Healthy Living',
+    'Unit 3: Teenagers / Community Service',
+    'Unit 4: Ethnic Groups / Music and Arts',
+    'Unit 5: Food and Drink / Vietnamese Food',
+    'Unit 6: Lifestyles / Wonders of Vietnam',
+    'Unit 7: Environmental Protection',
+    'Unit 8: Shopping / Tourism',
+    'Unit 9: Natural Disasters',
+    'Unit 10: Communication in Future',
+    'Unit 11: Science and Technology',
+    'Unit 12: Life on Other Planets'
   ];
 
   const categoryBadgeColors = {
@@ -88,13 +100,49 @@ export const MaterialPage = () => {
     setArticlesList(categoryArticles);
   };
 
+  // DYNAMIC TOPIC AI IMAGE GENERATOR (PERFECT MATCHING THẦY'S EXACT TITLE TOPIC)
+  const handleAutoGenerateAiImageForTitle = () => {
+    if (!formTitle.trim()) {
+      alert('Vui lòng nhập Tiêu đề bài viết trước để AI sinh ảnh đúng chủ đề!');
+      return;
+    }
+
+    soundFX.playClick();
+    setIsGeneratingAiImage(true);
+
+    // Topic keywords map
+    const titleLower = formTitle.toLowerCase();
+    let topicKeyword = 'english student classroom';
+
+    if (titleLower.includes('countryside') || titleLower.includes('nông thôn')) topicKeyword = 'vietnam countryside nature farm';
+    else if (titleLower.includes('leisure') || titleLower.includes('rảnh rỗi')) topicKeyword = 'teenagers origami craft hobby';
+    else if (titleLower.includes('healthy') || titleLower.includes('sức khỏe')) topicKeyword = 'healthy food fruits salad exercise';
+    else if (titleLower.includes('music') || titleLower.includes('âm nhạc')) topicKeyword = 'music instruments art students';
+    else if (titleLower.includes('food') || titleLower.includes('ăn uống')) topicKeyword = 'vietnamese food pho cooking';
+    else if (titleLower.includes('environment') || titleLower.includes('môi trường')) topicKeyword = 'green environment trees recycling';
+    else if (titleLower.includes('space') || titleLower.includes('vũ trụ')) topicKeyword = 'space astronaut planet rocket';
+    else if (titleLower.includes('science') || titleLower.includes('khoa học')) topicKeyword = 'science technology robot AI';
+
+    // Generate dynamic 3D Pixar cute image URL based on title topic
+    const dynamicAiUrl = `https://image.pollinations.ai/prompt/cute%203d%20pixar%20style%20educational%20illustration%20for%20${encodeURIComponent(topicKeyword)}?width=800&height=450&nologo=true`;
+
+    setFormThumbnail(dynamicAiUrl);
+
+    setTimeout(() => {
+      setIsGeneratingAiImage(false);
+      soundFX.playFanfare();
+      confetti({ particleCount: 100, spread: 70 });
+      alert(`✨ AI ĐÃ TẠO XONG ẢNH BÌA 3D PIXAR THEO ĐÚNG CHỦ ĐỀ TRONG TIÊU ĐỀ THẦY ĐẶT!`);
+    }, 1200);
+  };
+
   const handleStartCreateNew = () => {
     soundFX.playClick();
     setEditingArticleId(null);
     setFormTitle('');
     setFormGrade(selectedGrade);
-    setFormUnit('Unit 1');
-    setFormThumbnail(presetAiThumbnails[0].url);
+    setFormUnit(availableGlobalSuccessUnits[0]);
+    setFormThumbnail('https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop');
     setFormDescription('');
     setFormContent('');
     setFormAudioUrl('');
@@ -113,8 +161,8 @@ export const MaterialPage = () => {
     setEditingArticleId(article.id);
     setFormTitle(article.title || '');
     setFormGrade(article.grade || selectedGrade);
-    setFormUnit(article.unit || 'Unit 1');
-    setFormThumbnail(article.thumbnail || presetAiThumbnails[0].url);
+    setFormUnit(article.unit || availableGlobalSuccessUnits[0]);
+    setFormThumbnail(article.thumbnail || 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop');
     setFormDescription(article.description || '');
     setFormContent(article.content || '');
     setFormAudioUrl(article.audioUrl || '');
@@ -134,6 +182,35 @@ export const MaterialPage = () => {
       cmsStorage.deleteArticle(articleId);
       loadArticles();
       alert('✨ Đã xóa bài viết thành công!');
+    }
+  };
+
+  // Insert Inline Image into Content
+  const handleInsertInlineImage = () => {
+    if (!insertImageUrl.trim()) {
+      alert('Vui lòng dán link ảnh!');
+      return;
+    }
+    soundFX.playClick();
+    const imgHtml = `<br/><img src="${insertImageUrl}" alt="Ảnh bài viết" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155;" /><br/>`;
+    setFormContent(prev => prev + imgHtml);
+    setInsertImageUrl('');
+    alert('✨ Đã chèn hình ảnh thành công vào nội dung bài viết!');
+  };
+
+  // Direct Image File Upload Simulation
+  const handleFileUploadImage = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      soundFX.playClick();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Img = event.target.result;
+        const imgHtml = `<br/><img src="${base64Img}" alt="Ảnh dán" style="max-width:100%; border-radius:16px; margin: 12px 0; border: 1px solid #334155;" /><br/>`;
+        setFormContent(prev => prev + imgHtml);
+        alert('✨ Đã tải lên và dán ảnh đính kèm thành công vào nội dung bài viết!');
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -190,7 +267,7 @@ export const MaterialPage = () => {
       {/* 1. HERO BANNER */}
       <PageHeroBanner
         title="Thư Mục Học Liệu & Studio Soạn Bài Động 📚"
-        subtitle="Quản lý, soạn mới, sửa bài và đổi ảnh AI 3D Pixar cho 6 danh mục bài học Tiếng Anh THCS Global Success."
+        subtitle="Quản lý, soạn mới, sửa bài, dán hình ảnh trực tiếp và sinh ảnh AI 3D Pixar chuẩn tiêu đề cho 6 danh mục Global Success."
         badge="STUDIO SOẠN BÀI • GLOBAL SUCCESS KHỐI 6 - 9"
         bgImage="/images/hero_library_bg.jpg"
         actions={
@@ -257,7 +334,7 @@ export const MaterialPage = () => {
         })}
       </div>
 
-      {/* 3. INLINE EDITOR FORM PANEL (ALWAYS AVAILABLE RIGHT ON PAGE WHEN CLICKED) */}
+      {/* 3. INLINE EDITOR FORM PANEL WITH DYNAMIC AI IMAGE & RICH CONTENT IMAGE EMBEDDING */}
       {showEditorForm && (
         <div ref={editorRef} className="glass-panel p-6 sm:p-8 space-y-6 border-2 border-indigo-500/60 bg-slate-900/95 shadow-2xl animate-fadeIn">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -273,73 +350,69 @@ export const MaterialPage = () => {
             </button>
           </div>
 
-          <form onSubmit={handleSaveArticleForm} className="space-y-4 text-xs font-bold">
+          <form onSubmit={handleSaveArticleForm} className="space-y-5 text-xs font-bold">
             
-            {/* AI Pixar Cover Gallery Selector */}
-            <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
-              <div className="flex items-center justify-between">
-                <label className="text-indigo-400 flex items-center gap-1.5">
-                  <Image className="w-4 h-4" /> CHỌN ẢNH BÌA AI 3D PIXAR CUTE HOẶC DÁN LINK ẢNH TÙY CHỌN:
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundFX.playClick();
-                    const rand = presetAiThumbnails[Math.floor(Math.random() * presetAiThumbnails.length)].url;
-                    setFormThumbnail(rand);
-                  }}
-                  className="px-3 py-1.5 rounded-full bg-indigo-600 text-white text-[10px] font-extrabold flex items-center gap-1"
-                >
-                  <Wand2 className="w-3 h-3" /> ✨ AI Tự Tạo Ảnh
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {presetAiThumbnails.map((preset, pIdx) => (
-                  <button
-                    type="button"
-                    key={pIdx}
-                    onClick={() => {
-                      soundFX.playClick();
-                      setFormThumbnail(preset.url);
-                    }}
-                    className={`h-16 rounded-xl overflow-hidden border-2 relative transition-all ${
-                      formThumbnail === preset.url ? 'border-indigo-500 scale-105 shadow-md' : 'border-slate-800 opacity-60 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={preset.url} alt={preset.title} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-
-              <input
-                type="url"
-                value={formThumbnail}
-                onChange={(e) => setFormThumbnail(e.target.value)}
-                placeholder="https://link-anh-bia-cua-thay.jpg"
-                className="w-full glass-input p-2.5 text-xs"
-              />
-            </div>
-
+            {/* 1. TITLE & TOPIC */}
             <div>
               <label className="block text-slate-300 mb-1">TIÊU ĐỀ BÀI VIẾT / BÀI HỌC *</label>
               <input
                 type="text"
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="Nhập tiêu đề bài viết..."
-                className="w-full glass-input p-3 text-xs"
+                placeholder="Nhập tiêu đề bài viết (Ví dụ: Mẹo Học Từ Vựng Cốt Lõi Khối 8 Unit 2: Life in the countryside...)"
+                className="w-full glass-input p-3 text-xs font-extrabold text-white"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            {/* 2. DYNAMIC TOPIC AI IMAGE GENERATOR */}
+            <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div>
+                  <label className="text-indigo-400 font-extrabold flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-indigo-400" />
+                    ẢNH BÌA AI 3D PIXAR SINH ĐÚNG CHỦ ĐỀ TIÊU ĐỀ BÀI VIẾT:
+                  </label>
+                  <p className="text-[11px] text-slate-400 font-normal">AI sẽ phân tích tiêu đề Thầy đặt để vẽ 1 bức ảnh 3D Pixar cute độc nhất cho bài viết!</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAutoGenerateAiImageForTitle}
+                  disabled={isGeneratingAiImage}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-extrabold flex items-center gap-1.5 shadow hover:scale-105 transition-all shrink-0"
+                >
+                  <Wand2 className="w-4 h-4 animate-spin" />
+                  {isGeneratingAiImage ? 'AI Đang Vẽ Ảnh 3D...' : '✨ AI Tự Tạo Ảnh Đúng Tiêu Đề'}
+                </button>
+              </div>
+
+              {/* Image Preview & URL */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center pt-2">
+                <div className="sm:col-span-4 h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
+                  <img src={formThumbnail} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                </div>
+                <div className="sm:col-span-8 space-y-2">
+                  <span className="text-[11px] text-slate-400">Link ảnh bìa hiện tại (hoặc dán link ảnh tùy chọn):</span>
+                  <input
+                    type="url"
+                    value={formThumbnail}
+                    onChange={(e) => setFormThumbnail(e.target.value)}
+                    placeholder="https://link-anh-bia-cua-thay.jpg"
+                    className="w-full glass-input p-2.5 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 3. KHỐI LỚP & UNIT MENU SỔ XUỐNG (<SELECT>) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-slate-300 mb-1">KHỐI LỚP</label>
                 <select
                   value={formGrade}
                   onChange={(e) => setFormGrade(parseInt(e.target.value))}
-                  className="w-full glass-input p-3 text-xs bg-slate-900"
+                  className="w-full glass-input p-3 text-xs bg-slate-900 font-extrabold text-white"
                 >
                   <option value={6}>Khối 6</option>
                   <option value={7}>Khối 7</option>
@@ -349,19 +422,23 @@ export const MaterialPage = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1">UNIT</label>
-                <input
-                  type="text"
+                <label className="block text-slate-300 mb-1">UNIT (MENU SỔ XUỐNG GLOBAL SUCCESS 12 UNITS)</label>
+                <select
                   value={formUnit}
                   onChange={(e) => setFormUnit(e.target.value)}
-                  placeholder="Unit 1, Unit 2..."
-                  className="w-full glass-input p-3 text-xs"
-                />
+                  className="w-full glass-input p-3 text-xs bg-slate-900 font-extrabold text-indigo-300"
+                >
+                  {availableGlobalSuccessUnits.map((u, uIdx) => (
+                    <option key={uIdx} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-slate-300 mb-1">MÔ TẢ TÓM TẮT BÀI VIẾT</label>
+              <label className="block text-slate-300 mb-1">MÔ TẢ TÓM TẮT BÀI VIẾT (HIỂN THỊ TRÊN THẺ CARD)</label>
               <input
                 type="text"
                 value={formDescription}
@@ -371,18 +448,50 @@ export const MaterialPage = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-slate-300 mb-1">NỘI DUNG CHI TIẾT BÀI VIẾT (VĂN BẢN / HTML / KỊCH BẢN)</label>
+            {/* 4. RICH CONTENT EDITOR WITH INLINE IMAGE INSERTION & UPLOAD */}
+            <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                <label className="text-slate-300 font-extrabold flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-indigo-400" />
+                  NỘI DUNG CHI TIẾT BÀI VIẾT (HỖ TRỢ DÁN VĂN BẢN KÈM HÌNH ÁNH):
+                </label>
+
+                {/* Inline Image Uploader & Link Insertion Toolbar */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 font-extrabold text-[11px] cursor-pointer flex items-center gap-1">
+                    <Upload className="w-3.5 h-3.5" /> 📷 Upload Ảnh Vào Bài
+                    <input type="file" accept="image/*" onChange={handleFileUploadImage} className="hidden" />
+                  </label>
+
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="url"
+                      value={insertImageUrl}
+                      onChange={(e) => setInsertImageUrl(e.target.value)}
+                      placeholder="Dán link ảnh tại đây..."
+                      className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] w-36 text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleInsertInlineImage}
+                      className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[11px]"
+                    >
+                      + Chèn Ảnh
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <textarea
-                rows={6}
+                rows={10}
                 value={formContent}
                 onChange={(e) => setFormContent(e.target.value)}
-                placeholder="Dán hoặc soạn nội dung chi tiết bài viết tại đây..."
-                className="w-full glass-input p-3 text-xs font-serif leading-relaxed"
+                placeholder="Dán văn bản bài học, kịch bản nghe hay công thức ngữ pháp... (Có thể bấm Chèn Ảnh hoặc Upload Ảnh ở trên để ảnh xuất hiện trực tiếp trong bài viết!)"
+                className="w-full glass-input p-4 text-xs font-serif leading-relaxed text-slate-100 bg-slate-900/90"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-300 mb-1">LINK AUDIO GOOGLE DRIVE / MP3 (NẾU CÓ)</label>
                 <input
@@ -408,7 +517,7 @@ export const MaterialPage = () => {
 
             <button
               type="submit"
-              className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-xl flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-xl flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4 fill-white" />
               {editingArticleId ? '✨ LƯU THAY ĐỔI BÀI VIẾT' : '✨ LƯU & XUẤT BẢN BÀI VIẾT RA TRANG CHỦ'}
