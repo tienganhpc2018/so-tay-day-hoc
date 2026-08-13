@@ -5,6 +5,7 @@ import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { cmsStorage } from '../utils/cmsStorage';
+import { TeachingUtilitiesMarket } from '../components/utilities/TeachingUtilitiesMarket';
 import { 
   BookOpen, 
   BookMarked, 
@@ -1179,7 +1180,10 @@ export const MaterialPage = () => {
         </div>
       )}
 
-      {/* DYNAMIC ARTICLE CARDS LIST */}
+      {/* DYNAMIC ARTICLE CARDS LIST OR TEACHING UTILITIES MARKET */}
+      {activeCategory === 'utilities' ? (
+        <TeachingUtilitiesMarket />
+      ) : (
       <div className="space-y-6">
         
         {/* Category Header */}
@@ -1309,6 +1313,7 @@ export const MaterialPage = () => {
         )}
 
       </div>
+      )}
 
       {/* Reader Modal (z-[100] floating above Navbar z-50) */}
       {activeReaderArticle && (

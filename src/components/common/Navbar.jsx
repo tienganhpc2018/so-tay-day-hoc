@@ -64,7 +64,8 @@ export const Navbar = () => {
         { label: '1. Grammar (Ngữ pháp)', path: '/materials?type=grammar' },
         { label: '2. Vocabulary (Từ vựng)', path: '/materials?type=vocabulary' },
         { label: '3. Infographic (Trực quan)', path: '/materials?type=infographic' },
-        { label: '4. Ý tưởng dạy học', path: '/materials?type=ideas' }
+        { label: '4. Ý tưởng dạy học', path: '/materials?type=ideas' },
+        { label: '5. Tiện ích giảng dạy (Gemini Canvas)', path: '/materials?type=utilities' }
       ]
     },
     { 

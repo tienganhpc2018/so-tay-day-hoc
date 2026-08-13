@@ -23,14 +23,13 @@ export const GameHubPage = () => {
     { id: 'flashcard', label: '1. Flashcard Từ Vựng', icon: BookOpen },
     { id: 'matching', label: '2. Trò Chơi Ghép Cặp', icon: Layers },
     { id: 'racing', label: '3. Đua Xe Từ Vựng (Word Scramble)', icon: Dices },
-    { id: 'iframe', label: '4. iFrame Game Project', icon: ExternalLink },
-    { id: 'utilities', label: '5. Tiện Ích Giảng Dạy (Gemini Canvas)', icon: Code }
+    { id: 'iframe', label: '4. iFrame Game Project', icon: ExternalLink }
   ];
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans animate-fadeIn">
       
-      {/* HERO BANNER MATCHING SCREENSHOT 1 & 2 (100% CLEAR IMAGE, 20% DARK OVERLAY) */}
+      {/* HERO BANNER */}
       <PageHeroBanner
         title="Sân Trường Tương Tác 🎮"
         subtitle="Bộ sưu tập các trò chơi giáo dục công nghệ cao giúp giờ học sinh động và thú vị hơn. Giáo viên có thể quản lý câu hỏi riêng tư và đồng bộ trực tiếp vào game!"
@@ -39,8 +38,8 @@ export const GameHubPage = () => {
         showVipBadge={true}
       />
 
-      {/* 5 MENU CON CORRESPONDING TO 5 GAME & UTILITY MODES */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
+      {/* 4 MENU CON CHO 4 CHẾ ĐỘ TRÒ CHƠI TƯƠNG TÁC */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -66,13 +65,12 @@ export const GameHubPage = () => {
         })}
       </div>
 
-      {/* Game Content & Utilities Market View */}
+      {/* Game Content View */}
       <div className="py-2">
         {activeTab === 'flashcard' && <FlashcardGame />}
         {activeTab === 'matching' && <MatchingPairsGame />}
         {activeTab === 'racing' && <WordScrambleGame />}
         {activeTab === 'iframe' && <IFrameGameViewer />}
-        {activeTab === 'utilities' && <TeachingUtilitiesMarket />}
       </div>
 
     </div>
