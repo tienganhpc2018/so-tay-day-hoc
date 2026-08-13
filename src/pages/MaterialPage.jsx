@@ -177,13 +177,44 @@ export const MaterialPage = () => {
     }
   };
 
-  // HELPER TO INSERT HTML AT EXACT CURSOR POSITION INSIDE CONTENTEDITABLE
+  const savedRangeRef = useRef(null);
+
+  // SAVE CURSOR POSITION INSIDE EDITOR CONTAINER
+  const handleSaveCursorPosition = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      try {
+        const range = sel.getRangeAt(0);
+        if (contentEditableRef.current && contentEditableRef.current.contains(range.commonAncestorContainer)) {
+          savedRangeRef.current = range.cloneRange();
+        }
+      } catch (e) {}
+    }
+  };
+
+  // HELPER TO RESTORE CURSOR AND INSERT HTML AT EXACT SAVED CURSOR POSITION
   const insertHtmlAtCursor = (htmlStr) => {
     soundFX.playClick();
     if (contentEditableRef.current) {
       contentEditableRef.current.focus();
     }
+
+    const sel = window.getSelection();
+    if (savedRangeRef.current && sel) {
+      try {
+        sel.removeAllRanges();
+        sel.addRange(savedRangeRef.current);
+      } catch (e) {}
+    }
+
     document.execCommand('insertHTML', false, htmlStr);
+
+    if (sel && sel.rangeCount > 0) {
+      try {
+        savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+      } catch (e) {}
+    }
+
     if (contentEditableRef.current) {
       setFormContent(contentEditableRef.current.innerHTML);
     }
@@ -206,10 +237,10 @@ export const MaterialPage = () => {
       <br/>
     `;
     insertHtmlAtCursor(accordionHtml);
-    alert('✨ ĐÃ CHÈN KHUNG ẨN ĐÁP ÁN TRỐNG TẠI CON TRỎ CHUỘT! THẦY CÓ THỂ TỰ NHẬP NỘI DUNG ĐÁP ÁN RẤT DỄ DÀNG!');
+    alert('✨ ĐÃ CHÈN KHUNG ẨN ĐÁP ÁN TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
   };
 
-  // UPLOAD AUDIO FILE FROM COMPUTER DIRECTLY
+  // UPLOAD AUDIO FILE FROM COMPUTER DIRECTLY (RESTORES EXACT SAVED CURSOR RANGE)
   const handleFileUploadAudioFile = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -226,7 +257,7 @@ export const MaterialPage = () => {
           <br/>
         `;
         insertHtmlAtCursor(audioHtml);
-        alert(`✨ ĐÃ TẢI LÊN FILE AUDIO "${file.name}" THÀNH CÔNG TẠI VỊ TRÍ CON TRỎ CHUỘT!`);
+        alert(`✨ ĐÃ TẢI LÊN FILE AUDIO "${file.name}" THÀNH CÔNG TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!`);
       };
       reader.readAsDataURL(file);
     }
@@ -844,16 +875,21 @@ export const MaterialPage = () => {
                 {/* Right Actions Toolbar: Audio Upload & Link, Video, Hidden Answers & Clean Fonts */}
                 <div className="flex flex-wrap items-center gap-2">
                   <label 
+                    onMouseDown={handleSaveCursorPosition}
+                    onClick={handleSaveCursorPosition}
                     className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow cursor-pointer"
                     title="Tải tệp âm thanh MP3 trực tiếp từ máy tính của Thầy"
                   >
                     <Volume2 className="w-3.5 h-3.5" /> 🎧 Upload File Audio Từ Máy
-                    <input type="file" accept="audio/*" onChange={handleFileUploadAudioFile} className="hidden" />
+                    <input type="file" accept="audio/*" onChange={handleFileUploadAudioFile} onClick={handleSaveCursorPosition} className="hidden" />
                   </label>
 
                   <button
                     type="button"
-                    onClick={handleInsertAudioPlayerAtCursor}
+                    onClick={() => {
+                      handleSaveCursorPosition();
+                      handleInsertAudioPlayerAtCursor();
+                    }}
                     className="px-3 py-1.5 rounded-xl bg-purple-950 text-purple-300 border border-purple-500/40 hover:bg-purple-900 font-extrabold text-[11px] flex items-center gap-1 shadow"
                     title="Chèn link bài nghe MP3 / Google Drive tại vị trí con trỏ"
                   >
@@ -862,7 +898,10 @@ export const MaterialPage = () => {
 
                   <button
                     type="button"
-                    onClick={handleInsertVideoPlayerAtCursor}
+                    onClick={() => {
+                      handleSaveCursorPosition();
+                      handleInsertVideoPlayerAtCursor();
+                    }}
                     className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
                     title="Nhúng khung xem Video YouTube / MP4 tại vị trí con trỏ"
                   >
@@ -871,7 +910,10 @@ export const MaterialPage = () => {
 
                   <button
                     type="button"
-                    onClick={handleInsertHiddenAnswerBox}
+                    onClick={() => {
+                      handleSaveCursorPosition();
+                      handleInsertHiddenAnswerBox();
+                    }}
                     className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
                     title="Chèn khung ẩn đáp án trống cho Thầy tự nhập đáp án tại đúng vị trí con trỏ"
                   >
@@ -903,13 +945,20 @@ export const MaterialPage = () => {
 
               </div>
 
-              {/* CONTENTEDITABLE CONTAINER WITH BE VIETNAM PRO FONT GUARANTEE & FREEDOM OF COLORS */}
+              {/* CONTENTEDITABLE CONTAINER WITH CURSOR MEMORY */}
               <div
                 ref={contentEditableRef}
                 contentEditable={true}
                 onPaste={handlePasteContent}
-                onInput={(e) => setFormContent(e.currentTarget.innerHTML)}
-                onBlur={(e) => setFormContent(e.currentTarget.innerHTML)}
+                onKeyUp={handleSaveCursorPosition}
+                onMouseUp={handleSaveCursorPosition}
+                onClick={handleSaveCursorPosition}
+                onSelect={handleSaveCursorPosition}
+                onBlur={handleSaveCursorPosition}
+                onInput={(e) => {
+                  handleSaveCursorPosition();
+                  setFormContent(e.currentTarget.innerHTML);
+                }}
                 dangerouslySetInnerHTML={{ __html: formContent }}
                 className={`w-full min-h-[300px] max-h-[650px] overflow-y-auto p-5 text-sm font-sans leading-relaxed rounded-2xl border transition-all space-y-3 prose max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-500 [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block ${
                   editorBgMode === 'paper'
