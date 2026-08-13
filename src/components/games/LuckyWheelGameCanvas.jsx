@@ -78,6 +78,18 @@ export const LuckyWheelGameCanvas = ({ onClose }) => {
       question: 'What is the synonym of "famous" in Grade 8 Unit 1?',
       options: ['Well-known', 'Unknown', 'Secret', 'Quiet'],
       correctIndex: 0
+    },
+    {
+      id: 4,
+      question: 'She prefers _____ books in her leisure time.',
+      options: ['reading', 'read', 'reads', 'to reading'],
+      correctIndex: 0
+    },
+    {
+      id: 5,
+      question: 'People in the countryside live _____ than those in the city.',
+      options: ['more peacefully', 'peaceful', 'most peaceful', 'peacefully'],
+      correctIndex: 0
     }
   ]);
 
@@ -280,7 +292,7 @@ export const LuckyWheelGameCanvas = ({ onClose }) => {
           {/* HEADER MATCHING SCREENSHOT 1 */}
           <div className="space-y-1 border-b border-slate-200 pb-4">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              CÔNG CỤ DẠY HỌC 4.0 - THẦY ĐƯỢC AI
+              CÔNG CỤ DẠY HỌC 4.0 - THẦY HẢI AI
             </h1>
             <p className="text-xs sm:text-sm font-bold text-slate-500">
               Tích hợp Vòng Quay May Mắn, Trắc Nghiệm KaTeX và Công thức Toán Học
@@ -702,7 +714,7 @@ export const LuckyWheelGameCanvas = ({ onClose }) => {
 
                 {/* ADD / EDIT QUESTION FORM MATCHING SCREENSHOT 3 100% */}
                 {showAddQuestionForm ? (
-                  <form onSubmit={handleSaveQuestionForm} className="p-3.5 bg-slate-50 rounded-2xl border space-y-3 animate-fadeIn">
+                  <form onSubmit={handleSaveQuestionForm} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-300 space-y-3 animate-fadeIn">
                     <h4 className="font-extrabold text-xs text-slate-900">
                       {editingQId ? 'Chỉnh sửa câu hỏi:' : 'Nhập nội dung câu hỏi mới...'}
                     </h4>
@@ -712,25 +724,92 @@ export const LuckyWheelGameCanvas = ({ onClose }) => {
                       placeholder="Nhập nội dung câu hỏi mới..." 
                       value={newQText} 
                       onChange={(e) => setNewQText(e.target.value)} 
-                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                       required
                     />
 
-                    <div className="space-y-1.5">
-                      <input type="text" placeholder="Đáp án A" value={optA} onChange={(e) => setOptA(e.target.value)} className="w-full p-2 rounded-lg border text-xs bg-white" required />
-                      <input type="text" placeholder="Đáp án B" value={optB} onChange={(e) => setOptB(e.target.value)} className="w-full p-2 rounded-lg border text-xs bg-white" required />
-                      <input type="text" placeholder="Đáp án C" value={optC} onChange={(e) => setOptC(e.target.value)} className="w-full p-2 rounded-lg border text-xs bg-white" />
-                      <input type="text" placeholder="Đáp án D" value={optD} onChange={(e) => setOptD(e.target.value)} className="w-full p-2 rounded-lg border text-xs bg-white" />
-                    </div>
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-extrabold text-slate-600 uppercase">
+                        NHẬP 4 ĐÁP ÁN & ĐÁNH DẤU ĐÁP ÁN ĐÚNG (✓):
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="radio" 
+                          name="correctRadio" 
+                          checked={correctAnswerIdx === 0} 
+                          onChange={() => setCorrectAnswerIdx(0)}
+                          className="w-4 h-4 accent-emerald-600 cursor-pointer" 
+                          title="Chọn A là Đáp án đúng"
+                        />
+                        <span className="font-black text-xs text-slate-700 w-4">A:</span>
+                        <input 
+                          type="text" 
+                          placeholder="Nhập nội dung Đáp án A..." 
+                          value={optA} 
+                          onChange={(e) => setOptA(e.target.value)} 
+                          className={`flex-1 p-2 rounded-xl border text-xs font-bold text-slate-900 bg-white placeholder-slate-400 focus:outline-none ${correctAnswerIdx === 0 ? 'border-emerald-500 ring-2 ring-emerald-400/50 bg-emerald-50/50' : 'border-slate-300'}`} 
+                          required 
+                        />
+                      </div>
 
-                    <div className="flex items-center justify-between text-xs pt-1">
-                      <label className="font-bold text-slate-700">Đáp án đúng:</label>
-                      <select value={correctAnswerIdx} onChange={(e) => setCorrectAnswerIdx(Number(e.target.value))} className="p-1.5 rounded-lg border font-bold text-xs bg-white">
-                        <option value={0}>Đáp án A</option>
-                        <option value={1}>Đáp án B</option>
-                        <option value={2}>Đáp án C</option>
-                        <option value={3}>Đáp án D</option>
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="radio" 
+                          name="correctRadio" 
+                          checked={correctAnswerIdx === 1} 
+                          onChange={() => setCorrectAnswerIdx(1)}
+                          className="w-4 h-4 accent-emerald-600 cursor-pointer" 
+                          title="Chọn B là Đáp án đúng"
+                        />
+                        <span className="font-black text-xs text-slate-700 w-4">B:</span>
+                        <input 
+                          type="text" 
+                          placeholder="Nhập nội dung Đáp án B..." 
+                          value={optB} 
+                          onChange={(e) => setOptB(e.target.value)} 
+                          className={`flex-1 p-2 rounded-xl border text-xs font-bold text-slate-900 bg-white placeholder-slate-400 focus:outline-none ${correctAnswerIdx === 1 ? 'border-emerald-500 ring-2 ring-emerald-400/50 bg-emerald-50/50' : 'border-slate-300'}`} 
+                          required 
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="radio" 
+                          name="correctRadio" 
+                          checked={correctAnswerIdx === 2} 
+                          onChange={() => setCorrectAnswerIdx(2)}
+                          className="w-4 h-4 accent-emerald-600 cursor-pointer" 
+                          title="Chọn C là Đáp án đúng"
+                        />
+                        <span className="font-black text-xs text-slate-700 w-4">C:</span>
+                        <input 
+                          type="text" 
+                          placeholder="Nhập nội dung Đáp án C..." 
+                          value={optC} 
+                          onChange={(e) => setOptC(e.target.value)} 
+                          className={`flex-1 p-2 rounded-xl border text-xs font-bold text-slate-900 bg-white placeholder-slate-400 focus:outline-none ${correctAnswerIdx === 2 ? 'border-emerald-500 ring-2 ring-emerald-400/50 bg-emerald-50/50' : 'border-slate-300'}`} 
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="radio" 
+                          name="correctRadio" 
+                          checked={correctAnswerIdx === 3} 
+                          onChange={() => setCorrectAnswerIdx(3)}
+                          className="w-4 h-4 accent-emerald-600 cursor-pointer" 
+                          title="Chọn D là Đáp án đúng"
+                        />
+                        <span className="font-black text-xs text-slate-700 w-4">D:</span>
+                        <input 
+                          type="text" 
+                          placeholder="Nhập nội dung Đáp án D..." 
+                          value={optD} 
+                          onChange={(e) => setOptD(e.target.value)} 
+                          className={`flex-1 p-2 rounded-xl border text-xs font-bold text-slate-900 bg-white placeholder-slate-400 focus:outline-none ${correctAnswerIdx === 3 ? 'border-emerald-500 ring-2 ring-emerald-400/50 bg-emerald-50/50' : 'border-slate-300'}`} 
+                        />
+                      </div>
                     </div>
 
                     {/* BUTTONS MATCHING SCREENSHOT 3 */}
