@@ -690,12 +690,13 @@ export const MaterialPage = () => {
   };
 
   const subCategoryTabs = [
-    { id: 'vocabulary', label: '1. Từ Vựng (Vocabulary)', icon: BookMarked, color: 'text-indigo-400' },
-    { id: 'grammar', label: '2. Ngữ Pháp (Grammar)', icon: Brain, color: 'text-amber-400' },
+    { id: 'grammar', label: '1. Ngữ Pháp (Grammar)', icon: Brain, color: 'text-amber-400' },
+    { id: 'vocabulary', label: '2. Từ Vựng (Vocabulary)', icon: BookMarked, color: 'text-indigo-400' },
     { id: 'audio', label: '3. Audio & Tapescript', icon: Volume2, color: 'text-purple-400' },
     { id: 'infographic', label: '4. Infographic Trực Quan', icon: ImageIcon, color: 'text-emerald-400' },
-    { id: 'project', label: '5. iFrame Game & Project', icon: Gamepad2, color: 'text-rose-400' },
-    { id: 'worksheet', label: '6. Phiếu Bài Tập 4 Kỹ Năng', icon: Edit3, color: 'text-teal-400' }
+    { id: 'ideas', label: '5. Ý Tưởng Dạy Học', icon: Sparkles, color: 'text-rose-400' },
+    { id: 'utilities', label: '6. Tiện Ích Dạy Học', icon: Wand2, color: 'text-cyan-400' },
+    { id: 'worksheet', label: '7. Phiếu Bài Tập 4 Kỹ Năng', icon: Edit3, color: 'text-teal-400' }
   ];
 
   const currentTabInfo = subCategoryTabs.find(t => t.id === activeCategory) || subCategoryTabs[0];
@@ -740,8 +741,8 @@ export const MaterialPage = () => {
         }
       />
 
-      {/* 6 CATEGORY SUB-TABS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
+      {/* 7 CATEGORY SUB-TABS MATCHING 100% NAVBAR DROPDOWN */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
         {subCategoryTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeCategory === tab.id;
@@ -750,14 +751,8 @@ export const MaterialPage = () => {
               key={tab.id}
               onClick={() => {
                 soundFX.playClick();
-                if (tab.id === 'worksheet') {
-                  navigate('/worksheet');
-                } else if (tab.id === 'project') {
-                  navigate('/games');
-                } else {
-                  setActiveCategory(tab.id);
-                  setSearchParams({ type: tab.id });
-                }
+                setActiveCategory(tab.id);
+                setSearchParams({ type: tab.id });
               }}
               className={`p-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all ${
                 isActive

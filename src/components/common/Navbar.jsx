@@ -63,9 +63,11 @@ export const Navbar = () => {
       subMenus: [
         { label: '1. Grammar (Ngữ pháp)', path: '/materials?type=grammar' },
         { label: '2. Vocabulary (Từ vựng)', path: '/materials?type=vocabulary' },
-        { label: '3. Infographic (Trực quan)', path: '/materials?type=infographic' },
-        { label: '4. Ý tưởng dạy học', path: '/materials?type=ideas' },
-        { label: '5. Tiện ích giảng dạy (Gemini Canvas)', path: '/materials?type=utilities' }
+        { label: '3. Audio & Tapescript', path: '/materials?type=audio' },
+        { label: '4. Infographic (Trực quan)', path: '/materials?type=infographic' },
+        { label: '5. Ý tưởng dạy học', path: '/materials?type=ideas' },
+        { label: '6. Tiện ích dạy học', path: '/materials?type=utilities' },
+        { label: '7. Phiếu bài tập 4 kỹ năng', path: '/materials?type=worksheet' }
       ]
     },
     { 
