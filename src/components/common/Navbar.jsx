@@ -122,30 +122,17 @@ export const Navbar = () => {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Logo Left */}
+          {/* Logo Left - Clean 3D Logo Image Only */}
           <Link 
             to="/" 
             onClick={() => soundFX.playClick()}
-            className="flex items-center gap-3 shrink-0 group"
+            className="flex items-center shrink-0 group py-1"
           >
-            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-950/80 border border-slate-700/80 flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-300 shrink-0">
-              <img 
-                src="/logo.png" 
-                alt="Sổ Tay Dạy Học THCS Logo" 
-                className="w-full h-full object-cover rounded-2xl" 
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-black text-lg tracking-tight text-white flex items-center gap-1.5">
-                SỔ TAY DẠY HỌC THCS
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                  ETA 4.0
-                </span>
-              </span>
-              <span className="text-[11px] text-slate-400 font-semibold tracking-wider">
-                Khối 6 • 7 • 8 • 9 • Global Success
-              </span>
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="Sổ Tay Dạy Học Logo" 
+              className="h-12 sm:h-14 w-auto object-contain rounded-2xl group-hover:scale-105 transition-all duration-300" 
+            />
           </Link>
 
           {/* Navigation Links Center */}
@@ -165,14 +152,12 @@ export const Navbar = () => {
                   <Link
                     to={item.path}
                     onClick={() => soundFX.playClick()}
-                    className={`flex flex-col items-center justify-center px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all duration-200 whitespace-nowrap shrink-0 ${
-                      isActive
-                        ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 border border-brand-500/50 scale-105'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent'
+                    className={`flex flex-col items-center justify-center px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all duration-200 whitespace-nowrap shrink-0 border border-transparent text-slate-300 hover:text-white hover:bg-brand-600 hover:shadow-lg hover:shadow-brand-600/30 hover:border-brand-500/50 ${
+                      isActive ? 'text-brand-400 font-black' : ''
                     }`}
                   >
                     <div className="flex items-center gap-1">
-                      <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                      <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-brand-400 group-hover:text-white' : 'text-slate-400 group-hover:text-white'}`} />
                       {hasSubMenus && <ChevronDown className="w-3 h-3 text-slate-400 group-hover:rotate-180 transition-transform" />}
                     </div>
                     <span className="whitespace-nowrap leading-none">{item.label}</span>
