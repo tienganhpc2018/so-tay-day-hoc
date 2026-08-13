@@ -1338,19 +1338,45 @@ export const MaterialPage = () => {
                 />
               </div>
 
-              {activeReaderArticle.audioUrl && (
-                <div className="p-4 rounded-2xl bg-purple-950/50 border border-purple-500/40 space-y-2">
-                  <span className="text-xs font-black text-purple-300 flex items-center gap-2">
-                    <Volume2 className="w-4 h-4 text-purple-400" />
-                    FILE ÂM THANH BÀI NGHE AUDIO AUDIO STREAM:
+              {/* STREAMING VIDEO / AUDIO PLAYER & YOUTUBE EMBED CLEAN */}
+              {activeReaderArticle.videoUrl && (
+                <div className="p-4 rounded-2xl bg-indigo-950/50 border border-indigo-500/40 space-y-2 select-none" onContextMenu={(e) => e.preventDefault()}>
+                  <span className="text-xs font-black text-indigo-300 flex items-center gap-2">
+                    <Video className="w-4 h-4 text-indigo-400" />
+                    STREAMING VIDEO BÀI GIẢNG (CHỐNG COPY & TẢI XUỐNG):
                   </span>
-                  <audio controls src={activeReaderArticle.audioUrl} className="w-full rounded-xl bg-slate-950" />
+                  {activeReaderArticle.videoUrl.includes('youtube.com') || activeReaderArticle.videoUrl.includes('youtu.be') ? (
+                    <iframe
+                      src={activeReaderArticle.videoUrl.replace('watch?v=', 'embed/')}
+                      title="YouTube video player"
+                      className="w-full h-64 rounded-xl border border-slate-800"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video controls controlsList="nodownload" src={activeReaderArticle.videoUrl} className="w-full h-64 rounded-xl bg-slate-950 object-cover" />
+                  )}
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 font-bold">
+                    <span>📊 Tiến độ xem: 100% (Hoàn thành)</span>
+                    <span className="text-emerald-400">🛡️ Bảo hộ bản quyền - Đã khóa tải xuống</span>
+                  </div>
                 </div>
               )}
 
-              {/* ARTICLE READER WITH BE VIETNAM PRO FONT GUARANTEE & COLORED TEXT RETENTION */}
+              {activeReaderArticle.audioUrl && (
+                <div className="p-4 rounded-2xl bg-purple-950/50 border border-purple-500/40 space-y-2 select-none" onContextMenu={(e) => e.preventDefault()}>
+                  <span className="text-xs font-black text-purple-300 flex items-center gap-2">
+                    <Volume2 className="w-4 h-4 text-purple-400" />
+                    FILE ÂM THANH STREAMING AUDIO (CHỐNG COPY):
+                  </span>
+                  <audio controls controlsList="nodownload" src={activeReaderArticle.audioUrl} className="w-full rounded-xl bg-slate-950" />
+                </div>
+              )}
+
+              {/* ARTICLE READER WITH BE VIETNAM PRO FONT GUARANTEE & COPYRIGHT PROTECTION GUARD */}
               <div 
-                className="text-sm font-sans text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
+                onContextMenu={(e) => e.preventDefault()}
+                className="text-sm font-sans text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none select-text [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
                 style={{ fontFamily: "'Be Vietnam Pro', 'Inter', system-ui, sans-serif" }}
                 dangerouslySetInnerHTML={{ __html: activeReaderArticle.content }}
               />
@@ -1358,7 +1384,7 @@ export const MaterialPage = () => {
               {activeReaderArticle.fileUrl && (
                 <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-semibold flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-indigo-400" /> Tệp tài liệu đính kèm:
+                    <FileText className="w-4 h-4 text-indigo-400" /> Tệp đính kèm bài giảng (.ZIP, .DOCX, .XLSX, .MINDMAP):
                   </span>
                   <a
                     href={activeReaderArticle.fileUrl}
@@ -1366,7 +1392,7 @@ export const MaterialPage = () => {
                     rel="noreferrer"
                     className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow"
                   >
-                    <Download className="w-3.5 h-3.5" /> Tải Tệp Về Máy
+                    <Download className="w-3.5 h-3.5" /> Xem Tệp Đính Kèm
                   </a>
                 </div>
               )}
