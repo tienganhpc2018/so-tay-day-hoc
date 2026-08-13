@@ -333,27 +333,28 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* 4. THƯ VIỆN HỌC LIỆU MỚI NHẤT & HỘI CHỢ PROJECT NỔI BẬT 🚀 */}
+      {/* 4. THƯ VIỆN HỌC LIỆU MỚI NHẤT (LINK TO LUYỆN THI VÀO 10 GIA LAI) & HỘI CHỢ PROJECT NỔI BẬT (LINK TO ẢNH HOẠT ĐỘNG SÂN TRƯỜNG) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
         
+        {/* COLUMN 1: THƯ VIỆN HỌC LIỆU MỚI NHẤT -> LINK TO LUYỆN THI VÀO 10 GIA LAI 🏆 */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-brand-500 pl-3">
               <BookOpen className="w-5 h-5 text-brand-400" />
-              Thư viện Học liệu mới nhất
+              Thư viện Học liệu mới nhất (Luyện thi vào 10 Gia Lai)
             </h3>
-            <Link to="/materials" className="text-xs font-bold text-brand-400 hover:underline">
-              Xem tất cả (Menu Thư Mục Học Liệu) →
+            <Link to="/lop-dao-tao?module=gialai_10" className="text-xs font-bold text-brand-400 hover:underline">
+              Xem tất cả (Luyện Thi Vào 10 Gia Lai) →
             </Link>
           </div>
 
           <div className="space-y-3">
             {[
-              { title: 'GIÁO ÁN TA 7(GLOBAL) - BÀI 4', sub: 'Tiếng Anh • Lớp 7', price: '50.000đ', downloads: '0 tải' },
-              { title: 'GIÁO ÁN TA 7(GLOBAL) - BÀI 3', sub: 'Tiếng Anh • Lớp 7', price: '50.000đ', downloads: '3 tải' },
-              { title: 'GIÁO ÁN TA 7(GLOBAL) - BÀI 2', sub: 'Tiếng Anh • Lớp 7', price: '50.000đ', downloads: '1 tải' }
+              { title: 'ĐỀ THI CHÍNH THỨC VÀO 10 CHUYÊN TIẾNG ANH GIA LAI', sub: 'Tiếng Anh • Lớp 9 • Có Đáp Án Chốt', price: 'Bảo mật Drive', downloads: '192 lượt xem' },
+              { title: 'ĐỀ THI THỬ VÀO 10 TỈNH GIA LAI MÃ 801', sub: 'Tiếng Anh • Lớp 9 • Tệp Audio Nghe', price: 'Bảo mật Drive', downloads: '158 lượt xem' },
+              { title: 'ĐỀ THI TUYỂN SINH VÔ 10 TỈNH GIA LAI 2025 - 2026', sub: 'Tiếng Anh • Lớp 9 • Ma Trận Đề Thi', price: 'Bảo mật Drive', downloads: '240 lượt xem' }
             ].map((item, idx) => (
-              <Link key={idx} to="/materials" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4 hover:border-brand-500/50 transition-all block">
+              <Link key={idx} to="/lop-dao-tao?module=gialai_10" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4 hover:border-brand-500/50 transition-all block">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-brand-400 shrink-0">
                     <FileText className="w-5 h-5" />
@@ -365,35 +366,36 @@ export const HomePage = () => {
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-rose-400 block">{item.price}</span>
-                  <span className="text-[10px] text-slate-400 font-medium">📥 {item.downloads}</span>
+                  <span className="text-xs font-black text-emerald-400 block">{item.price}</span>
+                  <span className="text-[10px] text-slate-400 font-medium">👁️ {item.downloads}</span>
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
+        {/* COLUMN 2: HỘI CHỢ PROJECT NỔI BẬT -> LINK TO SÂN TRƯỜNG - ẢNH HOẠT ĐỘNG 🖼️ */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-rose-500 pl-3">
               <Rocket className="w-5 h-5 text-rose-400" />
-              Hội chợ Project nổi bật 🚀
+              Hội chợ Project nổi bật (Ảnh hoạt động Sân trường) 🚀
             </h3>
-            <Link to="/games" className="text-xs font-bold text-rose-400 hover:underline">
-              Xem tất cả (Menu Sân Trường Tương Tác) →
+            <Link to="/games?tab=photos" className="text-xs font-bold text-rose-400 hover:underline">
+              Xem tất cả (Ảnh Hoạt Động Sân Trường) →
             </Link>
           </div>
 
           <div className="space-y-3">
             {[
-              { title: 'PROJECT: VÒNG ĐỜI VÀ MÔI TRƯỜNG SỐNG', sub: 'Interactive Project • Bởi ' + authorName, price: '10.000đ' },
-              { title: 'BỘ TRÒ CHƠI FLASHCARD TỪ VỰNG TIẾNG ANH', sub: 'Flashcard Game • Bởi ' + authorName, price: '10.000đ' },
-              { title: 'TRÒ CHƠI GHÉP CẶP TỪ & HÌNH ẢNH GLOBAL SUCCESS', sub: 'Matching Game • Bởi ' + authorName, price: '20.000đ' }
+              { title: 'KỶ NIỆM BUỔI TỔNG KẾT NĂM HỌC SÔI NỔI LỚP 8A5', sub: 'Ảnh Hoạt Động • Bởi ' + authorName, price: 'Ảnh Hoạt Động' },
+              { title: 'LƯU BÚT CHIA TAY RA TRƯỜNG THÂN THƯƠNG KHỐI 9', sub: 'Ảnh Hoạt Động • Bởi ' + authorName, price: 'Ảnh Hoạt Động' },
+              { title: 'ALBUM HOẠT ĐỘNG NGOẠI KHÓA TIẾNG ANH GLOBAL SUCCESS', sub: 'Ảnh Hoạt Động • Bởi ' + authorName, price: 'Ảnh Hoạt Động' }
             ].map((item, idx) => (
-              <Link key={idx} to="/games" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4 hover:border-rose-500/50 transition-all block">
+              <Link key={idx} to="/games?tab=photos" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4 hover:border-rose-500/50 transition-all block">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-rose-400 shrink-0">
-                    <Gamepad2 className="w-5 h-5" />
+                    <Rocket className="w-5 h-5" />
                   </div>
                   <div>
                     <h4 className="text-xs font-extrabold text-white">{item.title}</h4>
@@ -402,7 +404,7 @@ export const HomePage = () => {
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-rose-400 block">{item.price}</span>
+                  <span className="text-xs font-black text-amber-400 block">{item.price}</span>
                 </div>
               </Link>
             ))}
