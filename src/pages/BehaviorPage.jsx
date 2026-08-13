@@ -6,6 +6,7 @@ import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { DuckRaceGameCanvas } from '../components/behavior/DuckRaceGameCanvas';
+import { AddClassModal } from '../components/behavior/AddClassModal';
 import { 
   Users, 
   Dices, 
@@ -39,7 +40,6 @@ import {
   Check
 } from 'lucide-react';
 
-// PRESET AI PIXAR / ANIME AVATARS FOR SELECTION (DIRECTIVE BY THẦY)
 const AI_PIXAR_AVATARS = [
   { id: 'ai-1', label: 'Cậu bé Pixar 3D', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' },
   { id: 'ai-2', label: 'Cô bé Anime VIP', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop' },
@@ -60,7 +60,7 @@ export const BehaviorPage = () => {
   const [themeMode, setThemeMode] = useState('default');
 
   const [activeModal, setActiveModal] = useState(null); 
-  // 'attendance' | 'reward_penalty' | 'group_division' | 'duck_race' | 'blind_bag_grid' | 'seating_map' | 'timer' | 'avatar_picker' | 'announcement' | 'wheel' | 'teams' | 'call_multiple'
+  const [showAddClassModal, setShowAddClassModal] = useState(false);
 
   // Dynamic Roster State
   const [students, setStudents] = useState([
@@ -75,8 +75,11 @@ export const BehaviorPage = () => {
     { id: 'st-9', code: '109', full_name: 'Huỳnh Thị Trà My', plus_points: 5, minus_points: 0, status: 'Present', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop' }
   ]);
 
-  // TRACK CALLED STUDENTS (REMOVE ALREADY CALLED STUDENTS - DIRECTIVE BY THẦY)
+  // TRACK CALLED STUDENTS
   const [calledStudentIds, setCalledStudentIds] = useState([]);
+
+  // TRACK OPENED BLIND BAG POUCHES (DIRECTIVE BY THẦY MATCHING SCREENSHOT 2: "số được chọn rồi sẽ tự mờ đi, không chọn lại được nữa")
+  const [openedPouchNumbers, setOpenedPouchNumbers] = useState([]);
 
   // Active (Present) & Uncalled Students Only
   const availableStudents = students.filter(s => 
@@ -110,12 +113,12 @@ export const BehaviorPage = () => {
   // ANNOUNCEMENT POPUP STATE
   const [announcementData, setAnnouncementData] = useState(null);
 
-  // SUSPENSE SHUFFLE SELECTION STATE (5-6 SECONDS SUSPENSE - DIRECTIVE BY THẦY)
+  // SUSPENSE SHUFFLE SELECTION STATE
   const [isShuffling, setIsShuffling] = useState(false);
   const [shufflingStudent, setShufflingStudent] = useState(null);
 
-  // TÚI MÙ (BLIND BAG GAME) 3-STEP WORKFLOW STATES (MATCHING SCREENSHOTS 3, 4, 5)
-  const [blindBagStep, setBlindBagStep] = useState(1); // 1: 32 Grid | 2: Pouch Opening | 3: Big Name Reveal
+  // TÚI MÙ 3-STEP WORKFLOW STATES
+  const [blindBagStep, setBlindBagStep] = useState(1);
   const [selectedPouchNumber, setSelectedPouchNumber] = useState(null);
   const [blindBagWinner, setBlindBagWinner] = useState(null);
 
@@ -136,6 +139,15 @@ export const BehaviorPage = () => {
     confetti({ particleCount: 120, spread: 80 });
     setAnnouncementData({ title, message, winner });
     setActiveModal('announcement');
+  };
+
+  // Create New Class Handler (DIRECTIVE BY THẦY MATCHING SCREENSHOT 1)
+  const handleAddNewClass = (newClassData) => {
+    setSelectedClass(newClassData.className);
+    setStudents(newClassData.students);
+    setCalledStudentIds([]);
+    setOpenedPouchNumbers([]);
+    triggerAnnouncement('🎉 ĐÃ TẠO LỚP HỌC MỚI', `Tạo lớp ${newClassData.fullClassName} với ${newClassData.students.length} học sinh thành công!`);
   };
 
   // Add Custom Criterion
@@ -183,12 +195,12 @@ export const BehaviorPage = () => {
       setShufflingStudent(randomTemp);
       count += 1;
 
-      if (count > 25) { // 6 seconds suspense (25 steps * 240ms = 6000ms)
+      if (count > 25) {
         clearInterval(interval);
         setIsShuffling(false);
 
         const winner = availableStudents[Math.floor(Math.random() * availableStudents.length)];
-        setCalledStudentIds(prev => [...prev, winner.id]); // Mark as called
+        setCalledStudentIds(prev => [...prev, winner.id]);
         setSelectedStudentForReward(winner);
         triggerAnnouncement('🎯 CHÚC MỪNG HỌC SINH ĐƯỢC GỌI TÊN', `Xin mời học sinh ${winner.full_name} (Mã: ${winner.code}) lên bảng!`, winner);
       }
@@ -219,7 +231,7 @@ export const BehaviorPage = () => {
 
         const shuffled = [...availableStudents].sort(() => 0.5 - Math.random()).slice(0, 3);
         const newCalledIds = shuffled.map(s => s.id);
-        setCalledStudentIds(prev => [...prev, ...newCalledIds]); // Mark all 3 as called
+        setCalledStudentIds(prev => [...prev, ...newCalledIds]);
 
         triggerAnnouncement(
           '🎯 GỌI TÊN NGẪU NHIÊN 3 HỌC SINH',
@@ -229,8 +241,13 @@ export const BehaviorPage = () => {
     }, 240);
   };
 
-  // TÚI MÙ (BLIND BAG GAME) 3-STEP INTERACTIVE WORKFLOW (MATCHING SCREENSHOTS 3, 4, 5)
+  // TÚI MÙ (BLIND BAG GAME) WITH FADED / GREYED OUT OPENED POUCHES (DIRECTIVE BY THẦY MATCHING SCREENSHOT 2)
   const handleOpenBlindBagPouch = (pouchNum) => {
+    if (openedPouchNumbers.includes(pouchNum)) {
+      triggerAnnouncement('⚠️ TÚI MÙ ĐÃ MỞ', `Túi mù #${pouchNum} đã được mở trước đó, vui lòng nhấp chọn túi mù khác!`);
+      return;
+    }
+
     soundFX.playClick();
     if (availableStudents.length === 0) {
       triggerAnnouncement('❌ THÔNG BÁO', 'Tất cả học sinh đều đã được mở túi mù!');
@@ -238,14 +255,15 @@ export const BehaviorPage = () => {
     }
 
     setSelectedPouchNumber(pouchNum);
-    setBlindBagStep(2); // Step 2: Pouch Opening (Screenshot 4)
+    setOpenedPouchNumbers(prev => [...prev, pouchNum]); // Mark pouch as opened (greyed out in Screenshot 2)
+    setBlindBagStep(2);
 
     setTimeout(() => {
       const winner = availableStudents[Math.floor(Math.random() * availableStudents.length)];
       setCalledStudentIds(prev => [...prev, winner.id]);
       setBlindBagWinner(winner);
       setSelectedStudentForReward(winner);
-      setBlindBagStep(3); // Step 3: Big Name Reveal (Screenshot 5)
+      setBlindBagStep(3);
 
       try { soundFX.playFanfare(); } catch (err) {}
       confetti({ particleCount: 160, spread: 90 });
@@ -281,7 +299,7 @@ export const BehaviorPage = () => {
       {/* HERO BANNER */}
       <PageHeroBanner
         title={`Sổ Nề Nếp & Quản Lý Lớp Chủ Nhiệm (${academicYear}) 📋`}
-        subtitle={`Điểm danh thời gian thực, Game Túi Mù 3 bước, Gọi Nhiều Hồi Hộp 6s & Tự động loại bỏ học sinh đã gọi Lớp ${selectedClass}.`}
+        subtitle={`Tạo Lớp Học Mới (Ảnh 1), Túi Mù mờ số đã chọn (Ảnh 2) & Cài đặt Đua Vịt tách riêng (Ảnh 3) Lớp ${selectedClass}.`}
         badge={`QUẢN LÝ LỚP CHỦ NHIỆM • LỚP ${selectedClass}`}
         bgImage="/images/hero_library_bg.jpg"
       />
@@ -294,8 +312,15 @@ export const BehaviorPage = () => {
           </span>
 
           <div className="flex items-center gap-3 text-xs font-bold">
+            <button
+              onClick={() => { soundFX.playClick(); setShowAddClassModal(true); }}
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-black shadow-lg flex items-center gap-1.5 animate-pulse"
+            >
+              <Plus className="w-4 h-4" /> + Thêm Lớp Học Mới (Ảnh 1)
+            </button>
+
             <span className="text-slate-400">
-              Sĩ số: <strong>{students.length} HS</strong> (Chưa gọi: <strong className="text-emerald-400">{availableStudents.length}</strong>, Đã gọi: <strong className="text-purple-400">{calledStudentIds.length}</strong>)
+              Sĩ số: <strong>{students.length} HS</strong> (Lớp {selectedClass})
             </span>
 
             {calledStudentIds.length > 0 && (
@@ -307,13 +332,13 @@ export const BehaviorPage = () => {
                 }}
                 className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[11px] shadow"
               >
-                🔄 Đặt Lại Danh Sách Gọi Tên
+                🔄 Đặt Lại Gọi Tên
               </button>
             )}
           </div>
         </div>
 
-        {/* PILLS ROW MATCHING SCREENSHOT 1 */}
+        {/* PILLS ROW */}
         <div className="flex flex-wrap gap-2 text-xs font-black">
           
           <button
@@ -427,7 +452,7 @@ export const BehaviorPage = () => {
         </div>
       </div>
 
-      {/* MAIN STUDENT CARDS GRID (MATCHING SCREENSHOT 2 100%) */}
+      {/* MAIN STUDENT CARDS GRID */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
@@ -461,7 +486,6 @@ export const BehaviorPage = () => {
                     : 'bg-white text-slate-900 border-slate-200 hover:border-amber-500 hover:shadow-2xl'
                 }`}
               >
-                {/* AVATAR WITH RED / PURPLE POINT BADGES MATCHING SCREENSHOT 2 */}
                 <div className="relative">
                   <div className={`rounded-full overflow-hidden border-2 shadow-md ${isAbsent ? 'border-rose-600 grayscale' : 'border-amber-400'} ${avatarSize === 'large' ? 'w-24 h-24' : 'w-20 h-20'}`}>
                     <img src={st.avatar} alt={st.full_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
@@ -486,78 +510,11 @@ export const BehaviorPage = () => {
         </div>
       </div>
 
-      {/* MODAL: "GỌI NHIỀU" FULL CLASS GRID WITH SUSPENSE (DIRECTIVE BY THẦY - MATCHING SCREENSHOT 2) */}
-      {activeModal === 'call_multiple' && (
-        <div className="fixed top-14 inset-x-0 bottom-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start justify-center p-4 pt-4 overflow-y-auto font-sans">
-          <div className="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl animate-fadeIn max-h-[88vh] flex flex-col text-white">
-            
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
-              <h3 className="text-base font-black text-amber-400 uppercase flex items-center gap-2">
-                👥 QUẢN LÝ GỌI NHIỀU HỌC SINH (FULL DANH SÁCH LỚP)
-              </h3>
-              <button onClick={() => setActiveModal(null)} className="p-1.5 rounded-xl bg-slate-800 text-slate-300">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {students.map((st) => {
-                  const isAbsent = st.status === 'Absent_Perm' || st.status === 'Absent_NoPerm';
-                  const isCalled = calledStudentIds.includes(st.id);
-                  const isShufflingThis = shufflingStudent?.id === st.id;
-
-                  return (
-                    <div
-                      key={st.id}
-                      className={`p-3 rounded-2xl border transition-all flex flex-col items-center text-center space-y-2 relative ${
-                        isShufflingThis
-                          ? 'bg-rose-600 text-white border-rose-400 scale-110 shadow-2xl animate-bounce z-10'
-                          : isAbsent
-                          ? 'bg-rose-950/80 border-rose-700 opacity-40'
-                          : isCalled
-                          ? 'bg-slate-950 border-slate-800 opacity-50'
-                          : 'bg-slate-950 border-slate-800'
-                      }`}
-                    >
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-amber-400">
-                        <img src={st.avatar} alt={st.full_name} className="w-full h-full object-cover" />
-                      </div>
-                      <span className="text-xs font-black line-clamp-2">{st.full_name}</span>
-                      {isCalled && <span className="text-[9px] text-purple-400 font-bold">[ ĐÃ GỌI ]</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between shrink-0 pt-3 border-t border-slate-800">
-              <button
-                onClick={() => setCalledStudentIds([])}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs"
-              >
-                🔄 Đặt Lại Danh Sách
-              </button>
-
-              <button
-                onClick={handlePickMultipleWithSuspense}
-                disabled={isShuffling}
-                className="px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-xl flex items-center gap-2 animate-bounce"
-              >
-                <Dices className="w-5 h-5 fill-slate-950" /> {isShuffling ? 'Đang Hồi Hộp Quay (6 Giây)...' : '🚀 BẮT ĐẦU VÒNG QUAY GỌI 3 HỌC SINH'}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: TÚI MÙ 3-STEP GAME WORKFLOW (MATCHING SCREENSHOTS 3, 4 & 5 100%) */}
+      {/* MODAL: TÚI MÙ WITH AUTO-DIMMING OPENED POUCHES (MATCHING SCREENSHOT 2 DIRECTIVE) */}
       {activeModal === 'blind_bag_grid' && (
         <div className="fixed top-14 inset-x-0 bottom-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-start justify-center p-3 pt-3 overflow-y-auto font-sans">
           <div className="bg-[#15803d] border-4 border-amber-400 rounded-3xl max-w-5xl w-full p-6 space-y-4 shadow-2xl animate-fadeIn max-h-[92vh] flex flex-col text-white relative">
             
-            {/* HEADER */}
             <div className="flex items-center justify-between border-b border-emerald-600 pb-3 shrink-0">
               <h3 className="text-base font-black text-amber-300 uppercase flex items-center gap-2">
                 🎁 TRÒ CHƠI TÚI MÙ MAY MẮN (32 HỘP QUÀ BÍ ẨN)
@@ -567,29 +524,47 @@ export const BehaviorPage = () => {
               </button>
             </div>
 
-            {/* STEP 1: 32 POUCHES GRID ON GREEN CUTTING MAT (MATCHING SCREENSHOT 3 100%) */}
+            {/* STEP 1: 32 POUCHES GRID (OPENED POUCHES ARE FADED/GREYED OUT IN SCREENSHOT 2) */}
             {blindBagStep === 1 && (
               <div className="flex-1 overflow-y-auto space-y-3">
-                <p className="text-xs font-bold text-amber-200 text-center">
-                  Nhấp chọn 1 túi mù bí ẩn bên dưới để xem học sinh may mắn nhận quà!
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-amber-200">
+                    Nhấp chọn 1 túi mù bí ẩn bên dưới để xem học sinh may mắn nhận quà! (Túi đã mở sẽ tự mờ đi)
+                  </p>
+                  {openedPouchNumbers.length > 0 && (
+                    <button
+                      onClick={() => setOpenedPouchNumbers([])}
+                      className="px-3 py-1 rounded-xl bg-emerald-900 text-emerald-200 font-bold text-[11px]"
+                    >
+                      🔄 Khôi Phục Lại Tất Cả Túi Mù
+                    </button>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 p-3 bg-[#166534] rounded-2xl border-2 border-emerald-500 shadow-inner">
                   {Array.from({ length: 32 }).map((_, idx) => {
                     const pouchNum = idx + 1;
                     const isPink = pouchNum % 2 !== 0;
+                    const isOpened = openedPouchNumbers.includes(pouchNum); // DIRECTIVE BY THẦY MATCHING SCREENSHOT 2
+
                     return (
                       <div
                         key={`pouch_${pouchNum}`}
                         onClick={() => handleOpenBlindBagPouch(pouchNum)}
-                        className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-between shadow-lg group hover:scale-105 ${
-                          isPink ? 'bg-rose-500 border-rose-300' : 'bg-sky-500 border-sky-300'
+                        className={`p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-between shadow-lg relative ${
+                          isOpened
+                            ? 'bg-slate-900/90 border-slate-700 opacity-40 grayscale cursor-not-allowed scale-95'
+                            : isPink
+                            ? 'bg-rose-500 border-rose-300 hover:scale-105 cursor-pointer'
+                            : 'bg-sky-500 border-sky-300 hover:scale-105 cursor-pointer'
                         }`}
                       >
                         <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-xs">
-                          ?
+                          {isOpened ? '✓' : '?'}
                         </div>
-                        <span className="text-[10px] font-black uppercase text-white tracking-wider">TÚI MÙ</span>
+                        <span className="text-[10px] font-black uppercase text-white tracking-wider">
+                          {isOpened ? 'ĐÃ MỞ' : 'TÚI MÙ'}
+                        </span>
                         <span className="w-6 h-6 rounded-full bg-amber-950 text-amber-300 text-[10px] font-black flex items-center justify-center shadow mt-1">
                           {pouchNum}
                         </span>
@@ -600,7 +575,7 @@ export const BehaviorPage = () => {
               </div>
             )}
 
-            {/* STEP 2: POUCH TEARING OPEN ANIMATION (MATCHING SCREENSHOT 4 100%) */}
+            {/* STEP 2: POUCH TEARING ANIMATION */}
             {blindBagStep === 2 && (
               <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6 animate-pulse">
                 <div className="w-40 h-40 rounded-3xl bg-rose-500 border-4 border-amber-300 shadow-2xl flex flex-col items-center justify-center space-y-2 animate-bounce">
@@ -611,7 +586,7 @@ export const BehaviorPage = () => {
               </div>
             )}
 
-            {/* STEP 3: BIG NAME & PIXAR AVATAR REVEAL CENTERED (MATCHING SCREENSHOT 5 100%) */}
+            {/* STEP 3: BIG NAME REVEAL */}
             {blindBagStep === 3 && blindBagWinner && (
               <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6 bg-slate-900 rounded-3xl border-2 border-amber-400 shadow-2xl animate-fadeIn text-center">
                 <span className="text-xs font-black text-amber-400 uppercase tracking-widest">Capybara May Mắn</span>
@@ -645,6 +620,25 @@ export const BehaviorPage = () => {
 
           </div>
         </div>
+      )}
+
+      {/* ADD CLASS MODAL (MATCHING SCREENSHOT 1 100%) */}
+      <AddClassModal
+        isOpen={showAddClassModal}
+        onClose={() => setShowAddClassModal(false)}
+        onAddClass={handleAddNewClass}
+      />
+
+      {/* DUCK RACE GAME CANVAS (MATCHING SCREENSHOT 3 100%) */}
+      {activeModal === 'duck_race' && (
+        <DuckRaceGameCanvas
+          students={students}
+          onClose={() => setActiveModal(null)}
+          onRewardWinner={(winner, pts) => {
+            soundFX.playClick();
+            handleApplyPoints(pts, `Thưởng chiến thắng Game Đua Vịt (#${winner.rank})`);
+          }}
+        />
       )}
 
       {/* CENTERED ANNOUNCEMENT POPUP MODAL */}
@@ -806,18 +800,6 @@ export const BehaviorPage = () => {
             </div>
           </div>
         </div>
-      )}
-
-      {/* MODAL 4: DUCK RACE GAME CANVAS */}
-      {activeModal === 'duck_race' && (
-        <DuckRaceGameCanvas
-          students={students}
-          onClose={() => setActiveModal(null)}
-          onRewardWinner={(winner, pts) => {
-            soundFX.playClick();
-            handleApplyPoints(pts, `Thưởng chiến thắng Game Đua Vịt (#${winner.rank})`);
-          }}
-        />
       )}
 
       {/* MODAL 5: HOMEROOM REWARD & PENALTY DIALOG */}
