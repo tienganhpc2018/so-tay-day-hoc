@@ -448,16 +448,19 @@ export const MaterialPage = () => {
               />
             </div>
 
-            {/* 4. RICH CONTENT EDITOR WITH INLINE IMAGE INSERTION & UPLOAD */}
+            {/* 4. VISUAL RICH TEXT CONTENT EDITOR (SUPPORTS DIRECT COPY/PASTE OF TEXT & IMAGES FROM ANY WEBSITE) */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
-                <label className="text-slate-300 font-extrabold flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-indigo-400" />
-                  NỘI DUNG CHI TIẾT BÀI VIẾT (HỖ TRỢ DÁN VĂN BẢN KÈM HÌNH ÁNH):
-                </label>
+                <div>
+                  <label className="text-indigo-400 font-extrabold flex items-center gap-1.5 text-xs">
+                    <FileText className="w-4 h-4 text-indigo-400" />
+                    KHUNG SOẠN THẢO QUAN SÁT TRỰC QUAN (HỖ TRỢ DÁN TRỰC TIẾP CHỮ + HÌNH ÁNH TỪ BẤT KỲ TRANG WEB NÀO):
+                  </label>
+                  <p className="text-[11px] text-slate-400 font-normal">Thầy chỉ cần bôi đen copy bài viết ở bất kỳ trang web nào (gồm cả chữ + hình ảnh) rồi nhấn <strong>Ctrl + V</strong> dán trực tiếp vào đây!</p>
+                </div>
 
                 {/* Inline Image Uploader & Link Insertion Toolbar */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <label className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 font-extrabold text-[11px] cursor-pointer flex items-center gap-1">
                     <Upload className="w-3.5 h-3.5" /> 📷 Upload Ảnh Vào Bài
                     <input type="file" accept="image/*" onChange={handleFileUploadImage} className="hidden" />
@@ -482,12 +485,15 @@ export const MaterialPage = () => {
                 </div>
               </div>
 
-              <textarea
-                rows={10}
-                value={formContent}
-                onChange={(e) => setFormContent(e.target.value)}
-                placeholder="Dán văn bản bài học, kịch bản nghe hay công thức ngữ pháp... (Có thể bấm Chèn Ảnh hoặc Upload Ảnh ở trên để ảnh xuất hiện trực tiếp trong bài viết!)"
-                className="w-full glass-input p-4 text-xs font-serif leading-relaxed text-slate-100 bg-slate-900/90"
+              {/* VISUAL CONTENTEDITABLE CONTAINER */}
+              <div
+                ref={contentEditableRef}
+                contentEditable={true}
+                onInput={(e) => setFormContent(e.currentTarget.innerHTML)}
+                onBlur={(e) => setFormContent(e.currentTarget.innerHTML)}
+                dangerouslySetInnerHTML={{ __html: formContent }}
+                className="w-full min-h-[220px] max-h-[500px] overflow-y-auto glass-input p-4 text-xs font-serif leading-relaxed text-slate-100 bg-slate-900/90 rounded-2xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 space-y-3 prose prose-invert max-w-none [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
+                style={{ wordBreak: 'break-word' }}
               />
             </div>
 
