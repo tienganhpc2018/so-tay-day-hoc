@@ -156,8 +156,8 @@ export const TugOfWarGameCanvas = ({ onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-[#fffbeb] text-slate-900 rounded-3xl max-w-6xl w-full border-4 border-amber-300 shadow-2xl overflow-hidden relative font-sans max-h-[92vh] flex flex-col">
+    <div className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-3 sm:p-4 overflow-y-auto pt-2 pb-6">
+      <div className="bg-[#fffbeb] text-slate-900 rounded-3xl max-w-5xl w-full border-4 border-amber-300 shadow-2xl overflow-hidden relative font-sans max-h-[82vh] flex flex-col">
         
         {/* TOP HEADER MATCHING SCREENSHOT 3 */}
         <div className="p-4 sm:p-6 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-100 border-b border-amber-200 flex items-center justify-between shrink-0">

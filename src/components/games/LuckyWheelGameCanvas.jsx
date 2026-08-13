@@ -281,13 +281,13 @@ export const LuckyWheelGameCanvas = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-3 sm:p-4 overflow-y-auto pt-2 pb-6">
       
       {/* ========================================================================= */}
       {/* 1. QUIZ ARENA VIEW MATCHING SCREENSHOT 1 100%                            */}
       {/* ========================================================================= */}
       {isQuizView ? (
-        <div className="bg-[#f8fafc] text-slate-900 rounded-3xl max-w-4xl w-full border-4 border-slate-300 shadow-2xl overflow-hidden relative font-sans max-h-[92vh] flex flex-col justify-between p-6 sm:p-10 animate-fadeIn">
+        <div className="bg-[#f8fafc] text-slate-900 rounded-3xl max-w-4xl w-full border-4 border-slate-300 shadow-2xl overflow-hidden relative font-sans max-h-[82vh] flex flex-col justify-between p-6 sm:p-8 animate-fadeIn">
           
           {/* HEADER MATCHING SCREENSHOT 1 */}
           <div className="space-y-1 border-b border-slate-200 pb-4">
@@ -390,7 +390,7 @@ export const LuckyWheelGameCanvas = ({ onClose }) => {
         /* ========================================================================= */
         /* 2. WHEEL & QUESTION CONFIGURATION CANVAS MATCHING SCREENSHOTS 4 & 5       */
         /* ========================================================================= */
-        <div className="bg-white text-slate-900 rounded-3xl max-w-7xl w-full border-4 border-slate-800 shadow-2xl overflow-hidden relative font-sans max-h-[94vh] flex flex-col">
+        <div className="bg-white text-slate-900 rounded-3xl max-w-5xl w-full border-4 border-slate-800 shadow-2xl overflow-hidden relative font-sans max-h-[82vh] flex flex-col">
           
           {/* HEADER MATCHING SCREENSHOT 4 */}
           <div className="p-4 bg-[#f8fafc] border-b-2 border-slate-200 flex items-center justify-between shrink-0">

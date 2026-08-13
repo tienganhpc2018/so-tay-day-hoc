@@ -149,11 +149,11 @@ export const HeadTiltGameCanvas = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-3 sm:p-4 overflow-y-auto pt-2 pb-6">
       
       {/* 1. SETUP CANVAS MATCHING SCREENSHOT 1 */}
       {gameState === 'setup' && (
-        <div className="bg-[#f0f4f8] text-slate-900 rounded-3xl max-w-5xl w-full border-4 border-slate-800 shadow-2xl overflow-hidden relative font-sans max-h-[92vh] flex flex-col">
+        <div className="bg-[#f0f4f8] text-slate-900 rounded-3xl max-w-4xl w-full border-4 border-slate-800 shadow-2xl overflow-hidden relative font-sans max-h-[82vh] flex flex-col">
           
           {/* HEADER MATCHING SCREENSHOT 1 */}
           <div className="p-4 bg-[#fefce8] border-b-2 border-slate-800 flex items-center justify-between shrink-0">
@@ -345,7 +345,7 @@ export const HeadTiltGameCanvas = ({ onClose }) => {
 
       {/* 2. PLAY ARENA MATCHING SCREENSHOT 2 */}
       {gameState === 'playing' && (
-        <div className="bg-[#1e1b4b] text-white rounded-3xl max-w-5xl w-full border-4 border-indigo-500 shadow-2xl overflow-hidden relative font-sans max-h-[92vh] flex flex-col justify-between p-4 sm:p-6 space-y-6">
+        <div className="bg-[#1e1b4b] text-white rounded-3xl max-w-4xl w-full border-4 border-indigo-500 shadow-2xl overflow-hidden relative font-sans max-h-[82vh] flex flex-col justify-between p-4 sm:p-6 space-y-6">
           
           {/* TOP ARENA BAR */}
           <div className="flex items-center justify-between border-b border-indigo-500/50 pb-4">
