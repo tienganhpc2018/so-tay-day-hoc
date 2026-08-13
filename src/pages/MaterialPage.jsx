@@ -148,10 +148,14 @@ export const MaterialPage = () => {
     executeFormatCommand('fontSize', '3'); // standard size
   };
 
-  // CHANGE TEXT COLOR FOR SELECTION (GUARANTEED WORKING WITH INLINE COLOR SPAN)
+  // CHANGE TEXT COLOR FOR SELECTION (STRICT WORKING INLINE STYLE)
   const handleApplyTextColor = (colorHex) => {
     setSelectedTextColor(colorHex);
     soundFX.playClick();
+    
+    try {
+      document.execCommand('styleWithCSS', false, true);
+    } catch (e) {}
 
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
@@ -185,7 +189,7 @@ export const MaterialPage = () => {
     }
   };
 
-  // INSERT INTERACTIVE ACCORDION TOGGLE BOX AT EXACT CURSOR POSITION
+  // INSERT CLEAN BLANK EDITABLE ACCORDION TOGGLE BOX AT EXACT CURSOR POSITION
   const handleInsertHiddenAnswerBox = () => {
     const accordionHtml = `
       <br/>
@@ -195,21 +199,40 @@ export const MaterialPage = () => {
           <span style="font-size: 11px; background-color: #047857; padding: 2px 8px; border-radius: 9999px; color: #ffffff;">ĐÁP ÁN ẨN</span>
         </summary>
         <div style="padding: 18px; color: #ecfdf5; font-size: 13px; font-weight: 600; line-height: 1.7; background-color: #064e3b; border-top: 1px solid #059669;">
-          <p style="color: #34d399; font-weight: 800; margin-bottom: 8px;">📌 ĐÁP ÁN BÀI TẬP VỀ NHÀ (EXERCISE):</p>
-          <p>1. Đáp án: <strong style="color: #fbbf24;">(1) national park</strong></p>
-          <p>2. Đáp án: <strong style="color: #fbbf24;">(2) hotel / homestay</strong></p>
-          <br/>
-          <p style="color: #fbbf24; font-weight: 800;">💡 GIẢI THÍCH CHI TIẾT CỦA THẦY NGUYỄN VĂN HẢI:</p>
-          <p>Điền lời giải thích chi tiết cho học sinh tại đây...</p>
+          <p style="color: #fbbf24; font-weight: 800; margin-bottom: 8px;">📌 NỘI DUNG ĐÁP ÁN & LỜI GIẢI CHI TIẾT CỦA THẦY NGUYỄN VĂN HẢI:</p>
+          <p style="color: #ffffff;">(Thầy nhấp chuột trực tiếp vào dòng này để gõ/dán nội dung đáp án và lời giải chi tiết cho bài tập...)</p>
         </div>
       </details>
       <br/>
     `;
     insertHtmlAtCursor(accordionHtml);
-    alert('✨ ĐÃ CHÈN KHUNG ẨN ĐÁP ÁN TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
+    alert('✨ ĐÃ CHÈN KHUNG ẨN ĐÁP ÁN TRỐNG TẠI CON TRỎ CHUỘT! THẦY CÓ THỂ TỰ NHẬP NỘI DUNG ĐÁP ÁN RẤT DỄ DÀNG!');
   };
 
-  // INSERT AUDIO PLAYER AT EXACT CURSOR POSITION
+  // UPLOAD AUDIO FILE FROM COMPUTER DIRECTLY
+  const handleFileUploadAudioFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      soundFX.playClick();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Audio = event.target.result;
+        const audioHtml = `
+          <br/>
+          <div style="padding: 14px 18px; border-radius: 16px; background-color: #3b0764; border: 1px solid #a855f7; margin: 14px 0; text-align: left;">
+            <p style="color: #e9d5ff; font-weight: 800; font-size: 12px; margin-bottom: 8px;">🎧 FILE NGHE AUDIO BÀI TẬP (${file.name}):</p>
+            <audio controls src="${base64Audio}" style="width: 100%; border-radius: 12px;" />
+          </div>
+          <br/>
+        `;
+        insertHtmlAtCursor(audioHtml);
+        alert(`✨ ĐÃ TẢI LÊN FILE AUDIO "${file.name}" THÀNH CÔNG TẠI VỊ TRÍ CON TRỎ CHUỘT!`);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // INSERT AUDIO PLAYER FROM LINK AT EXACT CURSOR POSITION
   const handleInsertAudioPlayerAtCursor = () => {
     const audioUrl = prompt('Nhập link Audio MP3 hoặc link Google Drive bài nghe:');
     if (!audioUrl || !audioUrl.trim()) return;
@@ -818,15 +841,23 @@ export const MaterialPage = () => {
 
                 </div>
 
-                {/* Right Actions Toolbar: Audio, Video, Hidden Answers & Clean Fonts */}
+                {/* Right Actions Toolbar: Audio Upload & Link, Video, Hidden Answers & Clean Fonts */}
                 <div className="flex flex-wrap items-center gap-2">
+                  <label 
+                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow cursor-pointer"
+                    title="Tải tệp âm thanh MP3 trực tiếp từ máy tính của Thầy"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" /> 🎧 Upload File Audio Từ Máy
+                    <input type="file" accept="audio/*" onChange={handleFileUploadAudioFile} className="hidden" />
+                  </label>
+
                   <button
                     type="button"
                     onClick={handleInsertAudioPlayerAtCursor}
-                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
-                    title="Chèn trình phát âm thanh Audio MP3 / Google Drive tại vị trí con trỏ"
+                    className="px-3 py-1.5 rounded-xl bg-purple-950 text-purple-300 border border-purple-500/40 hover:bg-purple-900 font-extrabold text-[11px] flex items-center gap-1 shadow"
+                    title="Chèn link bài nghe MP3 / Google Drive tại vị trí con trỏ"
                   >
-                    <Volume2 className="w-3.5 h-3.5" /> 🎧 + Audio
+                    <LinkIcon className="w-3.5 h-3.5" /> Link Audio
                   </button>
 
                   <button
@@ -842,9 +873,9 @@ export const MaterialPage = () => {
                     type="button"
                     onClick={handleInsertHiddenAnswerBox}
                     className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
-                    title="Chèn khung ẩn đáp án cho học sinh tự bấm vào xem tại đúng vị trí con trỏ"
+                    title="Chèn khung ẩn đáp án trống cho Thầy tự nhập đáp án tại đúng vị trí con trỏ"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" /> 👉 + Khung Đáp Án Ẩn
+                    <CheckCircle2 className="w-3.5 h-3.5" /> 👉 + Khung Đáp Án Ẩn Trống
                   </button>
 
                   <button
@@ -872,7 +903,7 @@ export const MaterialPage = () => {
 
               </div>
 
-              {/* CONTENTEDITABLE CONTAINER WITH BE VIETNAM PRO FONT GUARANTEE */}
+              {/* CONTENTEDITABLE CONTAINER WITH BE VIETNAM PRO FONT GUARANTEE & FREEDOM OF COLORS */}
               <div
                 ref={contentEditableRef}
                 contentEditable={true}
@@ -883,7 +914,7 @@ export const MaterialPage = () => {
                 className={`w-full min-h-[300px] max-h-[650px] overflow-y-auto p-5 text-sm font-sans leading-relaxed rounded-2xl border transition-all space-y-3 prose max-w-none focus:outline-none focus:ring-2 focus:ring-indigo-500 [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block ${
                   editorBgMode === 'paper'
                     ? 'bg-[#fefea2] text-slate-950 border-amber-300 prose-slate [&_*]:!bg-transparent'
-                    : 'bg-slate-900/95 text-slate-100 border-slate-800 prose-invert [&_*]:!text-slate-100 [&_*]:!bg-transparent'
+                    : 'bg-slate-900/95 text-slate-100 border-slate-800 prose-invert [&_*]:!bg-transparent'
                 }`}
                 style={{ 
                   fontFamily: selectedFont,
