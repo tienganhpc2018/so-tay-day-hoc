@@ -92,6 +92,19 @@ export const GameHubPage = () => {
     },
     {
       id: 2,
+      category: 'class_stories',
+      categoryLabel: 'CHUYỆN CỦA LỚP',
+      title: 'Chuyện vui giờ học Tiếng Anh THCS Global Success cùng Thầy Hải',
+      summary: 'Những tiết học sôi nổi, các trò chơi tương tác từ vựng và tràng pháo tay giòn giã của cả lớp.',
+      content: 'Giờ học Tiếng Anh của Thầy Hải luôn tràn ngập tiếng cười với các mô hình kiềng 3 chân, game lật thẻ và vòng quay may mắn...',
+      author: 'Phạm Thanh Tú',
+      authorAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop',
+      thumbnail: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop',
+      date: '11/05/2026',
+      likes: 39
+    },
+    {
+      id: 3,
       category: 'memoirs',
       categoryLabel: 'LƯU BÚT',
       title: 'Lưu bút chia tay ra trường thân thương của các bạn học sinh Khối 9',
@@ -104,7 +117,46 @@ export const GameHubPage = () => {
       likes: 35
     },
     {
-      id: 3,
+      id: 4,
+      category: 'memoirs',
+      categoryLabel: 'LƯU BÚT',
+      title: 'Lời chúc thân thương gửi tới Thầy Nguyễn Văn Hải & tập thể lớp',
+      summary: 'Dòng lưu bút tri ân lòng nhiệt huyết của người thầy và tình bạn thắm thiết tuổi học trò.',
+      content: 'Cảm ơn thầy Hải đã luôn đồng hành, truyền cảm hứng và giúp chúng em yêu thích môn Tiếng Anh mỗi ngày...',
+      author: 'Bùi Hoàng Hải',
+      authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+      thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=800&auto=format&fit=crop',
+      date: '09/05/2026',
+      likes: 42
+    },
+    {
+      id: 5,
+      category: 'youth',
+      categoryLabel: 'TUỔI HỌC TRÒ',
+      title: 'Những ước mơ tuổi 14 và phương pháp tự học Tiếng Anh hiệu quả',
+      summary: 'Bài viết chia sẻ tâm sự học trò tuổi 14 về ước mơ hoài bão và kinh nghiệm chinh phục các kỳ thi.',
+      content: 'Tuổi 14 dưới mái trường THCS là khoảng thời gian đẹp nhất với bao hoài bão. Những giờ học Tiếng Anh bám sát SGK Global Success giúp em tự tin hơn...',
+      author: 'Trần Thuỳ Dương',
+      authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+      thumbnail: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?q=80&w=800&auto=format&fit=crop',
+      date: '09/05/2026',
+      likes: 52
+    },
+    {
+      id: 6,
+      category: 'youth',
+      categoryLabel: 'TUỔI HỌC TRÒ',
+      title: 'Tâm sự tuổi hoa niên dưới mái trường THCS thân yêu',
+      summary: 'Góc suy ngẫm tuổi học trò & hành trình trưởng thành qua từng môn học và các hoạt động lớp.',
+      content: 'Thời gian trôi nhanh như một chớp mắt, mỗi ngày đến trường là một ngày vui với biết bao kỷ niệm đẹp...',
+      author: 'Vũ Mai Phương',
+      authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+      thumbnail: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop',
+      date: '08/05/2026',
+      likes: 31
+    },
+    {
+      id: 7,
       category: 'photos',
       categoryLabel: 'ẢNH HOẠT ĐỘNG',
       title: 'Album hình ảnh hoạt động ngoại khóa & dự án Tiếng Anh THCS',
@@ -326,7 +378,7 @@ export const GameHubPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {memoriesList.filter(m => activeTab === 'photos' ? m.category === 'photos' : true).map((item) => (
+            {memoriesList.filter(m => m.category === activeTab).map((item) => (
               <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between group">
                 <div>
                   <div className="h-48 bg-slate-950 overflow-hidden relative">
