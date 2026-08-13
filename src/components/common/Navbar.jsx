@@ -128,8 +128,12 @@ export const Navbar = () => {
             onClick={() => soundFX.playClick()}
             className="flex items-center gap-3 shrink-0 group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-400 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-all duration-300">
-              <GraduationCap className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-950/80 border border-slate-700/80 flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-300 shrink-0">
+              <img 
+                src="/logo.png" 
+                alt="Sổ Tay Dạy Học THCS Logo" 
+                className="w-full h-full object-cover rounded-2xl" 
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-black text-lg tracking-tight text-white flex items-center gap-1.5">

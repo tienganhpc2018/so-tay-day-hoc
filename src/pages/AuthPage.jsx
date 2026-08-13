@@ -76,10 +76,14 @@ export const AuthPage = () => {
     <div className="min-h-[85vh] flex items-center justify-center p-4">
       <div className="w-full max-w-md glass-panel p-8 space-y-6 shadow-2xl border-brand-500/30">
         
-        {/* Header Logo & Title (Bỏ dòng Khối 6-9 theo yêu cầu) */}
+        {/* Header Branding */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
-            <GraduationCap className="w-8 h-8" />
+          <div className="w-16 h-16 mx-auto rounded-2xl overflow-hidden bg-slate-950/80 border border-slate-700/80 flex items-center justify-center shadow-xl shadow-brand-500/20">
+            <img 
+              src="/logo.png" 
+              alt="Sổ Tay Dạy Học Logo" 
+              className="w-full h-full object-cover rounded-2xl" 
+            />
           </div>
           <h1 className="text-2xl font-black text-white tracking-wide">SỔ TAY DẠY HỌC</h1>
         </div>
