@@ -29,6 +29,8 @@ import { MatchingPairsGame } from '../games/MatchingPairsGame';
 import { WordScrambleGame } from '../games/WordScrambleGame';
 import { IFrameGameViewer } from '../games/iFrameGameViewer';
 import { TugOfWarGameCanvas } from '../games/TugOfWarGameCanvas';
+import { HeadTiltGameCanvas } from '../games/HeadTiltGameCanvas';
+import { LuckyWheelGameCanvas } from '../games/LuckyWheelGameCanvas';
 
 export const TeachingUtilitiesMarket = () => {
   const [activeTab, setActiveTab] = useState('games');
@@ -599,8 +601,20 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       )}
 
-      {/* TUG OF WAR / GAME CANVAS MODAL MATCHING SCREENSHOT 3 */}
-      {activePlayGame && (
+      {/* GAME CANVAS MODALS BASED ON ACTIVE PLAY GAME */}
+      {activePlayGame?.id === 'g1' && (
+        <LuckyWheelGameCanvas onClose={() => setActivePlayGame(null)} />
+      )}
+
+      {activePlayGame?.id === 'g2' && (
+        <TugOfWarGameCanvas onClose={() => setActivePlayGame(null)} />
+      )}
+
+      {activePlayGame?.id === 'g3' && (
+        <HeadTiltGameCanvas onClose={() => setActivePlayGame(null)} />
+      )}
+
+      {(activePlayGame?.id === 'g4' || (activePlayGame && activePlayGame.id !== 'g1' && activePlayGame.id !== 'g2' && activePlayGame.id !== 'g3')) && (
         <TugOfWarGameCanvas onClose={() => setActivePlayGame(null)} />
       )}
 
