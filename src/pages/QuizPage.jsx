@@ -187,101 +187,60 @@ export const QuizPage = () => {
         showVipBadge={true}
       />
 
-      {/* TOP CONTROL / FILTER BAR REORGANIZED MATCHING SCREENSHOT 1 100% */}
-      <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
-          
-          {/* LEFT 5 DROPDOWNS & TABS MATCHING USER REQUEST */}
-          <div className="lg:col-span-8 flex flex-wrap items-center gap-2">
-            
-            {/* TAB / DROPDOWN 1: NGÂN HÀNG ĐỀ THI (LỚP 6-9) */}
-            <select
-              value={selectedGrade}
-              onChange={(e) => {
-                const g = Number(e.target.value);
+      {/* TOP CONTROL BAR CLEAN & ELEGANT MATCHING USER DIRECTIVE SCREENSHOT 2 */}
+      <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl flex flex-wrap items-center justify-between gap-3">
+        {/* KHỐI LỚP SELECTOR */}
+        <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+          {[6, 7, 8, 9].map((g) => (
+            <button
+              key={g}
+              onClick={() => {
+                soundFX.playClick();
                 setSelectedGrade(g);
                 setSearchParams({ grade: g.toString() });
               }}
-              className="bg-slate-950 text-slate-200 text-xs font-black px-3.5 py-2.5 rounded-2xl border border-slate-800 focus:outline-none"
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                selectedGrade === g
+                  ? 'bg-brand-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
-              <option value={6}>📌 Ngân hàng đề thi: Khối 6</option>
-              <option value={7}>📌 Ngân hàng đề thi: Khối 7</option>
-              <option value={8}>📌 Ngân hàng đề thi: Khối 8</option>
-              <option value={9}>📌 Ngân hàng đề thi: Khối 9</option>
-            </select>
-
-            {/* TAB / DROPDOWN 2: LỰA CHỌN BÀI HỌC (TỰ ĐỘNG LIÊN KẾT THEO KHỐI LỚP) */}
-            <select
-              value={selectedUnit}
-              onChange={(e) => setSelectedUnit(e.target.value)}
-              className="bg-slate-950 text-slate-200 text-xs font-black px-3.5 py-2.5 rounded-2xl border border-slate-800 focus:outline-none"
-            >
-              <option value="all">📚 Lựa chọn bài học: Tất cả Units Khối {selectedGrade}</option>
-              {(GRADE_UNITS_MAP[selectedGrade] || []).map((u) => (
-                <option key={u.value} value={u.value}>{u.label}</option>
-              ))}
-            </select>
-
-            {/* TAB / DROPDOWN 3: KỸ NĂNG CẦN KIỂM TRA */}
-            <select
-              value={selectedSkill}
-              onChange={(e) => setSelectedSkill(e.target.value)}
-              className="bg-slate-950 text-slate-200 text-xs font-black px-3.5 py-2.5 rounded-2xl border border-slate-800 focus:outline-none"
-            >
-              <option value="all">🎯 Kỹ năng cần kiểm tra: Tất cả 4 kỹ năng</option>
-              <option value="listening">1. Listening (Nghe hiểu)</option>
-              <option value="speaking">2. Speaking (Nói & Chấm AI)</option>
-              <option value="reading">3. Reading (Đọc hiểu)</option>
-              <option value="writing">4. Writing (Viết & Chấm AI)</option>
-            </select>
-
-            {/* TAB 4: NGÂN HÀNG ĐỀ THI (SOẠN ĐỀ THI MỚI) */}
-            <button
-              onClick={() => {
-                soundFX.playClick();
-                setShowCreatorModal(true);
-              }}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
-            >
-              <Plus className="w-4 h-4" /> Ngân Hàng Đề Thi (Soạn Đề Mới)
+              Khối {g}
             </button>
+          ))}
+        </div>
 
-            {/* NÚT GIAO BÀI & CHẤM BÀI 4.0 EVAL */}
-            <button
-              onClick={() => {
-                soundFX.playClick();
-                setShowGradingModal(true);
-              }}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
-            >
-              <Award className="w-4 h-4" /> Giao Bài & Chấm Điểm 4.0
-            </button>
+        {/* TOP ACTION BUTTONS */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              soundFX.playClick();
+              setShowCreatorModal(true);
+            }}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
+          >
+            <Plus className="w-4 h-4" /> Ngân Hàng Đề Thi (Soạn Đề Mới)
+          </button>
 
-            {/* TAB 5: THỐNG KÊ BÁO CÁO (LINK TỚI DASHBOARD REQUISITE PAGE) */}
-            <button
-              onClick={() => {
-                soundFX.playClick();
-                setShowAnalyticsModal(true);
-              }}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
-            >
-              <BarChart3 className="w-4 h-4" /> Thống Kê Báo Cáo
-            </button>
+          <button
+            onClick={() => {
+              soundFX.playClick();
+              setShowGradingModal(true);
+            }}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
+          >
+            <Award className="w-4 h-4" /> Giao Bài & Chấm Điểm 4.0
+          </button>
 
-          </div>
-
-          {/* RIGHT SEARCH BOX */}
-          <div className="lg:col-span-4 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm đề thi trong ngân hàng..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-950 text-xs font-bold text-slate-200 border border-slate-800 placeholder-slate-500 focus:outline-none focus:border-brand-500"
-            />
-          </div>
-
+          <button
+            onClick={() => {
+              soundFX.playClick();
+              setShowAnalyticsModal(true);
+            }}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
+          >
+            <BarChart3 className="w-4 h-4" /> Thống Kê Báo Cáo
+          </button>
         </div>
       </div>
 
@@ -316,6 +275,10 @@ export const QuizPage = () => {
                   onStart={() => {
                     soundFX.playClick();
                     setActiveQuiz(quiz);
+                  }}
+                  onEdit={() => {
+                    soundFX.playClick();
+                    setShowCreatorModal(true);
                   }}
                 />
               ))}
