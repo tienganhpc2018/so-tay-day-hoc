@@ -15,19 +15,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { AlertTriangle, GraduationCap, MessageCircle } from 'lucide-react';
 
 const ProtectedRoute = ({ children, teacherOnly = false, adminOnly = false }) => {
-  const { user, profile, loading, isTeacher, isAdmin, isLocked } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-slate-400 text-sm font-semibold">
-        Đang khởi động hệ thống Sổ Tay Tiếng Anh THCS...
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  const { user, profile, isTeacher, isAdmin, isLocked } = useAuth();
 
   if (isLocked) {
     return (
@@ -41,14 +29,6 @@ const ProtectedRoute = ({ children, teacherOnly = false, adminOnly = false }) =>
         </div>
       </div>
     );
-  }
-
-  if (teacherOnly && !isTeacher) {
-    return <Navigate to="/materials" replace />;
-  }
-
-  if (adminOnly && !isAdmin) {
-    return <Navigate to="/materials" replace />;
   }
 
   return children;

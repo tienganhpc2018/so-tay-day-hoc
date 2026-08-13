@@ -3,10 +3,21 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext();
 
+const defaultTeacherUser = { id: 'teacher-hai-01', email: 'haithay@gmail.com' };
+const defaultTeacherProfile = {
+  id: 'teacher-hai-01',
+  email: 'haithay@gmail.com',
+  full_name: 'Thầy Nguyễn Văn Hải',
+  role: 'teacher',
+  status: 'active',
+  grade_level: 8,
+  total_stars: 99
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(defaultTeacherUser);
+  const [profile, setProfile] = useState(defaultTeacherProfile);
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
   // Helper: Create default active profile if DB row missing
