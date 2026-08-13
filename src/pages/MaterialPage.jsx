@@ -286,33 +286,80 @@ export const MaterialPage = () => {
     alert('✨ ĐÃ CHÈN TRÌNH PHÁT AUDIO TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
   };
 
-  // INSERT VIDEO EMBED AT EXACT CURSOR POSITION
-  const handleInsertVideoPlayerAtCursor = () => {
-    const videoUrl = prompt('Nhập link Video YouTube hoặc link Video MP4:');
-    if (!videoUrl || !videoUrl.trim()) return;
-
-    let videoHtml = '';
-    const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-
-    if (ytMatch && ytMatch[1]) {
-      const embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
-      videoHtml = `
-        <br/>
-        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; border: 1px solid #475569; margin: 14px 0;">
-          <iframe src="${embedUrl}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
-        </div>
-        <br/>
-      `;
-    } else {
-      videoHtml = `
-        <br/>
-        <video controls src="${videoUrl.trim()}" style="width: 100%; border-radius: 16px; margin: 14px 0; border: 1px solid #475569;" />
-        <br/>
-      `;
+  // AI TEST FORMATTER: SEPARATE & ALIGN STUCK OPTIONS A, B, C, D INTO A CLEAN EXAM PAPER
+  const handleAiFormatAndSeparateTestContent = () => {
+    if (!formContent.trim()) {
+      alert('Vui lòng dán nội dung bài kiểm tra/đề thi vào ô soạn thảo trước!');
+      return;
     }
 
-    insertHtmlAtCursor(videoHtml);
-    alert('✨ ĐÃ NHÚNG VIDEO TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
+    soundFX.playClick();
+
+    let raw = formContent;
+
+    // 1. Separate stuck options like "libraryB. To", "labC. To", "roomD. To"
+    // Insert line breaks and indentation before B., C., D.
+    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(B\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
+    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(C\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
+    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(D\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
+
+    // Clean Option A. line breaks
+    raw = raw.replace(/([a-zA-Z0-9\?\.\!\)\"\'])\s*(A\.\s*)/gi, '$1<br/>&nbsp;&nbsp;&nbsp;&nbsp;<strong style="color: #34d399;">$2</strong>');
+
+    // 2. Highlight Question numbers (1., 2., 3., 4., 5.)
+    raw = raw.replace(/(^|<br\s*\/?>|\n)\s*(\d{1,2}[\.\)])\s*/gi, '$1<br/><strong style="color: #fbbf24; font-size: 14px;">$2 </strong>');
+
+    // 3. Format Section Banners (LISTENING SECTION, TASK 1, KỊCH BẢN NGHE)
+    raw = raw.replace(/(LISTENING SECTION|TASK \d+:[^\n<]+|KỊCH BẢN NGHE[^\n<]*)/gi, (match) => {
+      return `<br/><div style="padding: 12px 16px; background-color: #1e1b4b; border: 1px solid #6366f1; border-radius: 12px; margin: 16px 0; color: #a5b4fc; font-weight: 800; font-size: 13px; text-transform: uppercase;">📌 ${match}</div>`;
+    });
+
+    const div = document.createElement('div');
+    div.innerHTML = raw;
+
+    // Ensure all images remain responsive
+    const imgs = div.querySelectorAll('img');
+    imgs.forEach(img => {
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '16px';
+      img.style.margin = '12px auto';
+      img.style.display = 'block';
+    });
+
+    const formattedHtml = div.innerHTML;
+    setFormContent(formattedHtml);
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML = formattedHtml;
+    }
+
+    soundFX.playFanfare();
+    confetti({ particleCount: 120, spread: 80 });
+
+    alert('✨ AI ĐÃ BÓC TÁCH & CHUẨN HÓA CĂN CHỈNH TOÀN BỘ CÁC CÂU HỎI A, B, C, D HÀNG LỐI NHƯ MỘT ĐỀ THI CHUẨN SGK!');
+  };
+
+  // RESIZE ALL IMAGES IN EDITOR TO CUSTOM PERCENTAGE (30%, 50%, 75%, 100%)
+  const handleSetImageSizeInEditor = (widthPercent) => {
+    soundFX.playClick();
+    if (!contentEditableRef.current) return;
+
+    const imgs = contentEditableRef.current.querySelectorAll('img');
+    if (imgs.length === 0) {
+      alert('Không tìm thấy hình ảnh nào trong ô soạn thảo để co kéo kích thước!');
+      return;
+    }
+
+    imgs.forEach(img => {
+      img.style.width = widthPercent;
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      img.style.borderRadius = '16px';
+      img.style.margin = '14px auto';
+      img.style.display = 'block';
+    });
+
+    setFormContent(contentEditableRef.current.innerHTML);
+    alert(`✨ ĐÃ CO KÉO KÍCH THƯỚC TOÀN BỘ HÌNH ẢNH THÀNH ${widthPercent} ĐẸP MẮT!`);
   };
 
   // SMART UNICODE NORMALIZE & FIX VIETNAMESE ACCENTS SPACING
@@ -872,8 +919,33 @@ export const MaterialPage = () => {
 
                 </div>
 
-                {/* Right Actions Toolbar: Audio Upload & Link, Video, Hidden Answers & Clean Fonts */}
+                {/* Right Actions Toolbar: Audio Upload & Link, Video, Hidden Answers, AI Test Formatter & Image Resizer */}
                 <div className="flex flex-wrap items-center gap-2">
+                  
+                  {/* AI TEST FORMATTER BUTTON */}
+                  <button
+                    type="button"
+                    onClick={handleAiFormatAndSeparateTestContent}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] flex items-center gap-1 shadow scale-102 transition-all"
+                    title="Tự động bóc tách các lựa chọn A, B, C, D dính liền thành hàng lối chuẩn đề thi SGK"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" /> 🤖 AI Bóc Tách Đề A,B,C,D Hàng Lối
+                  </button>
+
+                  {/* IMAGE RESIZER DROPDOWN */}
+                  <select
+                    onChange={(e) => handleSetImageSizeInEditor(e.target.value)}
+                    className="p-1.5 rounded-xl bg-slate-900 border border-emerald-500/50 text-[11px] font-bold text-emerald-300 shadow cursor-pointer"
+                    title="Co kéo kích thước tất cả hình ảnh trong bài viết"
+                    defaultValue="100%"
+                  >
+                    <option value="100%" disabled>🖼️ Chỉnh Cỡ Ảnh</option>
+                    <option value="40%">🖼️ Cỡ Nhỏ (40%)</option>
+                    <option value="60%">🖼️ Cỡ Vừa (60%)</option>
+                    <option value="80%">🖼️ Cỡ Lớn (80%)</option>
+                    <option value="100%">🖼️ Đầy Màn (100%)</option>
+                  </select>
+
                   <label 
                     onMouseDown={handleSaveCursorPosition}
                     onClick={handleSaveCursorPosition}
