@@ -11,6 +11,7 @@ import { BehaviorPage } from './pages/BehaviorPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { WorksheetPage } from './pages/WorksheetPage';
 import { ExamTestingPage } from './pages/ExamTestingPage';
+import { ClassTrainingPage } from './pages/ClassTrainingPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AlertTriangle, GraduationCap, MessageCircle } from 'lucide-react';
 
@@ -107,10 +108,19 @@ export const AppContent = () => {
           />
 
           <Route
+            path="/lop-dao-tao"
+            element={
+              <ProtectedRoute>
+                <ClassTrainingPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/worksheet"
             element={
               <ProtectedRoute>
-                <WorksheetPage />
+                <ClassTrainingPage />
               </ProtectedRoute>
             }
           />

@@ -87,14 +87,14 @@ export const Navbar = () => {
       ]
     },
     { 
-      path: '/worksheet', 
-      label: 'Kiểm Tra & Đánh Giá', 
-      icon: FileCheck,
+      path: '/lop-dao-tao', 
+      label: 'Lớp Đào Tạo', 
+      icon: GraduationCap,
       subMenus: [
-        { label: '1. Listening (Nghe hiểu)', path: '/worksheet?sec=listening' },
-        { label: '2. Speaking (Nói & Chấm AI)', path: '/worksheet?sec=speaking' },
-        { label: '3. Reading (Đọc hiểu)', path: '/worksheet?sec=reading' },
-        { label: '4. Writing (Viết & Chấm AI)', path: '/worksheet?sec=writing' }
+        { label: '1. Các Khóa Học (Tiếng Anh 6-9)', path: '/lop-dao-tao?tab=courses' },
+        { label: '2. Thông Tin Học Sinh', path: '/lop-dao-tao?tab=students' },
+        { label: '3. Khai Báo Năm Học', path: '/lop-dao-tao?tab=academic_year' },
+        { label: '4. Học Phí & Điểm Danh (3 Đợt)', path: '/lop-dao-tao?tab=tuition' }
       ]
     },
     { 

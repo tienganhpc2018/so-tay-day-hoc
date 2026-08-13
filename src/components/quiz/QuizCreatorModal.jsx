@@ -447,6 +447,51 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
                   ))}
                 </div>
               </div>
+
+              {/* QUICK QUESTION PREVIEW & EDIT BOX IN TAB 1 (FIX CHỈ ĐẠO ẢNH 2 CỦA THẦY) */}
+              <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <h4 className="text-xs font-black text-emerald-400 flex items-center gap-1.5 uppercase">
+                    👁️ XEM & SỬA NHANH DANH SÁCH CÂU HỎI TRONG ĐỀ THI ({questions.length} CÂU)
+                  </h4>
+                  <button
+                    onClick={() => setActiveTab('questions')}
+                    className="px-3 py-1 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-[11px] flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> + Soạn Thêm Câu Hỏi ở Tab 2
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-52 overflow-y-auto p-1">
+                  {questions.map((q, idx) => (
+                    <div key={q.id} className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs font-bold">
+                      <div className="flex items-center gap-2 truncate max-w-[70%]">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-800 text-brand-300 text-[10px] font-black">Câu {idx + 1}</span>
+                        <span className="text-slate-200 truncate">{q.question}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            handleEditQuestionClick(q);
+                            setActiveTab('questions');
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-[11px] flex items-center gap-1"
+                        >
+                          <Edit3 className="w-3 h-3" /> Sửa
+                        </button>
+
+                        <button
+                          onClick={() => setQuestions(questions.filter(item => item.id !== q.id))}
+                          className="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 text-[11px] flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" /> Xóa
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
