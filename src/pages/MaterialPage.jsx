@@ -323,6 +323,76 @@ export const MaterialPage = () => {
     alert('✨ AI ĐÃ BÓC TÁCH VÀ XUỐNG HÀNG THẲNG LỐI TOÀN BỘ CÁC LỰA CHỌN A, B, C, D CỦA BÀI KIỂM TRA!');
   };
 
+  const selectedEditorImageRef = useRef(null);
+
+  // CLICK IMAGE TO SELECT WITH GOLDEN OUTLINE
+  const handleEditorClick = (e) => {
+    handleSaveCursorPosition();
+    if (e.target && e.target.tagName === 'IMG') {
+      if (contentEditableRef.current) {
+        const allImgs = contentEditableRef.current.querySelectorAll('img');
+        allImgs.forEach(i => i.style.outline = 'none');
+      }
+      e.target.style.outline = '4px solid #f59e0b';
+      e.target.style.outlineOffset = '4px';
+      selectedEditorImageRef.current = e.target;
+    }
+  };
+
+  // DOUBLE CLICK IMAGE TO INSTANTLY DELETE
+  const handleEditorDoubleClick = (e) => {
+    if (e.target && e.target.tagName === 'IMG') {
+      if (window.confirm('Thầy có muốn xóa hình ảnh này khỏi bài viết?')) {
+        soundFX.playClick();
+        if (e.target.parentNode) {
+          e.target.parentNode.removeChild(e.target);
+        }
+        selectedEditorImageRef.current = null;
+        if (contentEditableRef.current) {
+          setFormContent(contentEditableRef.current.innerHTML);
+        }
+      }
+    }
+  };
+
+  // KEYDOWN BACKSPACE / DELETE TO DELETE SELECTED IMAGE
+  const handleEditorKeyDown = (e) => {
+    if ((e.key === 'Backspace' || e.key === 'Delete') && selectedEditorImageRef.current) {
+      const target = selectedEditorImageRef.current;
+      if (target && target.parentNode) {
+        e.preventDefault();
+        soundFX.playClick();
+        target.parentNode.removeChild(target);
+        selectedEditorImageRef.current = null;
+        if (contentEditableRef.current) {
+          setFormContent(contentEditableRef.current.innerHTML);
+        }
+      }
+    }
+  };
+
+  // TOOLBAR BUTTON TO DELETE CURRENTLY SELECTED IMAGE
+  const handleDeleteSelectedImageInEditor = () => {
+    soundFX.playClick();
+    let target = selectedEditorImageRef.current;
+
+    if (!target && contentEditableRef.current) {
+      const imgs = contentEditableRef.current.querySelectorAll('img');
+      if (imgs.length > 0) {
+        target = imgs[imgs.length - 1]; // Pick last image
+      }
+    }
+
+    if (target && target.parentNode) {
+      target.parentNode.removeChild(target);
+      selectedEditorImageRef.current = null;
+      setFormContent(contentEditableRef.current.innerHTML);
+      alert('✨ Đã xóa hình ảnh khỏi bài viết thành công!');
+    } else {
+      alert('Thầy nhấp chuột trực tiếp vào hình ảnh cần xóa, sau đó bấm nút này để xóa ảnh!');
+    }
+  };
+
   // RESIZE ALL IMAGES IN EDITOR TO CUSTOM PERCENTAGE (30%, 50%, 75%, 100%)
   const handleSetImageSizeInEditor = (widthPercent) => {
     soundFX.playClick();
@@ -999,6 +1069,16 @@ export const MaterialPage = () => {
                     <CheckCircle2 className="w-3.5 h-3.5" /> 👉 + Khung Đáp Án Ẩn Trống
                   </button>
 
+                  {/* DELETE SELECTED IMAGE BUTTON */}
+                  <button
+                    type="button"
+                    onClick={handleDeleteSelectedImageInEditor}
+                    className="px-3 py-1.5 rounded-xl bg-rose-950 text-rose-300 border border-rose-500/40 hover:bg-rose-900 font-extrabold text-[11px] flex items-center gap-1 shadow"
+                    title="Xóa hình ảnh đang được nhấp chọn (Hoặc nhấp đúp vào ảnh / Nhấn Backspace)"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> 🗑️ Xóa Ảnh Đã Chọn
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleFixVietnameseFontsAndAccents}
@@ -1024,14 +1104,25 @@ export const MaterialPage = () => {
 
               </div>
 
-              {/* CONTENTEDITABLE CONTAINER WITH NATIVE SMOOTH CARET CURSOR */}
+              {/* CONTENTEDITABLE CONTAINER WITH IMAGE SELECTION & DELETION */}
               <div
                 ref={contentEditableRef}
                 contentEditable={true}
                 onPaste={handlePasteContent}
-                onKeyUp={handleSaveCursorPosition}
+                onKeyUp={(e) => {
+                  handleSaveCursorPosition();
+                  handleEditorKeyDown(e);
+                }}
+                onKeyDown={(e) => {
+                  handleSaveCursorPosition();
+                  handleEditorKeyDown(e);
+                }}
                 onMouseUp={handleSaveCursorPosition}
-                onClick={handleSaveCursorPosition}
+                onClick={(e) => {
+                  handleSaveCursorPosition();
+                  handleEditorClick(e);
+                }}
+                onDoubleClick={handleEditorDoubleClick}
                 onSelect={handleSaveCursorPosition}
                 onBlur={handleSaveCursorPosition}
                 onInput={(e) => {
