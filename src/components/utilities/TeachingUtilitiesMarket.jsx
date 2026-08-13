@@ -15,13 +15,23 @@ import {
   Trash2, 
   Sparkles, 
   X,
-  ExternalLink
+  ExternalLink,
+  BookOpen,
+  Layers,
+  Dices
 } from 'lucide-react';
 import { soundFX } from '../../utils/soundEffects';
 import confetti from 'canvas-confetti';
 
+import { FlashcardGame } from '../games/FlashcardGame';
+import { MatchingPairsGame } from '../games/MatchingPairsGame';
+import { WordScrambleGame } from '../games/WordScrambleGame';
+import { IFrameGameViewer } from '../games/iFrameGameViewer';
+
 export const TeachingUtilitiesMarket = () => {
   const [activeTab, setActiveTab] = useState('games');
+  const [activeGameSubTab, setActiveGameSubTab] = useState('flashcard');
+
   const [selectedGrade, setSelectedGrade] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('most_used');
@@ -32,15 +42,23 @@ export const TeachingUtilitiesMarket = () => {
   // Play Game Modal
   const [activePlayGame, setActivePlayGame] = useState(null);
 
-  // 4 MAIN TABS MATCHING SCREENSHOT 2
+  // 4 MAIN TABS - TAB 1 IS "Game vui học"
   const tabs = [
-    { id: 'games', label: 'Trò chơi tương tác', icon: Gamepad2 },
+    { id: 'games', label: 'Game vui học', icon: Gamepad2 },
     { id: 'questions', label: 'Kho câu hỏi cá nhân', icon: HelpCircle },
     { id: 'classes', label: 'Danh sách lớp học', icon: Users },
     { id: 'community', label: 'Thư viện cộng đồng', icon: Globe }
   ];
 
-  // TAB 1: 4 INTERACTIVE GAMES MATCHING SCREENSHOT 1 & 2
+  // 4 INTERACTIVE GAME SUB-TABS INSIDE "Game vui học"
+  const gameSubTabs = [
+    { id: 'flashcard', label: '1. Flashcard Từ Vựng', icon: BookOpen },
+    { id: 'matching', label: '2. Trò Chơi Ghép Cặp', icon: Layers },
+    { id: 'racing', label: '3. Đua Xe Từ Vựng (Word Scramble)', icon: Dices },
+    { id: 'iframe', label: '4. iFrame Game Project', icon: ExternalLink }
+  ];
+
+  // 4 ADDITIONAL INTERACTIVE GAMES
   const [interactiveGames, setInteractiveGames] = useState([
     {
       id: 'g1',
@@ -98,7 +116,7 @@ export const TeachingUtilitiesMarket = () => {
     { id: 3, name: 'Lớp 9A1 - Ôn thi Vào 10', count: '35 học sinh', teacher: 'Thầy Nguyễn Văn Hải' }
   ];
 
-  // TAB 4: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG MATCHING SCREENSHOT 3 (CHỈ 4 LỚP: 6, 7, 8, 9)
+  // TAB 4: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG (CHỈ 4 LỚP: 6, 7, 8, 9)
   const communityQuestionSets = [
     {
       id: 'c1',
@@ -199,7 +217,7 @@ export const TeachingUtilitiesMarket = () => {
   return (
     <div className="space-y-8 font-sans animate-fadeIn">
       
-      {/* 1. HERO BANNER MATCHING SCREENSHOT 2 */}
+      {/* 1. HERO BANNER */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900">
         <div className="h-64 sm:h-72 w-full relative">
           <img 
@@ -225,7 +243,7 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       </div>
 
-      {/* 2. 4 MAIN TABS DIRECTLY BELOW HERO BANNER MATCHING SCREENSHOT 2 */}
+      {/* 2. 4 MAIN TABS DIRECTLY BELOW HERO BANNER */}
       <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 pb-4">
         {tabs.map((t) => {
           const Icon = t.icon;
@@ -250,62 +268,101 @@ export const TeachingUtilitiesMarket = () => {
         })}
       </div>
 
-      {/* TAB 1: TRÒ CHƠI TƯƠNG TÁC */}
+      {/* TAB 1: GAME VUI HỌC (CHỨA ĐẦY ĐỦ 4 TRÒ CHƠI NGUYÊN BẢN & BỘ CARD GAME) */}
       {activeTab === 'games' && (
-        <div className="space-y-6 animate-fadeIn">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              🎁 Trò chơi Miễn phí <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">4 trò chơi</span>
-            </h3>
+        <div className="space-y-8 animate-fadeIn">
+          
+          {/* 4 SUB-TABS DÀNH RIÊNG CHO 4 GAMES TƯƠNG TÁC */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl">
+            {gameSubTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeGameSubTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    try { soundFX.playClick(); } catch (e) {}
+                    setActiveGameSubTab(tab.id);
+                  }}
+                  className={`p-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg scale-102 border border-brand-500/50'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                  {isActive && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {interactiveGames.map((g) => (
-              <div key={g.id} className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl hover:border-amber-400/50 transition-all flex flex-col justify-between group">
-                <div>
-                  <div className="relative h-48 w-full overflow-hidden bg-slate-950">
-                    <img src={g.img} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] uppercase shadow">
-                      {g.badge}
-                    </span>
+          {/* ACTIVE PLAYABLE GAME CONTAINER */}
+          <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl">
+            {activeGameSubTab === 'flashcard' && <FlashcardGame />}
+            {activeGameSubTab === 'matching' && <MatchingPairsGame />}
+            {activeGameSubTab === 'racing' && <WordScrambleGame />}
+            {activeGameSubTab === 'iframe' && <IFrameGameViewer />}
+          </div>
+
+          {/* ADDITIONAL 4 INTERACTIVE GAME CARDS */}
+          <div className="space-y-4 pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                🎁 Trò chơi Miễn phí khác <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">4 trò chơi</span>
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {interactiveGames.map((g) => (
+                <div key={g.id} className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl hover:border-amber-400/50 transition-all flex flex-col justify-between group">
+                  <div>
+                    <div className="relative h-44 w-full overflow-hidden bg-slate-950">
+                      <img src={g.img} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] uppercase shadow">
+                        {g.badge}
+                      </span>
+                      <button 
+                        onClick={() => alert(`Khung chỉnh sửa trò chơi ${g.title}`)}
+                        className="absolute top-3 right-3 px-3 py-1 rounded-xl bg-slate-900/90 text-amber-300 hover:bg-slate-800 font-extrabold text-xs shadow border border-amber-400/40"
+                      >
+                        ✏️ Sửa
+                      </button>
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-extrabold text-slate-400 uppercase tracking-wider">{g.tag}</span>
+                        <span className="font-bold text-amber-400">🔥 {g.plays}</span>
+                      </div>
+                      <h4 className="text-base font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{g.title}</h4>
+                      <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{g.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0 flex items-center gap-2">
                     <button 
-                      onClick={() => alert(`Khung chỉnh sửa trò chơi ${g.title}`)}
-                      className="absolute top-3 right-3 px-3 py-1 rounded-xl bg-slate-900/90 text-amber-300 hover:bg-slate-800 font-extrabold text-xs shadow border border-amber-400/40"
+                      onClick={() => {
+                        try { soundFX.playClick(); } catch (e) {}
+                        setActivePlayGame(g);
+                      }}
+                      className="flex-1 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg flex items-center justify-center gap-1.5"
                     >
-                      ✏️ Sửa
+                      <Play className="w-3.5 h-3.5 fill-current" /> Chơi ngay
+                    </button>
+                    <button 
+                      onClick={() => alert('Đã sao chép liên kết trò chơi!')}
+                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                    >
+                      <Share2 className="w-4 h-4" />
                     </button>
                   </div>
-
-                  <div className="p-5 space-y-2">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-extrabold text-slate-400 uppercase tracking-wider">{g.tag}</span>
-                      <span className="font-bold text-amber-400">🔥 {g.plays}</span>
-                    </div>
-                    <h4 className="text-base font-extrabold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{g.title}</h4>
-                    <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{g.description}</p>
-                  </div>
                 </div>
-
-                <div className="p-5 pt-0 flex items-center gap-2">
-                  <button 
-                    onClick={() => {
-                      try { soundFX.playClick(); } catch (e) {}
-                      setActivePlayGame(g);
-                    }}
-                    className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg flex items-center justify-center gap-1.5"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" /> Chơi ngay
-                  </button>
-                  <button 
-                    onClick={() => alert('Đã sao chép liên kết trò chơi!')}
-                    className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
         </div>
       )}
 
@@ -364,11 +421,11 @@ export const TeachingUtilitiesMarket = () => {
         </div>
       )}
 
-      {/* TAB 4: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG MATCHING SCREENSHOT 3 (CHỈ CÓ 4 LỚP: 6, 7, 8, 9) */}
+      {/* TAB 4: THƯ VIỆN CÂU HỎI CỘNG ĐỒNG (CHỈ CÓ 4 LỚP: 6, 7, 8, 9) */}
       {activeTab === 'community' && (
         <div className="space-y-6 animate-fadeIn">
           
-          {/* HEADER & SUBTITLE MATCHING SCREENSHOT 3 */}
+          {/* HEADER & SUBTITLE */}
           <div className="space-y-1">
             <h3 className="text-xl font-black text-white flex items-center gap-2">
               🌐 Thư viện câu hỏi cộng đồng
@@ -378,7 +435,7 @@ export const TeachingUtilitiesMarket = () => {
             </p>
           </div>
 
-          {/* SEARCH BAR & SORT MATCHING SCREENSHOT 3 */}
+          {/* SEARCH BAR & SORT */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-3xl bg-slate-900 border border-slate-800">
             <div className="flex-1 flex items-center gap-3 bg-slate-950 px-4 py-2.5 rounded-2xl border border-slate-800">
               <Search className="w-4 h-4 text-slate-400 shrink-0" />
@@ -410,7 +467,7 @@ export const TeachingUtilitiesMarket = () => {
             </div>
           </div>
 
-          {/* GRADE FILTER TABS MATCHING SCREENSHOT 3 (CHỈ CÓ 4 LỚP: 6, 7, 8, 9) */}
+          {/* GRADE FILTER TABS (CHỈ CÓ 4 LỚP: 6, 7, 8, 9) */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <button
               onClick={() => setSelectedGrade('all')}
@@ -438,7 +495,7 @@ export const TeachingUtilitiesMarket = () => {
             ))}
           </div>
 
-          {/* CARDS GRID MATCHING SCREENSHOT 3 WITH 2 BUTTONS: XEM THỬ & SỬ DỤNG */}
+          {/* CARDS GRID WITH 2 BUTTONS: XEM THỬ & SỬ DỤNG */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
             {filteredCommunitySets.map((item) => (
               <div key={item.id} className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 hover:border-orange-500/50 transition-all flex flex-col justify-between group shadow-xl">
@@ -463,7 +520,7 @@ export const TeachingUtilitiesMarket = () => {
                   </div>
                 </div>
 
-                {/* 2 BUTTONS MATCHING SCREENSHOT 3: XEM THỬ & SỬ DỤNG */}
+                {/* 2 BUTTONS: XEM THỬ & SỬ DỤNG */}
                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800/80">
                   <button
                     onClick={() => setPreviewItem(item)}
