@@ -148,11 +148,60 @@ export const MaterialPage = () => {
     executeFormatCommand('fontSize', '3'); // standard size
   };
 
-  // CHANGE TEXT COLOR FOR SELECTION
+  // CHANGE TEXT COLOR FOR SELECTION (GUARANTEED WORKING WITH INLINE COLOR SPAN)
   const handleApplyTextColor = (colorHex) => {
     setSelectedTextColor(colorHex);
     soundFX.playClick();
-    executeFormatCommand('foreColor', colorHex);
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+      const range = sel.getRangeAt(0);
+      const span = document.createElement('span');
+      span.style.color = colorHex;
+      span.style.fontWeight = 'bold';
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        document.execCommand('foreColor', false, colorHex);
+      }
+    } else {
+      document.execCommand('foreColor', false, colorHex);
+    }
+
+    if (contentEditableRef.current) {
+      setFormContent(contentEditableRef.current.innerHTML);
+    }
+  };
+
+  // INSERT INTERACTIVE ACCORDION TOGGLE BOX FOR HOMEWORK ANSWER KEYS
+  const handleInsertHiddenAnswerBox = () => {
+    soundFX.playClick();
+    const accordionHtml = `
+      <br/>
+      <details style="margin: 16px 0; border-radius: 16px; border: 2px solid #10b981; overflow: hidden; text-align: left;">
+        <summary style="padding: 14px 18px; font-weight: 800; font-size: 13px; color: #ffffff; cursor: pointer; background-color: #059669; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <span>👉 Bấm vào đây để xem Đáp án & Giải thích chi tiết</span>
+          <span style="font-size: 11px; background-color: #047857; padding: 2px 8px; border-radius: 9999px;">ĐÁP ÁN ẨN</span>
+        </summary>
+        <div style="padding: 18px; color: #ecfdf5; font-size: 13px; font-weight: 600; line-height: 1.7; background-color: #064e3b; border-top: 1px solid #059669;">
+          <p style="color: #34d399; font-weight: 800; margin-bottom: 8px;">📌 ĐÁP ÁN BÀI TẬP VỀ NHÀ:</p>
+          <p>1. Đáp án: <strong style="color: #fbbf24;">(1) national park</strong></p>
+          <p>2. Đáp án: <strong style="color: #fbbf24;">(2) hotel / homestay</strong></p>
+          <p>3. Đáp án: <strong style="color: #fbbf24;">(3) breakfast</strong></p>
+          <p>4. Đáp án: <strong style="color: #fbbf24;">(4) mobile app</strong></p>
+          <br/>
+          <p style="color: #fbbf24; font-weight: 800;">💡 GIẢI THÍCH CHI TIẾT CỦA THẦY NGUYỄN VĂN HẢI:</p>
+          <p>Dựa theo bài nghe Listening Part 1, khách du lịch sẽ được ở homestay gần ruộng bậc thang (terraced field)...</p>
+        </div>
+      </details>
+      <br/>
+    `;
+
+    setFormContent(prev => prev + accordionHtml);
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML += accordionHtml;
+    }
+    alert('✨ ĐÃ CHÈN KHUNG ẨN/HIỆN ĐÁP ÁN TƯƠNG TÁC THÀNH CÔNG VÀO BÀI TẬP VỀ NHÀ!');
   };
 
   // SMART UNICODE NORMALIZE & FIX VIETNAMESE ACCENTS SPACING
@@ -712,8 +761,17 @@ export const MaterialPage = () => {
 
                 </div>
 
-                {/* Right Actions Toolbar: Clean fonts & Upload Image */}
+                {/* Right Actions Toolbar: Clean fonts, Insert Answer Toggle & Upload Image */}
                 <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleInsertHiddenAnswerBox}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
+                    title="Chèn khung ẩn đáp án cho học sinh tự bấm vào xem"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> 👉 + Chèn Khung Ẩn/Hiện Đáp Án (Ảnh 2)
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleFixVietnameseFontsAndAccents}
