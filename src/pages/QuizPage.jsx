@@ -6,6 +6,8 @@ import { QuizCard } from '../components/quiz/QuizCard';
 import { QuizTakeModal } from '../components/quiz/QuizTakeModal';
 import { QuizCreatorModal } from '../components/quiz/QuizCreatorModal';
 import { QuizAnalyticsDashboard } from '../components/quiz/QuizAnalyticsDashboard';
+import { AssignmentGradingModal } from '../components/quiz/AssignmentGradingModal';
+import { GRADE_UNITS_MAP } from '../constants/gradeUnits';
 import { CardSkeleton } from '../components/common/Skeleton';
 import { PageHeroBanner } from '../components/common/PageHeroBanner';
 import { soundFX } from '../utils/soundEffects';
@@ -49,6 +51,7 @@ export const QuizPage = () => {
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [showCreatorModal, setShowCreatorModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [showGradingModal, setShowGradingModal] = useState(false);
 
   useEffect(() => {
     if (gradeParam) {
@@ -207,25 +210,16 @@ export const QuizPage = () => {
               <option value={9}>📌 Ngân hàng đề thi: Khối 9</option>
             </select>
 
-            {/* TAB / DROPDOWN 2: LỰA CHỌN BÀI HỌC (UNIT 1-12) */}
+            {/* TAB / DROPDOWN 2: LỰA CHỌN BÀI HỌC (TỰ ĐỘNG LIÊN KẾT THEO KHỐI LỚP) */}
             <select
               value={selectedUnit}
               onChange={(e) => setSelectedUnit(e.target.value)}
               className="bg-slate-950 text-slate-200 text-xs font-black px-3.5 py-2.5 rounded-2xl border border-slate-800 focus:outline-none"
             >
-              <option value="all">📚 Lựa chọn bài học: Tất cả Units</option>
-              <option value="unit1">Unit 1: Hobbies / My new school</option>
-              <option value="unit2">Unit 2: Healthy living / My home</option>
-              <option value="unit3">Unit 3: Community service</option>
-              <option value="unit4">Unit 4: Music and arts</option>
-              <option value="unit5">Unit 5: Food and drink</option>
-              <option value="unit6">Unit 6: Vietnamese lifestyle</option>
-              <option value="unit7">Unit 7: Traffic and transport</option>
-              <option value="unit8">Unit 8: Films and media</option>
-              <option value="unit9">Unit 9: Festivals around the world</option>
-              <option value="unit10">Unit 10: Energy sources</option>
-              <option value="unit11">Unit 11: Traveling in the future</option>
-              <option value="unit12">Unit 12: English speaking countries</option>
+              <option value="all">📚 Lựa chọn bài học: Tất cả Units Khối {selectedGrade}</option>
+              {(GRADE_UNITS_MAP[selectedGrade] || []).map((u) => (
+                <option key={u.value} value={u.value}>{u.label}</option>
+              ))}
             </select>
 
             {/* TAB / DROPDOWN 3: KỸ NĂNG CẦN KIỂM TRA */}
@@ -250,6 +244,17 @@ export const QuizPage = () => {
               className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
             >
               <Plus className="w-4 h-4" /> Ngân Hàng Đề Thi (Soạn Đề Mới)
+            </button>
+
+            {/* NÚT GIAO BÀI & CHẤM BÀI 4.0 EVAL */}
+            <button
+              onClick={() => {
+                soundFX.playClick();
+                setShowGradingModal(true);
+              }}
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-xs shadow-lg flex items-center gap-1.5 hover:scale-105 transition-all"
+            >
+              <Award className="w-4 h-4" /> Giao Bài & Chấm Điểm 4.0
             </button>
 
             {/* TAB 5: THỐNG KÊ BÁO CÁO (LINK TỚI DASHBOARD REQUISITE PAGE) */}
@@ -404,6 +409,12 @@ export const QuizPage = () => {
       <QuizAnalyticsDashboard
         isOpen={showAnalyticsModal}
         onClose={() => setShowAnalyticsModal(false)}
+      />
+
+      {/* ASSIGNMENT GRADING MODAL 4.0 EVAL */}
+      <AssignmentGradingModal
+        isOpen={showGradingModal}
+        onClose={() => setShowGradingModal(false)}
       />
 
       {/* QUIZ TAKE MODAL */}

@@ -22,6 +22,8 @@ import {
 import { soundFX } from '../../utils/soundEffects';
 import confetti from 'canvas-confetti';
 
+import { GRADE_UNITS_MAP } from '../../constants/gradeUnits';
+
 export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade = 8 }) => {
   const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'questions' | 'import' | 'random'
   
@@ -29,7 +31,7 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
   const [examTitle, setExamTitle] = useState('');
   const [examDesc, setExamDesc] = useState('');
   const [gradeLevel, setGradeLevel] = useState(initialGrade);
-  const [unitTopic, setUnitTopic] = useState('Unit 1 • Unit 2 • Unit 3');
+  const [unitTopic, setUnitTopic] = useState(GRADE_UNITS_MAP[initialGrade]?.[0]?.label || 'Unit 1');
   const [timeLimit, setTimeLimit] = useState(45); // 15, 30, 45, 60, 0
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleOptions, setShuffleOptions] = useState(true);
@@ -350,14 +352,16 @@ export const QuizCreatorModal = ({ isOpen, onClose, onQuizCreated, initialGrade 
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-300">Chủ đề / Unit bài học:</label>
-                  <input 
-                    type="text" 
-                    placeholder="Unit 1 • Unit 2 • Unit 3"
+                  <label className="text-xs font-bold text-slate-300">Chủ đề / Unit bài học (Tự động liên kết theo Khối {gradeLevel}):</label>
+                  <select 
                     value={unitTopic}
                     onChange={(e) => setUnitTopic(e.target.value)}
-                    className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold text-white"
-                  />
+                    className="w-full p-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold text-emerald-400 focus:outline-none focus:border-brand-500"
+                  >
+                    {(GRADE_UNITS_MAP[gradeLevel] || []).map((u) => (
+                      <option key={u.value} value={u.label}>{u.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
