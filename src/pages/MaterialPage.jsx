@@ -114,16 +114,6 @@ export const MaterialPage = () => {
     loadArticles();
   }, [activeCategory, selectedGrade]);
 
-  useEffect(() => {
-    const articleIdParam = searchParams.get('id');
-    if (articleIdParam) {
-      const found = cmsStorage.getArticleById(articleIdParam);
-      if (found) {
-        setActiveReaderArticle(found);
-      }
-    }
-  }, [searchParams]);
-
   const loadArticles = () => {
     const categoryArticles = cmsStorage.getArticlesByCategory(activeCategory);
     setArticlesList(categoryArticles);

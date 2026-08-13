@@ -32,32 +32,7 @@ export const HomePage = () => {
   const authorName = profile?.full_name || 'Nguyễn Văn Hải';
   const currentDateStr = new Date().toLocaleDateString('vi-VN');
 
-  const categoryConfigs = [
-    { key: 'vocabulary', label: 'VOCABULARY', color: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40', defaultTitle: 'Mẹo & Từ Vựng Cốt Lõi Khối 6 • 7 • 8 • 9 Global Success', defaultImg: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=600&auto=format&fit=crop' },
-    { key: 'grammar', label: 'GRAMMAR', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', defaultTitle: 'Chủ Điểm Ngữ Pháp Trọng Tâm 12 Units Tiếng Anh THCS', defaultImg: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=600&auto=format&fit=crop' },
-    { key: 'audio', label: 'AUDIO', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40', defaultTitle: 'Trọn Bộ Tapescript & File Audio Luyện Nghe Tiếng Anh THCS', defaultImg: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop' },
-    { key: 'infographic', label: 'INFOGRAPHIC', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', defaultTitle: 'Tuyển Tập Infographic Kiến Thức Tiếng Anh THCS Trực Quan', defaultImg: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop' },
-    { key: 'project', label: 'PROJECT', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40', defaultTitle: 'Hướng Dẫn Thiết Kế iFrame Game & Project Tương Tác', defaultImg: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop' },
-    { key: 'worksheet', label: 'WORKSHEET', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', defaultTitle: 'Bộ Phiếu Bài Tập 4 Kỹ Năng Tích Hợp AI Chấm Điểm & Nhắc Lỗi', defaultImg: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=600&auto=format&fit=crop' }
-  ];
-
-  const [categoryBlocks, setCategoryBlocks] = useState(() => {
-    return categoryConfigs.map(c => ({
-      key: c.key,
-      badgeLabel: c.label,
-      badgeColor: c.color,
-      mainArticle: {
-        id: `default-${c.key}`,
-        title: c.defaultTitle,
-        thumbnail: c.defaultImg,
-        description: 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.',
-        author: authorName,
-        categoryLabel: c.label,
-        category: c.key
-      },
-      previousArticles: []
-    }));
-  });
+  const [articles, setArticles] = useState([]);
 
   useEffect(() => {
     fetchHomeArticles();
@@ -65,34 +40,27 @@ export const HomePage = () => {
 
   const fetchHomeArticles = () => {
     try {
-      const cmsArticles = cmsStorage.getAllArticles() || [];
+      const cmsArticles = cmsStorage.getAllArticles();
+      if (cmsArticles && cmsArticles.length > 0) {
+        // Map 1 article per 6 categories: vocabulary, grammar, audio, infographic, project, worksheet
+        const cats = ['vocabulary', 'grammar', 'audio', 'infographic', 'project', 'worksheet'];
+        const mapped = cats.map(catKey => {
+          const found = cmsArticles.find(a => (a.category || '').toLowerCase() === catKey);
+          if (found) {
+            return {
+              ...found,
+              category: found.categoryLabel || found.category.toUpperCase(),
+              link: `/materials?type=${catKey}`
+            };
+          }
+          return null;
+        }).filter(Boolean);
 
-      const mappedBlocks = categoryConfigs.map(config => {
-        const catArticles = cmsArticles.filter(a => (a.category || '').toLowerCase() === config.key);
-        catArticles.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
-
-        const mainArticle = catArticles.length > 0 ? catArticles[0] : {
-          id: `default-${config.key}`,
-          title: config.defaultTitle,
-          thumbnail: config.defaultImg,
-          description: 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.',
-          author: authorName,
-          categoryLabel: config.label,
-          category: config.key
-        };
-
-        const previousArticles = catArticles.slice(1, 3);
-
-        return {
-          key: config.key,
-          badgeLabel: config.label,
-          badgeColor: config.color,
-          mainArticle,
-          previousArticles
-        };
-      });
-
-      setCategoryBlocks(mappedBlocks);
+        if (mapped.length > 0) {
+          setArticles(mapped);
+          return;
+        }
+      }
     } catch (err) {
       console.error('Error fetching home articles:', err);
     }
@@ -303,7 +271,7 @@ export const HomePage = () => {
 
       </div>
 
-      {/* 3. HỌC LIỆU GLOBAL SUCCESS 📰 */}
+      {/* 3. HỌC LIỆU GLOBAL SUCCESS (ĐỦ 6 BOXES CHO 6 CHỦ ĐỀ KHÁC NHAU) 📰 */}
       <div className="space-y-6 pt-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <h2 className="text-xl font-black text-white flex items-center gap-2 border-l-4 border-indigo-500 pl-3">
@@ -316,70 +284,40 @@ export const HomePage = () => {
           </Link>
         </div>
 
-        {/* 6 CATEGORY BOXES WITH REAL THUMBNAIL AND 2 PREVIOUS ARTICLES */}
+        {/* EXACTLY 6 BOXES IN 2 ROWS OF 3 GRID COLUMNS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categoryBlocks.map((block, bIdx) => (
-            <div 
-              key={bIdx} 
-              className="rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 overflow-hidden transition-all group shadow-xl backdrop-blur-sm flex flex-col justify-between"
+          {displayArticles.map((art, aIdx) => (
+            <Link 
+              key={aIdx} 
+              to={art.link || '/materials'} 
+              className="rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 p-6 space-y-4 transition-all group shadow-xl backdrop-blur-sm block flex flex-col justify-between"
             >
-              <div>
-                {/* THUMBNAIL IMAGE FROM ORIGINAL ARTICLE */}
-                <Link to={block.mainArticle.id && !block.mainArticle.id.toString().startsWith('default-') ? `/materials?id=${block.mainArticle.id}` : `/materials?type=${block.key}`} className="block relative h-48 w-full overflow-hidden bg-slate-950">
-                  <img
-                    src={block.mainArticle.thumbnail || 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop'}
-                    alt={block.mainArticle.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-                  <span className={`absolute top-3 left-3 px-3 py-1 rounded-full font-black text-[11px] border uppercase shadow ${block.badgeColor}`}>
-                    {block.badgeLabel}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className={`px-3 py-1 rounded-full font-black text-[11px] border uppercase ${
+                    art.badgeColor || 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                  }`}>
+                    {art.category || 'VOCABULARY'}
                   </span>
-                  <span className="absolute bottom-3 right-3 text-[10px] font-extrabold text-slate-200 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-slate-700/80">
-                    📅 {block.mainArticle.createdAt ? new Date(block.mainArticle.createdAt).toLocaleDateString('vi-VN') : currentDateStr}
-                  </span>
-                </Link>
-
-                <div className="p-5 space-y-3">
-                  <Link to={block.mainArticle.id && !block.mainArticle.id.toString().startsWith('default-') ? `/materials?id=${block.mainArticle.id}` : `/materials?type=${block.key}`} className="block">
-                    <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
-                      {block.mainArticle.title}
-                    </h3>
-                  </Link>
-
-                  <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                    {block.mainArticle.description || (block.mainArticle.content ? block.mainArticle.content.replace(/<[^>]*>?/gm, '').slice(0, 110) : 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.')}
-                  </p>
-
-                  {/* 2 PREVIOUS ARTICLES BELOW MAIN ARTICLE */}
-                  {block.previousArticles && block.previousArticles.length > 0 && (
-                    <div className="pt-3 border-t border-slate-800 space-y-2">
-                      <p className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">📚 Bài viết trước đó:</p>
-                      {block.previousArticles.map((prev, pIdx) => (
-                        <Link
-                          key={pIdx}
-                          to={`/materials?id=${prev.id}`}
-                          className="flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-amber-300 transition-colors truncate"
-                        >
-                          <span className="text-indigo-400 text-xs shrink-0">📌</span>
-                          <span className="truncate">{prev.title}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+                  <span className="text-slate-400 font-semibold">{art.date || currentDateStr}</span>
                 </div>
+
+                <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
+                  {art.title}
+                </h3>
+
+                <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                  {art.description || art.content || 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.'}
+                </p>
               </div>
 
-              <div className="p-5 pt-0 flex items-center justify-between text-xs font-bold text-slate-400 mt-auto">
-                <span>Tác giả: {block.mainArticle.author || authorName}</span>
-                <Link 
-                  to={block.mainArticle.id && !block.mainArticle.id.toString().startsWith('default-') ? `/materials?id=${block.mainArticle.id}` : `/materials?type=${block.key}`} 
-                  className="text-indigo-400 group-hover:underline flex items-center gap-1"
-                >
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 pt-3 border-t border-slate-800/80 mt-auto">
+                <span>Tác giả: {authorName}</span>
+                <span className="text-indigo-400 group-hover:underline flex items-center gap-1">
                   Đọc tiếp →
-                </Link>
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

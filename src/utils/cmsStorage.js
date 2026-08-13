@@ -137,13 +137,6 @@ export const cmsStorage = {
     return all.filter(a => (a.category || '').toLowerCase() === categoryKey.toLowerCase());
   },
 
-  // Get Article By ID
-  getArticleById: (articleId) => {
-    if (!articleId) return null;
-    const all = cmsStorage.getAllArticles();
-    return all.find(a => String(a.id) === String(articleId)) || null;
-  },
-
   // Save / Add / Update Article
   saveArticle: (articleData) => {
     const all = cmsStorage.getAllArticles();
