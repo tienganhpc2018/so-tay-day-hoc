@@ -173,35 +173,92 @@ export const MaterialPage = () => {
     }
   };
 
-  // INSERT INTERACTIVE ACCORDION TOGGLE BOX FOR HOMEWORK ANSWER KEYS
-  const handleInsertHiddenAnswerBox = () => {
+  // HELPER TO INSERT HTML AT EXACT CURSOR POSITION INSIDE CONTENTEDITABLE
+  const insertHtmlAtCursor = (htmlStr) => {
     soundFX.playClick();
+    if (contentEditableRef.current) {
+      contentEditableRef.current.focus();
+    }
+    document.execCommand('insertHTML', false, htmlStr);
+    if (contentEditableRef.current) {
+      setFormContent(contentEditableRef.current.innerHTML);
+    }
+  };
+
+  // INSERT INTERACTIVE ACCORDION TOGGLE BOX AT EXACT CURSOR POSITION
+  const handleInsertHiddenAnswerBox = () => {
     const accordionHtml = `
       <br/>
-      <details style="margin: 16px 0; border-radius: 16px; border: 2px solid #10b981; overflow: hidden; text-align: left;">
+      <details style="margin: 16px 0; border-radius: 16px; border: 2px solid #10b981; overflow: hidden; text-align: left; background-color: #022c22;">
         <summary style="padding: 14px 18px; font-weight: 800; font-size: 13px; color: #ffffff; cursor: pointer; background-color: #059669; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
           <span>👉 Bấm vào đây để xem Đáp án & Giải thích chi tiết</span>
-          <span style="font-size: 11px; background-color: #047857; padding: 2px 8px; border-radius: 9999px;">ĐÁP ÁN ẨN</span>
+          <span style="font-size: 11px; background-color: #047857; padding: 2px 8px; border-radius: 9999px; color: #ffffff;">ĐÁP ÁN ẨN</span>
         </summary>
         <div style="padding: 18px; color: #ecfdf5; font-size: 13px; font-weight: 600; line-height: 1.7; background-color: #064e3b; border-top: 1px solid #059669;">
-          <p style="color: #34d399; font-weight: 800; margin-bottom: 8px;">📌 ĐÁP ÁN BÀI TẬP VỀ NHÀ:</p>
+          <p style="color: #34d399; font-weight: 800; margin-bottom: 8px;">📌 ĐÁP ÁN BÀI TẬP VỀ NHÀ (EXERCISE):</p>
           <p>1. Đáp án: <strong style="color: #fbbf24;">(1) national park</strong></p>
           <p>2. Đáp án: <strong style="color: #fbbf24;">(2) hotel / homestay</strong></p>
-          <p>3. Đáp án: <strong style="color: #fbbf24;">(3) breakfast</strong></p>
-          <p>4. Đáp án: <strong style="color: #fbbf24;">(4) mobile app</strong></p>
           <br/>
           <p style="color: #fbbf24; font-weight: 800;">💡 GIẢI THÍCH CHI TIẾT CỦA THẦY NGUYỄN VĂN HẢI:</p>
-          <p>Dựa theo bài nghe Listening Part 1, khách du lịch sẽ được ở homestay gần ruộng bậc thang (terraced field)...</p>
+          <p>Điền lời giải thích chi tiết cho học sinh tại đây...</p>
         </div>
       </details>
       <br/>
     `;
+    insertHtmlAtCursor(accordionHtml);
+    alert('✨ ĐÃ CHÈN KHUNG ẨN ĐÁP ÁN TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
+  };
 
-    setFormContent(prev => prev + accordionHtml);
-    if (contentEditableRef.current) {
-      contentEditableRef.current.innerHTML += accordionHtml;
+  // INSERT AUDIO PLAYER AT EXACT CURSOR POSITION
+  const handleInsertAudioPlayerAtCursor = () => {
+    const audioUrl = prompt('Nhập link Audio MP3 hoặc link Google Drive bài nghe:');
+    if (!audioUrl || !audioUrl.trim()) return;
+
+    let directAudio = audioUrl.trim();
+    const driveMatch = directAudio.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch && driveMatch[1]) {
+      directAudio = `https://docs.google.com/uc?export=open&id=${driveMatch[1]}`;
     }
-    alert('✨ ĐÃ CHÈN KHUNG ẨN/HIỆN ĐÁP ÁN TƯƠNG TÁC THÀNH CÔNG VÀO BÀI TẬP VỀ NHÀ!');
+
+    const audioHtml = `
+      <br/>
+      <div style="padding: 14px 18px; border-radius: 16px; background-color: #3b0764; border: 1px solid #a855f7; margin: 14px 0; text-align: left;">
+        <p style="color: #e9d5ff; font-weight: 800; font-size: 12px; margin-bottom: 8px;">🎧 TRÌNH PHÁT BÀI NGHE AUDIO (LISTENING PRACTICE):</p>
+        <audio controls src="${directAudio}" style="width: 100%; border-radius: 12px;" />
+      </div>
+      <br/>
+    `;
+    insertHtmlAtCursor(audioHtml);
+    alert('✨ ĐÃ CHÈN TRÌNH PHÁT AUDIO TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
+  };
+
+  // INSERT VIDEO EMBED AT EXACT CURSOR POSITION
+  const handleInsertVideoPlayerAtCursor = () => {
+    const videoUrl = prompt('Nhập link Video YouTube hoặc link Video MP4:');
+    if (!videoUrl || !videoUrl.trim()) return;
+
+    let videoHtml = '';
+    const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+
+    if (ytMatch && ytMatch[1]) {
+      const embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+      videoHtml = `
+        <br/>
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; border: 1px solid #475569; margin: 14px 0;">
+          <iframe src="${embedUrl}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
+        </div>
+        <br/>
+      `;
+    } else {
+      videoHtml = `
+        <br/>
+        <video controls src="${videoUrl.trim()}" style="width: 100%; border-radius: 16px; margin: 14px 0; border: 1px solid #475569;" />
+        <br/>
+      `;
+    }
+
+    insertHtmlAtCursor(videoHtml);
+    alert('✨ ĐÃ NHÚNG VIDEO TẠI ĐÚNG VỊ TRÍ CON TRỎ CHUỘT!');
   };
 
   // SMART UNICODE NORMALIZE & FIX VIETNAMESE ACCENTS SPACING
@@ -761,15 +818,33 @@ export const MaterialPage = () => {
 
                 </div>
 
-                {/* Right Actions Toolbar: Clean fonts, Insert Answer Toggle & Upload Image */}
+                {/* Right Actions Toolbar: Audio, Video, Hidden Answers & Clean Fonts */}
                 <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleInsertAudioPlayerAtCursor}
+                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
+                    title="Chèn trình phát âm thanh Audio MP3 / Google Drive tại vị trí con trỏ"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" /> 🎧 + Audio
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleInsertVideoPlayerAtCursor}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
+                    title="Nhúng khung xem Video YouTube / MP4 tại vị trí con trỏ"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" /> 🎥 + Video
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleInsertHiddenAnswerBox}
                     className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] flex items-center gap-1 shadow"
-                    title="Chèn khung ẩn đáp án cho học sinh tự bấm vào xem"
+                    title="Chèn khung ẩn đáp án cho học sinh tự bấm vào xem tại đúng vị trí con trỏ"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" /> 👉 + Chèn Khung Ẩn/Hiện Đáp Án (Ảnh 2)
+                    <CheckCircle2 className="w-3.5 h-3.5" /> 👉 + Khung Đáp Án Ẩn
                   </button>
 
                   <button
@@ -1024,9 +1099,9 @@ export const MaterialPage = () => {
                 </div>
               )}
 
-              {/* ARTICLE READER WITH BE VIETNAM PRO FONT GUARANTEE */}
+              {/* ARTICLE READER WITH BE VIETNAM PRO FONT GUARANTEE & COLORED TEXT RETENTION */}
               <div 
-                className="text-sm font-sans text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!text-slate-100 [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
+                className="text-sm font-sans text-slate-100 leading-relaxed space-y-4 prose prose-invert max-w-none [&_*]:!bg-transparent [&_img]:max-w-full [&_img]:rounded-2xl [&_img]:my-3 [&_img]:border [&_img]:border-slate-700 [&_img]:block"
                 style={{ fontFamily: "'Be Vietnam Pro', 'Inter', system-ui, sans-serif" }}
                 dangerouslySetInnerHTML={{ __html: activeReaderArticle.content }}
               />
