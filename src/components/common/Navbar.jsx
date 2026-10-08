@@ -208,15 +208,15 @@ export const Navbar = () => {
                       <div className="text-[10px] text-slate-500">5 phút trước • Hạn chót: 24h tới</div>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                      <div className="text-amber-400 text-[11px] font-black">⭐ ĐIỂM SỐ & NHẬN XÉT</div>
-                      <div className="text-white font-bold">Thầy Hải đã chấm bài Speaking: 9.5 Điểm</div>
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 space-y-1">
+                      <div className="text-amber-800 text-[11px] font-black">⭐ ĐIỂM SỐ & NHẬN XÉT</div>
+                      <div className="text-slate-900 font-bold">Thầy Hải đã chấm bài Speaking: 9.5 Điểm</div>
                       <div className="text-[10px] text-slate-500">1 giờ trước</div>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                      <div className="text-purple-400 text-[11px] font-black">📢 DẶN DÒ LỚP HỌC</div>
-                      <div className="text-white font-bold">Thông báo lịch thi thử trực tuyến tối nay</div>
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
+                      <div className="text-emerald-800 text-[11px] font-black">📢 DẶN DÒ LỚP HỌC</div>
+                      <div className="text-slate-900 font-bold">Thông báo lịch thi thử trực tuyến tối nay</div>
                       <div className="text-[10px] text-slate-500">3 giờ trước</div>
                     </div>
                   </div>
@@ -225,8 +225,8 @@ export const Navbar = () => {
             </div>
 
             {profile && (
-              <div className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <div className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 font-bold text-xs shadow-sm">
+                <Star className="w-4 h-4 fill-amber-500 text-amber-600" />
                 <span>{profile.total_stars || 0} Sao</span>
               </div>
             )}
@@ -234,23 +234,24 @@ export const Navbar = () => {
             {profile ? (
               <div className="flex items-center gap-2">
                 <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-xs font-extrabold text-white max-w-[130px] truncate">
+                  <span className="text-xs font-extrabold text-slate-900 max-w-[130px] truncate">
                     {profile.full_name}
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
                     {profile.role === 'admin' ? 'Quản trị VIP' : profile.role === 'teacher' ? 'Giáo viên VIP' : `Học sinh K${profile.grade_level || 8}`}
                   </span>
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  className="p-2.5 rounded-xl text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition-all"
+                  className="p-2.5 rounded-xl text-slate-700 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-300 transition-all shadow-sm"
+                  title="Đăng xuất"
                 >
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
             ) : (
-              <Link to="/auth" className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg">
+              <Link to="/auth" className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-lg">
                 ➔ Đăng nhập
               </Link>
             )}

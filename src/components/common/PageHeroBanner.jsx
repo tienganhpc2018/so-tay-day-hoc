@@ -19,47 +19,47 @@ export const PageHeroBanner = ({
   const finalBgImage = bgImage || defaultImages.school;
 
   return (
-    <div className="relative rounded-[32px] overflow-hidden border-2 border-brand-500/50 shadow-2xl transition-all duration-300 font-sans min-h-[240px] flex flex-col justify-center bg-slate-950 group">
+    <div className="relative rounded-[24px] overflow-hidden border-2 border-emerald-500/40 shadow-md transition-all duration-300 font-sans min-h-[140px] sm:min-h-[160px] flex flex-col justify-center bg-transparent group">
       
-      {/* 1. CRYSTAL CLEAR BACKGROUND IMAGE (100% Sharp) */}
+      {/* 1. BACKGROUND IMAGE (Soft & Clear) */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img 
           src={finalBgImage} 
           alt={title}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-30"
           onError={(e) => {
             e.currentTarget.src = defaultImages.school;
           }}
         />
         
-        {/* 2. ONLY 20% DARK GRADIENT OVERLAY ON LEFT TO KEEP TEXT READABLE WHILE IMAGE REMAINS FULLY VISIBLE */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-slate-950/20 pointer-events-none" />
+        {/* 2. LIGHT TRANSPARENT OVERLAY (NO BLACK) */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-white/40 pointer-events-none" />
       </div>
 
-      {/* Glow highlight */}
-      <div className="absolute top-0 right-0 w-1/3 h-full pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/20 via-brand-500/10 to-transparent z-0" />
+      {/* Soft highlight */}
+      <div className="absolute top-0 right-0 w-1/3 h-full pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-100/50 via-emerald-50/20 to-transparent z-0" />
 
       {/* 3. Banner Text Content */}
-      <div className="relative z-10 p-8 sm:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-        <div className="space-y-3 max-w-2xl">
+      <div className="relative z-10 p-5 sm:p-7 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-2xl">
           
           {badge && (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/85 text-brand-300 border border-brand-500/60 text-xs font-black uppercase tracking-wider shadow-xl backdrop-blur-md">
-              <Sparkles className="w-4 h-4 text-brand-400" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 text-emerald-800 border border-emerald-400 text-xs font-black uppercase tracking-wider shadow-sm backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
               {badge}
             </div>
           )}
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
             {title}
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-100 leading-relaxed font-bold drop-shadow-md">
+          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-bold">
             {subtitle}
           </p>
 
           {actions && (
-            <div className="pt-2">
+            <div className="pt-1">
               {actions}
             </div>
           )}
@@ -68,8 +68,8 @@ export const PageHeroBanner = ({
 
         {showVipBadge && (
           <div className="shrink-0">
-            <div className="px-6 py-3.5 rounded-2xl bg-amber-500/40 border-2 border-amber-400 text-amber-200 font-black text-sm flex items-center gap-2.5 shadow-2xl backdrop-blur-md animate-pulse">
-              <Crown className="w-5 h-5 fill-amber-400 text-amber-400" />
+            <div className="px-4 py-2.5 rounded-2xl bg-amber-100/90 border-2 border-amber-400 text-amber-900 font-black text-xs flex items-center gap-2 shadow-md backdrop-blur-md">
+              <Crown className="w-4 h-4 fill-amber-500 text-amber-600" />
               <span>👑 Đặc quyền VIP Giáo Viên</span>
             </div>
           </div>
