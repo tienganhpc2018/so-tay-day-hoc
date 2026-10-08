@@ -38,7 +38,7 @@ const ProtectedRoute = ({ children, teacherOnly = false, adminOnly = false }) =>
 
 export const AppContent = () => {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans relative">
       <Navbar />
       
       <main className="flex-1 pb-16">
@@ -112,34 +112,34 @@ export const AppContent = () => {
         </Routes>
       </main>
 
-      {/* FOOTER MATCHING SCREENSHOT 3 (CHÍNH XÁC VỚI THÔNG TIN CỦA THẦY) */}
-      <footer className="py-8 px-6 border-t border-slate-800 bg-slate-950 text-xs text-slate-400">
+      {/* FOOTER EMERALD GREEN THEME */}
+      <footer className="py-8 px-6 border-t border-emerald-800 bg-emerald-900 text-xs text-emerald-100">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 whitespace-nowrap">
           
           {/* Footer Brand & Subtitle Left */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-md">
               <GraduationCap className="w-6 h-6" />
             </div>
             <div>
-              <p className="font-extrabold text-slate-200 text-sm">
+              <p className="font-extrabold text-white text-sm">
                 Sổ Tay Dạy Học THCS -:- Giáo dục công nghệ 4.0
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-emerald-200">
                 Nền tảng chia sẻ và trao đổi học liệu số, thiết bị dạy học tự làm chất lượng cao (Khối 6, 7, 8, 9 Global Success).
               </p>
             </div>
           </div>
 
           {/* Footer Copyright Right */}
-          <div className="text-slate-400 font-semibold text-xs">
+          <div className="text-emerald-200 font-semibold text-xs">
             © 2026 SỔ TAY DẠY HỌC THCS. Tất cả quyền được bảo lưu.
           </div>
 
         </div>
       </footer>
 
-      {/* FLOATING AI TEACHING ASSISTANT CHATBOT (BOTTOM RIGHT - DIRECTIVE 1) */}
+      {/* FLOATING AI TEACHING ASSISTANT CHATBOT (BOTTOM RIGHT) */}
       <AiTeachingAssistantWidget />
 
     </div>

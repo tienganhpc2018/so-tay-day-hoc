@@ -96,7 +96,7 @@ export const Navbar = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl font-sans">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-md font-sans text-slate-900">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -130,20 +130,22 @@ export const Navbar = () => {
                   <Link
                     to={item.path}
                     onClick={() => soundFX.playClick()}
-                    className={`flex flex-col items-center justify-center px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all duration-200 whitespace-nowrap shrink-0 border border-transparent text-slate-300 hover:text-white hover:bg-brand-600 hover:shadow-lg hover:shadow-brand-600/30 hover:border-brand-500/50 ${
-                      isActive ? 'text-brand-400 font-black' : ''
+                    className={`flex flex-col items-center justify-center px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all duration-200 whitespace-nowrap shrink-0 border ${
+                      isActive 
+                        ? 'bg-emerald-600 text-white font-black shadow-md border-emerald-500' 
+                        : 'text-slate-700 hover:text-white hover:bg-emerald-600 hover:shadow-md border-transparent hover:border-emerald-500'
                     }`}
                   >
                     <div className="flex items-center gap-1">
-                      <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-brand-400 group-hover:text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                      {hasSubMenus && <ChevronDown className="w-3 h-3 text-slate-400 group-hover:rotate-180 transition-transform" />}
+                      <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-white' : 'text-slate-600 group-hover:text-white'}`} />
+                      {hasSubMenus && <ChevronDown className="w-3 h-3 text-slate-500 group-hover:text-white group-hover:rotate-180 transition-transform" />}
                     </div>
                     <span className="whitespace-nowrap leading-none">{item.label}</span>
                   </Link>
 
                   {/* Dropdown Sub-menu Modal */}
                   {hasSubMenus && activeDropdown === item.path && (
-                    <div className="absolute top-full left-0 mt-1 w-60 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1 animate-fadeIn">
+                    <div className="absolute top-full left-0 mt-1 w-64 rounded-2xl bg-white border-2 border-emerald-500 shadow-2xl p-2 z-50 space-y-1 animate-fadeIn text-slate-900">
                       {item.subMenus.map((sub, sIdx) => (
                         <Link
                           key={sIdx}
@@ -152,10 +154,10 @@ export const Navbar = () => {
                             soundFX.playClick();
                             setActiveDropdown(null);
                           }}
-                          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+                          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-800 hover:text-white hover:bg-emerald-600 transition-all"
                         >
                           <span>{sub.label}</span>
-                          <span className="text-[10px] text-indigo-400 font-mono">→</span>
+                          <span className="text-[10px] text-emerald-600 group-hover:text-white font-mono">→</span>
                         </Link>
                       ))}
                     </div>
@@ -170,39 +172,39 @@ export const Navbar = () => {
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={toggleSound}
-              className="p-2.5 rounded-xl text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 transition-all"
+              className="p-2.5 rounded-xl text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border border-slate-300 transition-all"
             >
-              {isMuted ? <VolumeX className="w-5 h-5 text-rose-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
+              {isMuted ? <VolumeX className="w-5 h-5 text-rose-500" /> : <Volume2 className="w-5 h-5 text-emerald-600" />}
             </button>
 
-            {/* REALTIME NOTIFICATION BELL WITH RED PULSE DOT (DIRECTIVE 2) */}
+            {/* REALTIME NOTIFICATION BELL WITH RED PULSE DOT */}
             <div className="relative">
               <button
                 onClick={() => {
                   soundFX.playClick();
                   setShowNotifications(!showNotifications);
                 }}
-                className="relative p-2.5 rounded-xl text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 transition-all"
+                className="relative p-2.5 rounded-xl text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border border-slate-300 transition-all"
                 title="Thông báo mới"
               >
-                <Bell className="w-5 h-5 text-amber-300" />
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-950 animate-ping" />
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-950" />
+                <Bell className="w-5 h-5 text-emerald-700" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white animate-ping" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white" />
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-900 border-2 border-slate-800 shadow-2xl p-4 space-y-3 z-50 animate-fadeIn text-xs font-bold">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                    <span className="text-white font-black flex items-center gap-1.5">
-                      <Bell className="w-4 h-4 text-amber-400" /> THÔNG BÁO REALTIME (3 MỚI)
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white border-2 border-emerald-500 shadow-2xl p-4 space-y-3 z-50 animate-fadeIn text-xs font-bold text-slate-900">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <span className="text-emerald-800 font-black flex items-center gap-1.5">
+                      <Bell className="w-4 h-4 text-emerald-600" /> THÔNG BÁO REALTIME (3 MỚI)
                     </span>
-                    <span className="text-[10px] text-brand-400">Đã đọc tất cả</span>
+                    <span className="text-[10px] text-emerald-600">Đã đọc tất cả</span>
                   </div>
 
                   <div className="space-y-2 max-h-60 overflow-y-auto">
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                      <div className="text-emerald-400 text-[11px] font-black">📝 BÀI TẬP MỚI</div>
-                      <div className="text-white font-bold">Thầy Hải vừa giao Bài tập Unit 1 Lớp 8</div>
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
+                      <div className="text-emerald-800 text-[11px] font-black">📝 BÀI TẬP MỚI</div>
+                      <div className="text-slate-900 font-bold">Thầy Hải vừa giao Bài tập Unit 1 Lớp 8</div>
                       <div className="text-[10px] text-slate-500">5 phút trước • Hạn chót: 24h tới</div>
                     </div>
 

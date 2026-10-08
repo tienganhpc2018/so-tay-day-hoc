@@ -434,7 +434,7 @@ export const WorksheetPage = () => {
                 setActiveMainMode('authoring');
               }}
               className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                activeMainMode === 'authoring' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-900/80 text-slate-400'
+                activeMainMode === 'authoring' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
               }`}
             >
               📝 Studio Soạn & Lưu Đề
@@ -446,7 +446,7 @@ export const WorksheetPage = () => {
                 setActiveMainMode('submission');
               }}
               className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                activeMainMode === 'submission' ? 'bg-amber-500 text-slate-950 shadow-lg' : 'bg-slate-900/80 text-slate-400'
+                activeMainMode === 'submission' ? 'bg-emerald-700 text-white shadow-lg' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
               }`}
             >
               🎙️ Chấm Bài Speaking / Writing (BTV)
@@ -463,17 +463,17 @@ export const WorksheetPage = () => {
           <div className="lg:col-span-4 space-y-6">
             
             {/* SECTION 1: CHỌN KHỐI & MULTI-SELECT UNITS */}
-            <div className="glass-panel p-6 space-y-4 border-indigo-500/40 bg-slate-900/95 shadow-xl">
-              <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-                <BookOpen className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+            <div className="glass-panel p-6 space-y-4 border-slate-200 bg-white shadow-xl">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                <BookOpen className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-sm font-extrabold text-emerald-800 uppercase tracking-wider">
                   1. CHỌN KHỐI LỚP & NHIỀU UNITS SGK
                 </h3>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2">KHỐI LỚP (6 • 7 • 8 • 9):</label>
-                <div className="grid grid-cols-4 gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 text-xs font-extrabold">
+                <label className="block text-xs font-bold text-slate-600 mb-2">KHỐI LỚP (6 • 7 • 8 • 9):</label>
+                <div className="grid grid-cols-4 gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-xs font-extrabold">
                   {[6, 7, 8, 9].map((g) => (
                     <button
                       key={g}
@@ -483,7 +483,7 @@ export const WorksheetPage = () => {
                         setGradeLevel(g);
                       }}
                       className={`py-2 rounded-xl transition-all ${
-                        gradeLevel === g ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                        gradeLevel === g ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Khối {g}
@@ -494,9 +494,9 @@ export const WorksheetPage = () => {
 
               {/* MULTI-SELECT UNIT PILLS BUTTONS */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-2 flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-600 mb-2 flex items-center justify-between">
                   <span>CHỌN CÁC UNIT BÀI HỌC KHỐI {gradeLevel}:</span>
-                  <span className="text-[10px] text-indigo-400 font-bold">(Có thể chọn nhiều Unit)</span>
+                  <span className="text-[10px] text-emerald-600 font-bold">(Có thể chọn nhiều Unit)</span>
                 </label>
                 
                 <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
@@ -509,8 +509,8 @@ export const WorksheetPage = () => {
                         onClick={() => toggleUnitSelection(u)}
                         className={`p-2 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'bg-indigo-600 text-white shadow-md border border-indigo-400'
-                            : 'bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800'
+                            ? 'bg-emerald-600 text-white shadow-md border border-emerald-500'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
                         }`}
                       >
                         <span className="truncate">{u.split(':')[0]}</span>
@@ -522,13 +522,13 @@ export const WorksheetPage = () => {
               </div>
 
               {/* AUTO GRAMMAR & VOCAB READOUT BOX UNDER SELECTED UNITS */}
-              <div className="p-3.5 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 text-xs space-y-2">
-                <span className="font-extrabold text-indigo-300 block text-[11px] uppercase tracking-wider">
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs space-y-2">
+                <span className="font-extrabold text-emerald-800 block text-[11px] uppercase tracking-wider">
                   ✨ CHỦ ĐIỂM NGỮ PHÁP TÍCH HỢP TỰ ĐỘNG:
                 </span>
                 <div className="flex flex-wrap gap-1">
                   {integratedGrammarList.map((g, gIdx) => (
-                    <span key={gIdx} className="px-2 py-0.5 rounded-md bg-indigo-900/80 text-indigo-200 text-[10px] font-semibold border border-indigo-700/50">
+                    <span key={gIdx} className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-semibold border border-emerald-300">
                       {g}
                     </span>
                   ))}
@@ -536,9 +536,9 @@ export const WorksheetPage = () => {
               </div>
 
               {/* NẠP FILE ĐỀ GỐC MẪU ("MỆNH LỆNH THÉP") */}
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                <label className="block text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                  <FileUp className="w-4 h-4 text-amber-400" /> TẢI FILE ĐỀ GỐC MẪU (.DOCX / .JSON):
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <FileUp className="w-4 h-4 text-emerald-600" /> TẢI FILE ĐỀ GỐC MẪU (.DOCX / .JSON):
                 </label>
                 <input
                   type="file"
@@ -551,7 +551,7 @@ export const WorksheetPage = () => {
                       alert(`✨ Đã nạp file đề mẫu: ${file.name}. AI sẽ sinh đề giống Format 100%!`);
                     }
                   }}
-                  className="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer"
+                  className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer"
                 />
               </div>
 
@@ -559,7 +559,7 @@ export const WorksheetPage = () => {
               <button
                 type="button"
                 onClick={handleGenerateExam}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-xl flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xl flex items-center justify-center gap-2"
               >
                 <Zap className="w-4 h-4 fill-white" /> ✨ BẮT ĐẦU TỰ ĐỘNG SOẠN ĐỀ THI
               </button>
@@ -567,9 +567,9 @@ export const WorksheetPage = () => {
             </div>
 
             {/* SECTION 2: CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN & ACCORDION TÙY CHỌN SỐ CÂU */}
-            <div className="glass-panel p-6 space-y-4 border-slate-800 bg-slate-900/95 shadow-xl">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider">
+            <div className="glass-panel p-6 space-y-4 border-slate-200 bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
                   CÁC DẠNG BÀI TẬP MUỐN XUẤT HIỆN:
                 </h3>
               </div>
@@ -577,39 +577,39 @@ export const WorksheetPage = () => {
               <div className="space-y-3">
                 
                 {/* 1. LISTENING ACCORDION */}
-                <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden text-xs">
+                <div className="rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden text-xs">
                   <div className="p-3 flex items-center justify-between font-bold">
                     <label className="flex items-center gap-3 cursor-pointer flex-1">
                       <input
                         type="checkbox"
                         checked={sectionConfigs.listening.enabled}
                         onChange={() => toggleSectionEnabled('listening')}
-                        className="accent-indigo-500 w-4 h-4 rounded"
+                        className="accent-emerald-600 w-4 h-4 rounded"
                       />
-                      <span className="w-5 h-5 rounded bg-purple-500/20 text-purple-300 text-[10px] flex items-center justify-center font-black">1</span>
-                      <span className="text-slate-200">LISTENING (Nghe hiểu - 2 Bài)</span>
+                      <span className="w-5 h-5 rounded bg-emerald-100 text-emerald-800 text-[10px] flex items-center justify-center font-black">1</span>
+                      <span className="text-slate-800">LISTENING (Nghe hiểu - 2 Bài)</span>
                     </label>
 
                     <button 
                       type="button"
                       onClick={() => toggleSectionExpand('listening')}
-                      className="p-1 rounded bg-slate-900 text-slate-400 hover:text-white"
+                      className="p-1 rounded bg-slate-200 text-slate-600 hover:text-slate-900"
                     >
                       {expandedSections.listening ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
                   </div>
 
                   {expandedSections.listening && (
-                    <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-4 text-xs animate-fadeIn">
+                    <div className="p-4 bg-white border-t border-slate-200 space-y-4 text-xs animate-fadeIn">
                       
-                      <div className="space-y-2 border-b border-slate-800 pb-3">
-                        <span className="font-extrabold text-purple-300 block">PART 1 (Trắc nghiệm):</span>
+                      <div className="space-y-2 border-b border-slate-200 pb-3">
+                        <span className="font-extrabold text-emerald-700 block">PART 1 (Trắc nghiệm):</span>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">Số câu hỏi:</span>
+                          <span className="text-slate-600">Số câu hỏi:</span>
                           <select
                             value={sectionConfigs.listening.part1Questions}
                             onChange={(e) => handleConfigChange('listening', 'part1Questions', parseInt(e.target.value))}
-                            className="bg-slate-950 text-white p-1.5 rounded-lg border border-slate-700 text-xs font-bold"
+                            className="bg-white text-slate-900 p-1.5 rounded-lg border border-slate-300 text-xs font-bold"
                           >
                             <option value={2}>2 câu</option>
                             <option value={4}>4 câu</option>
@@ -622,18 +622,18 @@ export const WorksheetPage = () => {
                           value={sectionConfigs.listening.part1AudioUrl}
                           onChange={(e) => handleConfigChange('listening', 'part1AudioUrl', e.target.value)}
                           placeholder="Dán link Drive Audio Part 1..."
-                          className="w-full glass-input text-xs p-2"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl text-xs p-2"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <span className="font-extrabold text-purple-300 block">PART 2 (True / False):</span>
+                        <span className="font-extrabold text-emerald-700 block">PART 2 (True / False):</span>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">Số câu hỏi:</span>
+                          <span className="text-slate-600">Số câu hỏi:</span>
                           <select
                             value={sectionConfigs.listening.part2Questions}
                             onChange={(e) => handleConfigChange('listening', 'part2Questions', parseInt(e.target.value))}
-                            className="bg-slate-950 text-white p-1.5 rounded-lg border border-slate-700 text-xs font-bold"
+                            className="bg-white text-slate-900 p-1.5 rounded-lg border border-slate-300 text-xs font-bold"
                           >
                             <option value={2}>2 câu</option>
                             <option value={4}>4 câu</option>
@@ -646,7 +646,7 @@ export const WorksheetPage = () => {
                           value={sectionConfigs.listening.part2AudioUrl}
                           onChange={(e) => handleConfigChange('listening', 'part2AudioUrl', e.target.value)}
                           placeholder="Dán link Drive Audio Part 2..."
-                          className="w-full glass-input text-xs p-2"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl text-xs p-2"
                         />
                       </div>
 
@@ -662,37 +662,37 @@ export const WorksheetPage = () => {
                   { key: 'writing', num: 5, name: 'WRITING (Viết sáng tạo)' },
                   { key: 'speaking', num: 6, name: 'SPEAKING (Nói & Chấm AI)' }
                 ].map((sec) => (
-                  <div key={sec.key} className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden text-xs">
+                  <div key={sec.key} className="rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden text-xs">
                     <div className="p-3 flex items-center justify-between font-bold">
                       <label className="flex items-center gap-3 cursor-pointer flex-1">
                         <input
                           type="checkbox"
                           checked={sectionConfigs[sec.key].enabled}
                           onChange={() => toggleSectionEnabled(sec.key)}
-                          className="accent-indigo-500 w-4 h-4 rounded"
+                          className="accent-emerald-600 w-4 h-4 rounded"
                         />
-                        <span className="w-5 h-5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] flex items-center justify-center font-black">
+                        <span className="w-5 h-5 rounded bg-emerald-100 text-emerald-800 text-[10px] flex items-center justify-center font-black">
                           {sec.num}
                         </span>
-                        <span className="text-slate-200">{sec.name}</span>
+                        <span className="text-slate-800">{sec.name}</span>
                       </label>
 
                       <button
                         type="button"
                         onClick={() => toggleSectionExpand(sec.key)}
-                        className="p-1 rounded bg-slate-900 text-slate-400 hover:text-white"
+                        className="p-1 rounded bg-slate-200 text-slate-600 hover:text-slate-900"
                       >
                         {expandedSections[sec.key] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
                     </div>
 
                     {expandedSections[sec.key] && (
-                      <div className="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between font-bold text-xs animate-fadeIn">
-                        <span className="text-slate-400">Số lượng câu hỏi:</span>
+                      <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between font-bold text-xs animate-fadeIn">
+                        <span className="text-slate-600">Số lượng câu hỏi:</span>
                         <select
                           value={sectionConfigs[sec.key].questionCount}
                           onChange={(e) => handleConfigChange(sec.key, 'questionCount', parseInt(e.target.value))}
-                          className="bg-slate-950 text-white p-1.5 rounded-lg border border-slate-700 text-xs font-bold"
+                          className="bg-white text-slate-900 p-1.5 rounded-lg border border-slate-300 text-xs font-bold"
                         >
                           <option value={2}>2 câu</option>
                           <option value={4}>4 câu</option>
@@ -708,7 +708,7 @@ export const WorksheetPage = () => {
 
               {/* PROMPT NOTES */}
               <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Ý TƯỞNG TỰ SOẠN CỦA THẦY CÔ (PROMPT NOTES)
                 </label>
                 <textarea
@@ -716,7 +716,7 @@ export const WorksheetPage = () => {
                   value={promptNotes}
                   onChange={(e) => setPromptNotes(e.target.value)}
                   placeholder="Ví dụ: Thêm câu hỏi phủ định; bám sát trang 12 SGK..."
-                  className="w-full glass-input text-xs leading-relaxed"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl p-3 text-xs leading-relaxed focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
@@ -724,19 +724,19 @@ export const WorksheetPage = () => {
 
           </div>
 
-          {/* RIGHT MAIN PAPER DISPLAY CANVAS (8 COLS) - SLEEK DARK PAPER TONE */}
+          {/* RIGHT MAIN PAPER DISPLAY CANVAS (8 COLS) */}
           <div className="lg:col-span-8 space-y-6">
             
             {/* ACTION BAR */}
-            <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+            <div className="p-4 rounded-3xl bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-md">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-slate-300">Trang xem trước bản in đề thi:</span>
+                <span className="text-xs font-extrabold text-slate-800">Trang xem trước bản in đề thi:</span>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 shadow"
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white flex items-center gap-1.5 shadow"
                 >
                   <Edit3 className="w-3.5 h-3.5" /> Sửa đề
                 </button>
@@ -744,79 +744,79 @@ export const WorksheetPage = () => {
                 <button
                   onClick={handleSaveToQuestionBank}
                   disabled={isSaving}
-                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 shadow"
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow"
                 >
                   <Save className="w-3.5 h-3.5" /> {isSaving ? 'Đang lưu...' : 'Lưu đề vào Ngân hàng'}
                 </button>
 
                 <button
                   onClick={() => alert('✨ Đã xuất file Word (.docx) chuẩn TAB!')}
-                  className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-1.5 shadow"
+                  className="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white flex items-center gap-1.5 shadow"
                 >
                   <FileText className="w-3.5 h-3.5" /> Xuất Word (.doc)
                 </button>
 
                 <button
                   onClick={() => alert('✨ Đã tải file mẫu (.json)!')}
-                  className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black flex items-center gap-1.5 shadow"
+                  className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black flex items-center gap-1.5 shadow"
                 >
                   <Download className="w-3.5 h-3.5" /> Tải file (.json)
                 </button>
 
                 <button
                   onClick={() => window.print()}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 shadow"
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow"
                 >
                   <Printer className="w-3.5 h-3.5" /> In đề (A4)
                 </button>
               </div>
             </div>
 
-            {/* PAPER CANVAS - SLEEK DARK THEME BG-[#1e293b] */}
+            {/* PAPER CANVAS - CLEAN WHITE PAPER TONE */}
             {hasGenerated && dynamicWorksheet ? (
-              <div className="bg-[#1e293b] text-slate-100 p-8 sm:p-12 rounded-3xl shadow-2xl space-y-8 font-sans border border-slate-700/80 animate-fadeIn">
+              <div className="bg-white text-slate-900 p-8 sm:p-12 rounded-3xl shadow-xl space-y-8 font-sans border border-slate-200 animate-fadeIn">
                 
-                <div className="text-center space-y-2 border-b border-slate-700 pb-6">
-                  <h1 className="text-2xl font-black text-indigo-400 uppercase tracking-wide">{dynamicWorksheet.title}</h1>
-                  <p className="text-xs font-bold text-slate-300">{dynamicWorksheet.subtitle}</p>
-                  <p className="text-[11px] font-semibold text-slate-400">{dynamicWorksheet.contact}</p>
+                <div className="text-center space-y-2 border-b border-slate-200 pb-6">
+                  <h1 className="text-2xl font-black text-emerald-700 uppercase tracking-wide">{dynamicWorksheet.title}</h1>
+                  <p className="text-xs font-bold text-slate-700">{dynamicWorksheet.subtitle}</p>
+                  <p className="text-[11px] font-semibold text-slate-500">{dynamicWorksheet.contact}</p>
                 </div>
 
                 <div className="space-y-8">
                   {dynamicWorksheet.sections.map((sec) => {
                     if (!sec.enabled) return null;
                     return (
-                      <div key={sec.id} className="space-y-4 border-l-4 border-indigo-500 pl-4">
-                        <h3 className="text-base font-black text-indigo-300 uppercase tracking-wider">{sec.title}</h3>
+                      <div key={sec.id} className="space-y-4 border-l-4 border-emerald-600 pl-4">
+                        <h3 className="text-base font-black text-emerald-800 uppercase tracking-wider">{sec.title}</h3>
                         
                         {sec.tasks.map((task, tIdx) => (
                           <div key={tIdx} className="space-y-4">
-                            <h4 className="text-xs font-black text-amber-300">{task.task_title}</h4>
-                            <p className="text-xs italic text-slate-400">{task.task_desc}</p>
+                            <h4 className="text-xs font-black text-emerald-700">{task.task_title}</h4>
+                            <p className="text-xs italic text-slate-600">{task.task_desc}</p>
 
                             {/* TAPESCRIPT BOX FOR TEACHERS IN ĐỀ GV MODE */}
                             {sec.id === 'listening' && modeAnswer === 'gv' && task.tapescript && (
-                              <div className="p-4 rounded-2xl bg-slate-900 border border-purple-500/40 text-xs text-purple-200 font-mono space-y-1">
-                                <span className="font-bold text-purple-400 block mb-1">📜 TAPESCRIPT NỘI DUNG BÀI NGHE:</span>
+                              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-mono space-y-1">
+                                <span className="font-bold text-emerald-800 block mb-1">📜 TAPESCRIPT NỘI DUNG BÀI NGHE:</span>
                                 <p className="whitespace-pre-line leading-relaxed">{task.tapescript}</p>
                               </div>
                             )}
 
                             {/* DEDICATED SHORT AUDIO PLAYER */}
                             {sec.id === 'listening' && task.audioStream && (
-                              <div className="p-4 rounded-2xl bg-slate-900 border border-indigo-500/40 space-y-2">
-                                <span className="text-xs font-black text-indigo-300 flex items-center gap-1.5">
-                                  <Volume2 className="w-4 h-4 text-indigo-400" />
+                              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                                <span className="text-xs font-black text-emerald-800 flex items-center gap-1.5">
+                                  <Volume2 className="w-4 h-4 text-emerald-600" />
                                   🔊 TRÌNH PHÁT BÀI NGHE AUDIO {tIdx === 0 ? 'PART 1' : 'PART 2'} ({dynamicWorksheet.durationInfo.durationText}):
                                 </span>
-                                <audio controls src={task.audioStream} className="w-full rounded-xl bg-slate-950" />
+                                <audio controls src={task.audioStream} className="w-full rounded-xl bg-slate-100" />
                               </div>
                             )}
 
                             {/* MANDATORY READING TEXT PASSAGE */}
                             {task.passage && (
-                              <div className="p-5 rounded-2xl bg-slate-900 border border-emerald-500/40 text-xs leading-relaxed font-serif text-slate-200">
-                                <span className="font-bold text-emerald-400 block mb-1">📖 READING PASSAGE:</span>
+                              <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-xs leading-relaxed font-serif text-slate-800">
+                                <span className="font-bold text-emerald-800 block mb-1">📖 READING PASSAGE:</span>
                                 {task.passage}
                               </div>
                             )}
@@ -824,8 +824,8 @@ export const WorksheetPage = () => {
                             {/* CLEAN STUDENT QUESTIONS */}
                             <div className="space-y-3">
                               {task.questions.map((q) => (
-                                <div key={q.id} className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs space-y-2">
-                                  <p className="font-extrabold text-white">{q.num}. {q.qText}</p>
+                                <div key={q.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                                  <p className="font-extrabold text-slate-900">{q.num}. {q.qText}</p>
                                   
                                   {q.options && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
@@ -833,7 +833,7 @@ export const WorksheetPage = () => {
                                         <span
                                           key={oIdx}
                                           className={`px-3 py-2.5 rounded-xl border text-xs font-bold ${
-                                            modeAnswer === 'gv' && opt === q.correct ? 'bg-purple-600 text-white border-purple-500 shadow' : 'bg-slate-950 text-slate-300 border-slate-800'
+                                            modeAnswer === 'gv' && opt === q.correct ? 'bg-emerald-600 text-white border-emerald-500 shadow' : 'bg-white text-slate-800 border-slate-200'
                                           }`}
                                         >
                                           {opt}
@@ -844,7 +844,7 @@ export const WorksheetPage = () => {
 
                                   {/* DETAILED EXPLANATION FOR TEACHERS */}
                                   {modeAnswer === 'gv' && q.explanation && (
-                                    <p className="text-[11px] font-semibold text-purple-300 bg-purple-950/60 p-2.5 rounded-xl border border-purple-500/30 mt-2">
+                                    <p className="text-[11px] font-semibold text-emerald-800 bg-emerald-100/70 p-2.5 rounded-xl border border-emerald-200 mt-2">
                                       💡 {q.explanation}
                                     </p>
                                   )}
@@ -861,13 +861,13 @@ export const WorksheetPage = () => {
 
               </div>
             ) : (
-              <div className="glass-panel p-16 text-center space-y-4 border-indigo-500/30 bg-slate-900/90">
-                <div className="w-16 h-16 rounded-3xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto text-2xl font-black">
+              <div className="glass-panel p-16 text-center space-y-4 border-slate-200 bg-white">
+                <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto text-2xl font-black">
                   <Zap className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white">Sẵn Sàng Khởi Tạo Bài Kiểm Tra!</h3>
-                  <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                  <h3 className="text-lg font-black text-slate-900">Sẵn Sàng Khởi Tạo Bài Kiểm Tra!</h3>
+                  <p className="text-xs text-slate-600 mt-1 max-w-md mx-auto">
                     Vui lòng chọn Khối lớp, các Unit bài học bên cột trái và nhấp nút <strong>✨ BẮT ĐẦU TỰ ĐỘNG SOẠN ĐỀ THI</strong> để xem trước bản in.
                   </p>
                 </div>
@@ -881,14 +881,14 @@ export const WorksheetPage = () => {
 
       {/* MODE 2: DEDICATED STUDENT HOMEWORK AI SUBMISSION & EVALUATION TAB */}
       {activeMainMode === 'submission' && (
-        <div className="glass-panel p-8 max-w-3xl mx-auto space-y-6 border-amber-500/40 bg-slate-900/95 shadow-2xl animate-fadeIn">
-          <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black shrink-0">
+        <div className="glass-panel p-8 max-w-3xl mx-auto space-y-6 border-slate-200 bg-white shadow-2xl animate-fadeIn">
+          <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black shrink-0">
               <Sparkles className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white">Chấm Bài Speaking / Writing Bằng AI (Giao BTV Về Nhà)</h2>
-              <p className="text-xs text-slate-400">Học sinh dán đoạn văn hoặc nộp tệp ghi âm audio MP3 để AI phân tích lỗi sai và tính điểm yếu.</p>
+              <h2 className="text-lg font-black text-slate-900">Chấm Bài Speaking / Writing Bằng AI (Giao BTV Về Nhà)</h2>
+              <p className="text-xs text-slate-600">Học sinh dán đoạn văn hoặc nộp tệp ghi âm audio MP3 để AI phân tích lỗi sai và tính điểm yếu.</p>
             </div>
           </div>
 
@@ -898,13 +898,13 @@ export const WorksheetPage = () => {
               value={studentSubmissionContent}
               onChange={(e) => setStudentSubmissionContent(e.target.value)}
               placeholder="Dán đoạn văn viết hoặc bài nói của học sinh để AI chấm điểm..."
-              className="w-full glass-input text-xs leading-relaxed"
+              className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl p-4 text-xs leading-relaxed focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
 
             <button
               onClick={() => handleRunAIEvaluation('Speaking / Writing')}
               disabled={isAnalyzingAI}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-xl flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-xl flex items-center justify-center gap-2"
             >
               <BrainCircuit className="w-5 h-5" />
               {isAnalyzingAI ? 'AI Đang Phân Tích Bài...' : '🤖 Nộp Bài ĐỂ AI Chấm Điểm & Sửa Lỗi'}
@@ -912,18 +912,18 @@ export const WorksheetPage = () => {
           </div>
 
           {aiEvaluationResult && (
-            <div className="p-6 rounded-3xl bg-slate-950 border border-emerald-500/50 text-xs space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <span className="font-black text-emerald-400 text-sm">KẾT QUẢ CHẤM BÀI VÀ THỐNG KÊ AI</span>
-                <span className="px-3 py-1 rounded-xl bg-emerald-500 text-slate-950 font-black text-sm">
+            <div className="p-6 rounded-3xl bg-slate-50 border border-emerald-300 text-xs space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <span className="font-black text-emerald-800 text-sm">KẾT QUẢ CHẤM BÀI VÀ THỐNG KÊ AI</span>
+                <span className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-black text-sm">
                   {aiEvaluationResult.score}
                 </span>
               </div>
 
-              <p className="text-slate-200 font-semibold">{aiEvaluationResult.feedback}</p>
+              <p className="text-slate-800 font-semibold">{aiEvaluationResult.feedback}</p>
 
-              <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-rose-300 font-bold space-y-1">
-                <span className="text-amber-400 block font-black">⚠️ THỐNG KÊ ĐIỂM YẾU HỌC SINH (BẢNG XẾP HẠNG):</span>
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 font-bold space-y-1">
+                <span className="text-amber-800 block font-black">⚠️ THỐNG KÊ ĐIỂM YẾU HỌC SINH (BẢNG XẾP HẠNG):</span>
                 <p>{aiEvaluationResult.weaknesses}</p>
               </div>
             </div>
@@ -933,7 +933,7 @@ export const WorksheetPage = () => {
 
       {/* EDIT TEST MODAL */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full text-slate-900 space-y-4 shadow-2xl animate-fadeIn">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-base font-extrabold text-slate-900">✏️ Chỉnh Sửa Đề Thi Bản In</h3>
@@ -948,7 +948,7 @@ export const WorksheetPage = () => {
                 setIsEditModalOpen(false);
                 alert('✨ Đã lưu thay đổi chỉnh sửa đề thi!');
               }}
-              className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-extrabold text-xs shadow-lg"
+              className="w-full py-3 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs shadow-lg hover:bg-emerald-700"
             >
               Lưu chỉnh sửa
             </button>
