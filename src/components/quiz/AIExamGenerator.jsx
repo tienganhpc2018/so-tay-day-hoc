@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { GlobalSuccessKnowledgeBase } from '../../data/globalSuccessData';
+import { normalizeExamData, createEmptyExam } from '../../utils/examAdapter';
 
 export const AIExamGenerator = ({ onExamSaved }) => {
   const { profile } = useAuth();

@@ -10,51 +10,55 @@ import {
   Sparkles, 
   Send, 
   X, 
-  Shuffle, 
-  Upload, 
-  Image as ImageIcon,
-  Check,
-  FileText
+  Volume2, 
+  Play, 
+  Pause, 
+  FileText, 
+  Edit3, 
+  BookOpen, 
+  Check
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { normalizeExamData, calculateExamPoints } from '../../utils/examAdapter';
 
 export const QuizTakeModal = ({ isOpen, onClose, quiz, onQuizSubmitted }) => {
+  if (!isOpen || !quiz) return null;
+
   const { profile } = useAuth();
-  const [questionsList, setQuestionsList] = useState([]);
+  const [exam, setExam] = useState(() => normalizeExamData(quiz));
+  const [activeSectionCode, setActiveSectionCode] = useState('A_LISTENING');
   const [userAnswers, setUserAnswers] = useState({});
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
 
-  // Live Timer Countdown State
-  const [secondsLeft, setSecondsLeft] = useState(45 * 60);
+  // Live Timer Countdown
+  const [secondsLeft, setSecondsLeft] = useState(() => {
+    const mins = quiz.time_limit_minutes || quiz.metadata?.time_limit_minutes || 45;
+    return mins > 0 ? mins * 60 : 0;
+  });
 
-  // Handwritten Photo State for Essay
-  const [photoPreview, setPhotoPreview] = useState({});
+  // Audio Playback State for Listening
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   useEffect(() => {
-    if (isOpen && quiz) {
-      loadQuizQuestions();
-      setUserAnswers({});
-      setCurrentIdx(0);
-      setResult(null);
-      setPhotoPreview({});
-      
-      const mins = quiz.time_limit_minutes || 45;
-      setSecondsLeft(mins > 0 ? mins * 60 : 0);
-    }
-  }, [isOpen, quiz]);
+    const norm = normalizeExamData(quiz);
+    setExam(norm);
+    setUserAnswers({});
+    setResult(null);
 
-  // Live Countdown Timer Effect
+    const mins = norm.metadata?.time_limit_minutes || quiz.time_limit_minutes || 45;
+    setSecondsLeft(mins > 0 ? mins * 60 : 0);
+  }, [quiz]);
+
+  // Live Timer Countdown Effect
   useEffect(() => {
     let timer = null;
-    if (isOpen && secondsLeft > 0 && !result) {
+    if (secondsLeft > 0 && !result) {
       timer = setInterval(() => {
         setSecondsLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            handleSubmitQuizAuto();
+            handleSubmitQuiz();
             return 0;
           }
           return prev - 1;
@@ -62,358 +66,366 @@ export const QuizTakeModal = ({ isOpen, onClose, quiz, onQuizSubmitted }) => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isOpen, secondsLeft, result]);
+  }, [secondsLeft, result]);
 
-  const loadQuizQuestions = () => {
-    setLoading(true);
-    let rawList = [];
-
-    if (quiz.questions && Array.isArray(quiz.questions) && quiz.questions.length > 0) {
-      quiz.questions.forEach(sec => {
-        if (sec.tasks && Array.isArray(sec.tasks)) {
-          sec.tasks.forEach(tsk => {
-            if (tsk.questions && Array.isArray(tsk.questions)) {
-              rawList.push(...tsk.questions);
-            }
-          });
-        }
-      });
-    }
-
-    if (rawList.length === 0) {
-      rawList = [
-        {
-          id: 'q1',
-          type: 'single_choice',
-          qText: 'What is the synonym of "famous" in Grade 8 Unit 1?',
-          options: ['A. Well-known', 'B. Unknown', 'C. Secret', 'D. Quiet'],
-          correct: 'A. Well-known'
-        },
-        {
-          id: 'q2',
-          type: 'multi_choice',
-          qText: 'Which of the following are healthy habits? (Select ALL correct)',
-          options: ['A. Eating fresh vegetables', 'B. Drinking water', 'C. Staying up past midnight', 'D. Exercising'],
-          correct: ['A. Eating fresh vegetables', 'B. Drinking water', 'D. Exercising']
-        },
-        {
-          id: 'q3',
-          type: 'true_false',
-          qText: 'The present simple tense is used for daily routines.',
-          options: ['Đúng (True)', 'Sai (False)'],
-          correct: 'Đúng (True)'
-        },
-        {
-          id: 'q4',
-          type: 'fill_blank',
-          qText: 'She enjoys _____ (read) books in her leisure time.',
-          correct: 'reading'
-        },
-        {
-          id: 'q5',
-          type: 'essay',
-          qText: 'Write a short paragraph about your favorite hobby or upload a photo of your handwritten paper.',
-          allowPhoto: true
-        }
-      ];
-    }
-
-    // Shuffle questions if enabled
-    if (quiz.shuffleQuestions) {
-      rawList = [...rawList].sort(() => Math.random() - 0.5);
-    }
-
-    setQuestionsList(rawList);
-    setLoading(false);
-  };
-
-  const handleSelectSingleOption = (qId, option) => {
+  // Answer Selected Handlers
+  const handleSelectAnswer = (qId, answerValue) => {
     try { soundFX.playClick(); } catch (e) {}
     setUserAnswers(prev => ({
       ...prev,
-      [qId]: option
+      [qId]: answerValue
     }));
   };
 
-  const handleSelectMultiOption = (qId, option) => {
-    try { soundFX.playClick(); } catch (e) {}
-    const current = userAnswers[qId] || [];
-    const updated = current.includes(option)
-      ? current.filter(o => o !== option)
-      : [...current, option];
-    setUserAnswers(prev => ({
-      ...prev,
-      [qId]: updated
-    }));
-  };
-
-  const handleFillInput = (qId, value) => {
-    setUserAnswers(prev => ({
-      ...prev,
-      [qId]: value
-    }));
-  };
-
-  const handleFileUpload = (qId, event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPhotoPreview(prev => ({ ...prev, [qId]: url }));
-      setUserAnswers(prev => ({ ...prev, [`${qId}_photo`]: file.name }));
-      try { soundFX.playFanfare(); } catch (e) {}
-    }
-  };
-
-  const handleSubmitQuizAuto = () => {
-    alert('⏱️ Đã hết thời gian làm bài! Hệ thống đang tự động nộp bài cho em...');
-    handleSubmitQuiz();
-  };
-
+  // Submit Quiz Calculation
   const handleSubmitQuiz = async () => {
-    if (submitting || !questionsList.length) return;
+    soundFX.playClick();
     setSubmitting(true);
 
-    let correctCount = 0;
-    questionsList.forEach((q) => {
-      const uAns = userAnswers[q.id];
-      if (q.type === 'single_choice' || q.type === 'true_false') {
-        if (uAns && (uAns === q.correct || uAns.includes(q.correct))) correctCount++;
-      } else if (q.type === 'fill_blank') {
-        if (uAns && uAns.trim().toLowerCase() === (q.correct || '').trim().toLowerCase()) correctCount++;
-      } else if (q.type === 'multi_choice') {
-        if (Array.isArray(uAns) && uAns.length > 0) correctCount++;
+    let earnedScore = 0;
+    const { grandTotal } = calculateExamPoints(exam);
+
+    exam.sections.forEach(sec => {
+      if (sec.code === 'D_WRITING') {
+        (sec.parts || []).forEach(p => {
+          if (p.part_num !== 3) {
+            (p.questions || []).forEach(q => {
+              const uAns = (userAnswers[q.id] || '').trim().toLowerCase();
+              const cAns = (q.correct || q.suggested_answer || '').trim().toLowerCase();
+              if (uAns && (uAns === cAns || (q.accepted_answers || []).some(a => a.toLowerCase() === uAns))) {
+                earnedScore += (q.points || 0.25);
+              }
+            });
+          }
+        });
       } else {
-        if (uAns) correctCount++;
+        (sec.tasks || []).forEach(t => {
+          (t.questions || []).forEach(q => {
+            const uAns = (userAnswers[q.id] || '').trim();
+            const cAns = (q.correct || '').trim();
+            if (uAns && uAns === cAns) {
+              earnedScore += (q.points || 0.25);
+            }
+          });
+        });
       }
     });
 
-    const score = Number(((correctCount / questionsList.length) * 10).toFixed(1));
-    const starsEarned = Math.round(score * 2);
+    earnedScore = Math.round(earnedScore * 100) / 100;
+    const finalScore10 = grandTotal > 0 ? Math.round((earnedScore / grandTotal) * 1000) / 100 : 10;
+    const starsEarned = Math.round(finalScore10 * 2);
 
-    setResult({
-      score,
-      correctCount,
-      totalCount: questionsList.length,
-      starsEarned
-    });
+    const resObj = {
+      score: finalScore10,
+      rawScore: earnedScore,
+      totalScore: grandTotal,
+      starsEarned,
+      submittedAt: new Date().toLocaleTimeString('vi-VN')
+    };
 
+    setResult(resObj);
     setSubmitting(false);
-    try { soundFX.playFanfare(); } catch (e) {}
-    confetti({ particleCount: 150, spread: 90 });
-    if (onQuizSubmitted) onQuizSubmitted(score);
-  };
+    confetti({ particleCount: 150, spread: 80 });
 
-  if (!isOpen) return null;
+    if (onQuizSubmitted) onQuizSubmitted(resObj);
+  };
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
-    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const currentQ = questionsList[currentIdx];
-
   return (
-    <div className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-start justify-center p-3 sm:p-4 overflow-y-auto pt-2 pb-6">
-      <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-4xl w-full border-4 border-slate-800 shadow-2xl overflow-hidden relative font-sans max-h-[82vh] flex flex-col justify-between animate-fadeIn">
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto font-sans">
+      <div className="bg-slate-900 text-slate-100 rounded-3xl max-w-6xl w-full border-4 border-slate-800 shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
         
-        {/* HEADER BAR WITH LIVE TIMER */}
+        {/* MODAL HEADER */}
         <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div>
-            <span className="px-2.5 py-0.5 rounded-full bg-brand-600 text-white font-black text-[10px] uppercase">
-              {quiz?.exam_code || 'BÀI THI THỦ CÔNG'}
-            </span>
-            <h3 className="text-base font-black text-white truncate max-w-md mt-0.5">
-              {quiz?.title || 'BÀI KIỂM TRA TIẾNG ANH THCS'}
-            </h3>
+            <h2 className="text-base font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+              🎓 {exam.title}
+            </h2>
+            <p className="text-xs text-slate-400">
+              Trường: {exam.metadata.school_name || 'THCS'} | Lớp: {exam.metadata.class_name || '8A5'} | Bộ sách: {exam.metadata.textbook}
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* LIVE COUNTDOWN TIMER */}
-            <div className="px-4 py-1.5 rounded-2xl bg-amber-500/20 text-amber-300 font-black text-xs border border-amber-500/40 flex items-center gap-1.5 shadow">
-              <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
-              <span>Thời gian: {formatTime(secondsLeft)}</span>
-            </div>
+          <div className="flex items-center gap-4">
+            {!result && secondsLeft > 0 && (
+              <div className="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-black text-base flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-400 animate-pulse" />
+                {formatTime(secondsLeft)}
+              </div>
+            )}
 
-            <button onClick={onClose} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700">
-              <X className="w-4 h-4" />
+            <button onClick={onClose} className="p-2 rounded-xl bg-slate-800 text-slate-300">
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {!result ? (
-          /* ARENA PLAYING VIEW */
-          <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
-            
-            {/* QUESTION PROGRESS & COUNTER */}
-            <div className="flex items-center justify-between text-xs font-bold border-b border-slate-800 pb-3">
-              <span className="text-slate-400">
-                Câu {currentIdx + 1} / {questionsList.length}
-              </span>
-              <span className="text-indigo-400 uppercase font-black">
-                Dạng: {currentQ?.type || 'Trắc nghiệm'}
-              </span>
-            </div>
-
-            {/* QUESTION TEXT */}
-            <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 border-l-4 border-l-brand-500">
-              <h2 className="text-lg sm:text-xl font-black text-white leading-relaxed">
-                {currentQ?.qText || currentQ?.question}
-              </h2>
-            </div>
-
-            {/* OPTIONS RENDERING BASED ON TYPE */}
-            <div className="space-y-3">
-              {/* SINGLE CHOICE OR TRUE/FALSE */}
-              {(currentQ?.type === 'single_choice' || currentQ?.type === 'true_false' || !currentQ?.type) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(currentQ?.options || []).map((opt, oIdx) => {
-                    const isSelected = userAnswers[currentQ.id] === opt;
-                    return (
-                      <button
-                        key={oIdx}
-                        onClick={() => handleSelectSingleOption(currentQ.id, opt)}
-                        className={`p-4 rounded-2xl border-2 font-bold text-xs sm:text-sm flex items-center gap-3 transition-all text-left ${
-                          isSelected
-                            ? 'bg-brand-600/90 text-white border-brand-400 shadow-lg scale-101'
-                            : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
-                        }`}
-                      >
-                        <span className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${isSelected ? 'bg-white text-brand-600' : 'bg-slate-900 text-slate-400'}`}>
-                          {String.fromCharCode(65 + oIdx)}
-                        </span>
-                        <span>{opt}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* MULTI CHOICE (CHECKBOXES) */}
-              {currentQ?.type === 'multi_choice' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(currentQ?.options || []).map((opt, oIdx) => {
-                    const isChecked = (userAnswers[currentQ.id] || []).includes(opt);
-                    return (
-                      <button
-                        key={oIdx}
-                        onClick={() => handleSelectMultiOption(currentQ.id, opt)}
-                        className={`p-4 rounded-2xl border-2 font-bold text-xs sm:text-sm flex items-center gap-3 transition-all text-left ${
-                          isChecked
-                            ? 'bg-emerald-600/90 text-white border-emerald-400 shadow-lg'
-                            : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
-                        }`}
-                      >
-                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center border ${isChecked ? 'bg-white text-emerald-600 border-white' : 'border-slate-600'}`}>
-                          {isChecked && <Check className="w-4 h-4 stroke-[3]" />}
-                        </span>
-                        <span>{opt}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* FILL IN THE BLANK */}
-              {currentQ?.type === 'fill_blank' && (
-                <div className="space-y-2 bg-slate-950 p-5 rounded-3xl border border-slate-800">
-                  <label className="text-xs font-bold text-slate-300">Nhập câu trả lời điền vào chỗ trống:</label>
-                  <input
-                    type="text"
-                    placeholder="Gõ từ hoặc cụm từ điền vào đây..."
-                    value={userAnswers[currentQ.id] || ''}
-                    onChange={(e) => handleFillInput(currentQ.id, e.target.value)}
-                    className="w-full p-3 rounded-2xl bg-slate-900 border border-slate-700 text-xs font-bold text-emerald-400 focus:outline-none focus:border-brand-500"
-                  />
-                </div>
-              )}
-
-              {/* ESSAY & PHOTO UPLOAD */}
-              {currentQ?.type === 'essay' && (
-                <div className="space-y-4 bg-slate-950 p-5 rounded-3xl border border-slate-800">
-                  <textarea
-                    rows={4}
-                    placeholder="Gõ bài làm tự luận dài vào đây..."
-                    value={userAnswers[currentQ.id] || ''}
-                    onChange={(e) => handleFillInput(currentQ.id, e.target.value)}
-                    className="w-full p-3 rounded-2xl bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 focus:outline-none focus:border-brand-500"
-                  />
-
-                  {/* PHOTO UPLOADER */}
-                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-dashed border-slate-700 text-center space-y-2">
-                    <ImageIcon className="w-8 h-8 text-slate-400 mx-auto" />
-                    <div className="text-xs font-bold text-slate-300">Tải Ảnh Chụp Bài Làm Thủ Công (Nếu có)</div>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={(e) => handleFileUpload(currentQ.id, e)} 
-                      className="hidden" 
-                      id={`file_input_${currentQ.id}`}
-                    />
-                    <label 
-                      htmlFor={`file_input_${currentQ.id}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer shadow"
-                    >
-                      <Upload className="w-4 h-4" /> Chọn Ảnh Chụp Vở Bài Tập
-                    </label>
-
-                    {photoPreview[currentQ.id] && (
-                      <div className="mt-2 text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" /> Đã đính kèm ảnh bài làm!
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-        ) : (
-          /* RESULT SUMMARY VIEW */
-          <div className="p-8 text-center space-y-6 my-auto">
-            <Award className="w-20 h-20 text-amber-400 mx-auto animate-bounce" />
-            <h2 className="text-2xl sm:text-3xl font-black text-white">
-              🎉 HOÀN THÀNH BÀI THI THÀNH CÔNG!
-            </h2>
-            <div className="text-lg font-black text-emerald-400">
-              Điểm số: {result.score} / 10 • Đúng {result.correctCount}/{result.totalCount} câu
-            </div>
+        {/* SECTION NAV TABS */}
+        <div className="flex items-center gap-2 p-3 bg-slate-950/60 border-b border-slate-800 text-xs font-black shrink-0 overflow-x-auto">
+          {exam.sections.map((sec) => (
             <button
-              onClick={onClose}
-              className="px-8 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs shadow-xl"
+              key={sec.code}
+              onClick={() => setActiveSectionCode(sec.code)}
+              className={`px-4 py-2 rounded-xl transition-all ${
+                activeSectionCode === sec.code
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'bg-slate-900 text-slate-400 hover:text-white'
+              }`}
             >
-              Đóng và Quay lại Ngân Hàng Đề Thi
+              {sec.title}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {/* BOTTOM NAVIGATION FOOTER */}
+        {/* MODAL BODY */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          
+          {/* RESULT SUMMARY VIEW AFTER SUBMIT */}
+          {result ? (
+            <div className="p-8 rounded-3xl bg-slate-950 border border-slate-800 text-center space-y-4 max-w-lg mx-auto my-6">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
+                <Award className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black text-white">KẾT QUẢ BÀI THI CỦA EM</h3>
+              <p className="text-4xl font-black text-amber-400 font-mono">{result.score} / 10.0 Điểm</p>
+              <p className="text-xs text-slate-300">
+                Thưởng thành tích: <span className="font-bold text-amber-300">+{result.starsEarned} Sao 🌟</span>
+              </p>
+              <button
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-extrabold text-xs"
+              >
+                Hoàn Thành & Đóng
+              </button>
+            </div>
+          ) : (
+            <div>
+              {/* CURRENT ACTIVE SECTION VIEW */}
+              {exam.sections.map((sec) => {
+                if (sec.code !== activeSectionCode) return null;
+
+                return (
+                  <div key={sec.code} className="space-y-6">
+                    <div className="border-b border-slate-800 pb-2">
+                      <h3 className="text-base font-black text-amber-300">{sec.title}</h3>
+                      <p className="text-xs text-slate-400 italic">{sec.instruction}</p>
+                    </div>
+
+                    {/* SECTION A: LISTENING TASKS */}
+                    {sec.code === 'A_LISTENING' && sec.tasks?.map((task, tIdx) => (
+                      <div key={task.id} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                        <h4 className="text-xs font-black text-indigo-300 uppercase">{task.title}</h4>
+
+                        {/* AUDIO PLAYER (TEACHER TRANSCRIPT HIDDEN FROM STUDENTS) */}
+                        {task.audio_url && (
+                          <div className="p-3.5 rounded-xl bg-slate-900 border border-indigo-500/40 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => setIsPlayingAudio(!isPlayingAudio)}
+                                className="w-10 h-10 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black shadow-lg"
+                              >
+                                {isPlayingAudio ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                              </button>
+                              <div>
+                                <p className="text-xs font-bold text-white">Audio Recording (Listening Task)</p>
+                                <span className="text-[10px] text-slate-400">Nghe kỹ đoạn băng để trả lời câu hỏi bên dưới</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* QUESTIONS */}
+                        <div className="space-y-4 pt-2">
+                          {task.questions?.map((q) => (
+                            <div key={q.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                              <p className="text-xs font-bold text-white">Câu {q.num}: {q.question}</p>
+                              {q.options && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                  {q.options.map((opt, oIdx) => (
+                                    <button
+                                      key={oIdx}
+                                      onClick={() => handleSelectAnswer(q.id, opt)}
+                                      className={`p-3 rounded-xl border text-left transition-all ${
+                                        userAnswers[q.id] === opt
+                                          ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold shadow'
+                                          : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                                      }`}
+                                    >
+                                      {opt}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* SECTION B: KNOWLEDGE OF LANGUAGE (SINGLE PASSAGE PER CLOZE GROUP) */}
+                    {sec.code === 'B_KNOWLEDGE' && sec.tasks?.map((task, tIdx) => (
+                      <div key={task.id} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                        <h4 className="text-xs font-black text-indigo-300 uppercase">{task.title}</h4>
+
+                        {/* CLOZE PASSAGE SHOWN ONCE */}
+                        {task.passage?.content && (
+                          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 leading-relaxed font-serif">
+                            <h5 className="font-bold text-amber-300 font-sans mb-1">{task.passage.title}</h5>
+                            <p>{task.passage.content}</p>
+                          </div>
+                        )}
+
+                        {/* CHILD QUESTIONS */}
+                        <div className="space-y-3">
+                          {task.questions?.map((q) => (
+                            <div key={q.id} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
+                              <p className="font-bold text-white">Vị trí Vẫn Blank ({q.blank_num}):</p>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {q.options?.map((opt, oIdx) => (
+                                  <button
+                                    key={oIdx}
+                                    onClick={() => handleSelectAnswer(q.id, opt)}
+                                    className={`p-2.5 rounded-lg border text-center transition-all ${
+                                      userAnswers[q.id] === opt
+                                        ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold shadow'
+                                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                                    }`}
+                                  >
+                                    {opt}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* SECTION C: READING (SINGLE PASSAGE PER READING GROUP) */}
+                    {sec.code === 'C_READING' && sec.tasks?.map((task, tIdx) => (
+                      <div key={task.id} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                        <h4 className="text-xs font-black text-indigo-300 uppercase">{task.title}</h4>
+
+                        {/* READING PASSAGE SHOWN ONCE */}
+                        {task.passage?.content && (
+                          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 leading-relaxed font-serif">
+                            <h5 className="font-bold text-amber-300 font-sans mb-1">{task.passage.title}</h5>
+                            <p>{task.passage.content}</p>
+                          </div>
+                        )}
+
+                        <div className="space-y-3">
+                          {task.questions?.map((q) => (
+                            <div key={q.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
+                              <p className="font-bold text-white">Câu {q.num}: {q.question}</p>
+                              {q.options && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {q.options.map((opt, oIdx) => (
+                                    <button
+                                      key={oIdx}
+                                      onClick={() => handleSelectAnswer(q.id, opt)}
+                                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                                        userAnswers[q.id] === opt
+                                          ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold shadow'
+                                          : 'bg-slate-950 text-slate-300 border-slate-800'
+                                      }`}
+                                    >
+                                      {opt}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* SECTION D: WRITING (3 PARTS) */}
+                    {sec.code === 'D_WRITING' && sec.parts?.map((part) => (
+                      <div key={part.part_num} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                        <h4 className="text-xs font-black text-indigo-300 uppercase">{part.title}</h4>
+                        <p className="text-xs text-slate-400 italic">{part.instruction}</p>
+
+                        {part.part_num === 3 ? (
+                          <div className="space-y-3">
+                            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold">
+                              {part.prompt}
+                            </div>
+                            <textarea
+                              rows={6}
+                              value={userAnswers['writing_p3'] || ''}
+                              onChange={(e) => handleSelectAnswer('writing_p3', e.target.value)}
+                              className="w-full p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white leading-relaxed focus:outline-none focus:border-amber-400"
+                              placeholder="Gõ bài viết đoạn văn của em tại đây (80-100 từ)..."
+                            />
+                            <div className="text-right text-[11px] text-slate-400">
+                              Số từ đã gõ: {(userAnswers['writing_p3'] || '').trim().split(/\s+/).filter(Boolean).length} từ
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {part.questions?.map((q) => (
+                              <div key={q.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
+                                <p className="font-bold text-white">Câu {q.num}: {q.question || q.original_sentence}</p>
+                                {q.prompt_keyword && (
+                                  <p className="text-amber-300 font-bold">➔ {q.prompt_keyword}</p>
+                                )}
+
+                                {q.options ? (
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {q.options.map((opt, oIdx) => (
+                                      <button
+                                        key={oIdx}
+                                        onClick={() => handleSelectAnswer(q.id, opt)}
+                                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                                          userAnswers[q.id] === opt
+                                            ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
+                                            : 'bg-slate-950 text-slate-300 border-slate-800'
+                                        }`}
+                                      >
+                                        {opt}
+                                      </button>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={userAnswers[q.id] || ''}
+                                    onChange={(e) => handleSelectAnswer(q.id, e.target.value)}
+                                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white"
+                                    placeholder="Gõ câu trả lời viết lại của em..."
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* MODAL FOOTER */}
         {!result && (
           <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between shrink-0">
+            <span className="text-xs text-slate-400">Hãy kiểm tra kỹ bài làm của cả 4 Section trước khi Nộp Bài.</span>
             <button
-              onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
-              disabled={currentIdx === 0}
-              className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs disabled:opacity-40"
+              onClick={handleSubmitQuiz}
+              disabled={submitting}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-xs shadow-lg flex items-center gap-2"
             >
-              ← Câu trước
+              <Send className="w-4 h-4" /> {submitting ? 'Đang Nộp Bài...' : 'Nộp Bài Thi (Submit)'}
             </button>
-
-            {currentIdx < questionsList.length - 1 ? (
-              <button
-                onClick={() => setCurrentIdx(prev => Math.min(questionsList.length - 1, prev + 1))}
-                className="px-6 py-2 rounded-xl bg-brand-600 text-white font-black text-xs shadow"
-              >
-                Câu tiếp theo →
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmitQuiz}
-                disabled={submitting}
-                className="px-8 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5"
-              >
-                <Send className="w-4 h-4" /> NỘP BÀI THI
-              </button>
-            )}
           </div>
         )}
 
