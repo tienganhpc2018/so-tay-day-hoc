@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti';
 import { DuckRaceGameCanvas } from '../components/behavior/DuckRaceGameCanvas';
 import { AddClassModal } from '../components/behavior/AddClassModal';
 import { TetPickNameModal } from '../components/behavior/TetPickNameModal';
+import { WeekendReportModal } from '../components/behavior/WeekendReportModal';
 import { 
   Users, 
   Dices, 
@@ -39,7 +40,8 @@ import {
   Plus,
   Image as ImageIcon,
   Check,
-  Move
+  Move,
+  FileText
 } from 'lucide-react';
 
 const AI_PIXAR_AVATARS = [
@@ -62,6 +64,7 @@ export const BehaviorPage = () => {
   const [activeModal, setActiveModal] = useState(null); 
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showTetModal, setShowTetModal] = useState(false);
+  const [showWeekendReportModal, setShowWeekendReportModal] = useState(false);
 
   // Dynamic Roster State
   const [students, setStudents] = useState([
@@ -384,6 +387,16 @@ export const BehaviorPage = () => {
             className="px-5 py-2 rounded-full bg-rose-600 hover:bg-rose-500 text-white shadow-lg"
           >
             Danh Sách & Cho Điểm
+          </button>
+
+          <button
+            onClick={() => {
+              soundFX.playClick();
+              setShowWeekendReportModal(true);
+            }}
+            className="px-5 py-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black shadow-lg flex items-center gap-1.5 animate-pulse"
+          >
+            <FileText className="w-4 h-4" /> Báo Cáo Cuối Tuần 📊
           </button>
 
           <button
@@ -1078,6 +1091,14 @@ export const BehaviorPage = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL 7: BÁO CÁO SỔ CHỦ NHIỆM CUỐI TUẦN */}
+      <WeekendReportModal
+        isOpen={showWeekendReportModal}
+        onClose={() => setShowWeekendReportModal(false)}
+        selectedClass={selectedClass}
+        students={students}
+      />
 
     </div>
   );
