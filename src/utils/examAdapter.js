@@ -3,37 +3,66 @@ import { EXAM_SECTIONS, DEFAULT_EXAM_METADATA } from '../constants/examStructure
 export const createEmptyExam = (overrides = {}) => {
   return {
     id: overrides.id || `exam-${Date.now()}`,
-    title: overrides.title || 'BÀI KIỂM TRA GIỮA KỲ 1 TIẾNG ANH THCS',
-    description: overrides.description || 'Đề kiểm tra chuẩn THCS 4 kỹ năng (Listening, Knowledge, Reading, Writing)',
+    title: overrides.title || 'BÀI KIỂM TRA GIỮA KỲ 1 TIẾNG ANH KHỐI 8 (CHUẨN 37 CÂU • 10.0 ĐIỂM)',
+    description: overrides.description || 'Đề kiểm tra chuẩn hóa 4 phần: Listening (10 câu), Knowledge of Language (10 câu), Reading (10 câu), Writing (7 câu).',
     metadata: {
       ...DEFAULT_EXAM_METADATA,
       ...(overrides.metadata || {}),
-      grade_level: overrides.grade_level || overrides.metadata?.grade_level || 8
+      grade_level: overrides.grade_level || overrides.metadata?.grade_level || 8,
+      total_score: 10.0
     },
     sections: [
       {
         id: 'sec_listening',
         code: 'A_LISTENING',
-        title: 'A. LISTENING',
-        instruction: 'Listen to the audio recordings and complete the tasks below.',
+        title: 'Section 1: Listening (2.5 điểm • 10 câu)',
+        instruction: 'Listen to 3 recording tasks and answer questions 1 to 10.',
         points: 2.5,
         tasks: [
           {
             id: 'l_task_1',
             task_type: 'LISTENING_MCQ',
-            title: 'Task 1: Multiple Choice Questions',
-            instruction: 'Listen to the audio recording and choose the correct answer A, B, C, or D.',
+            title: 'Task 1: Multiple Choice Questions (4 câu • 1.0đ)',
+            instruction: 'Listen to the conversation about school picnic and choose the correct answer A, B, C, or D for questions 1 to 4.',
             audio_url: '',
-            audio_name: '',
-            audio_duration: '00:00',
-            teacher_transcript: '',
-            teacher_notes: '',
+            audio_name: 'Listening_Task1_Picnic.mp3',
+            audio_duration: '01:45',
+            teacher_transcript: 'Speaker A: Hi everyone! We are planning our annual school picnic tomorrow morning. We will meet at the main school gate at 8:00 AM. Please make sure to bring your water bottles and notebooks.',
             questions: [
-              { id: 'l1_q1', num: 1, question: 'What is the main topic of the conversation?', options: ['A. School picnic', 'B. English club', 'C. Book fair', 'D. Music festival'], correct: 'A. School picnic', points: 0.25 },
-              { id: 'l1_q2', num: 2, question: 'Where will the students meet tomorrow morning?', options: ['A. At the school gate', 'B. At the park', 'C. At the bus station', 'D. At the library'], correct: 'A. At the school gate', points: 0.25 },
-              { id: 'l1_q3', num: 3, question: 'What time does the event start?', options: ['A. 7:30 AM', 'B. 8:00 AM', 'C. 8:30 AM', 'D. 9:00 AM'], correct: 'B. 8:00 AM', points: 0.25 },
-              { id: 'l1_q4', num: 4, question: 'Who is organizing the activity?', options: ['A. The English Teacher', 'B. Class Monitor', 'C. Headmaster', 'D. Youth Union'], correct: 'A. The English Teacher', points: 0.25 },
-              { id: 'l1_q5', num: 5, question: 'What should students bring with them?', options: ['A. Water and notebooks', 'B. Cameras and hats', 'C. Laptops', 'D. Sports shoes'], correct: 'A. Water and notebooks', points: 0.25 }
+              { id: 'l1_q1', num: 1, question: 'Question 1: What is the main topic of the conversation?', options: ['A. School picnic', 'B. English club', 'C. Book fair', 'D. Music festival'], correct: 'A. School picnic', points: 0.25 },
+              { id: 'l1_q2', num: 2, question: 'Question 2: Where will the students meet tomorrow morning?', options: ['A. At the school gate', 'B. At the park', 'C. At the bus station', 'D. At the library'], correct: 'A. At the school gate', points: 0.25 },
+              { id: 'l1_q3', num: 3, question: 'Question 3: What time does the event start?', options: ['A. 7:30 AM', 'B. 8:00 AM', 'C. 8:30 AM', 'D. 9:00 AM'], correct: 'B. 8:00 AM', points: 0.25 },
+              { id: 'l1_q4', num: 4, question: 'Question 4: Who is organizing the activity?', options: ['A. The English Teacher', 'B. Class Monitor', 'C. Headmaster', 'D. Youth Union'], correct: 'A. The English Teacher', points: 0.25 }
+            ]
+          },
+          {
+            id: 'l_task_2',
+            task_type: 'LISTENING_GAPFILL',
+            title: 'Task 2: Gap Fill Questions (3 câu • 0.75đ)',
+            instruction: 'Listen to the announcement and fill in each blank with ONE suitable word for questions 5 to 7.',
+            audio_url: '',
+            audio_name: 'Listening_Task2_Bus.mp3',
+            audio_duration: '01:20',
+            teacher_transcript: 'Speaker B: Attention students, the school bus will arrive at exactly 7:45 AM. All participants must bring their own water bottles and wear comfortable sneakers.',
+            questions: [
+              { id: 'l2_q5', num: 5, blank_num: 5, question: 'Question 5: Students should bring their own _____ to the venue.', options: ['A. water', 'B. food', 'C. notebook', 'D. camera'], correct: 'A. water', points: 0.25 },
+              { id: 'l2_q6', num: 6, blank_num: 6, question: 'Question 6: The bus will arrive at exactly _____.', options: ['A. 7:45 AM', 'B. 8:15 AM', 'C. 7:30 AM', 'D. 8:00 AM'], correct: 'A. 7:45 AM', points: 0.25 },
+              { id: 'l2_q7', num: 7, blank_num: 7, question: 'Question 7: Remember to wear comfortable _____ for walking.', options: ['A. sneakers', 'B. boots', 'C. sandals', 'D. hats'], correct: 'A. sneakers', points: 0.25 }
+            ]
+          },
+          {
+            id: 'l_task_3',
+            task_type: 'LISTENING_TF',
+            title: 'Task 3: True / False Questions (3 câu • 0.75đ)',
+            instruction: 'Listen to the conversation and decide whether statements 8 to 10 are True or False.',
+            audio_url: '',
+            audio_name: 'Listening_Task3_Report.mp3',
+            audio_duration: '01:10',
+            teacher_transcript: 'Speaker C: The trip takes place on Sunday morning. Lunch is provided free by the school. After the trip, every student must write a short report.',
+            questions: [
+              { id: 'l3_q8', num: 8, question: 'Question 8: The event is held on a Sunday morning.', options: ['A. True', 'B. False'], correct: 'A. True', points: 0.25 },
+              { id: 'l3_q9', num: 9, question: 'Question 9: Lunch is provided free by the school organization.', options: ['A. True', 'B. False'], correct: 'A. True', points: 0.25 },
+              { id: 'l3_q10', num: 10, question: 'Question 10: All students are required to write a short report after the trip.', options: ['A. True', 'B. False'], correct: 'A. True', points: 0.25 }
             ]
           }
         ]
@@ -41,44 +70,44 @@ export const createEmptyExam = (overrides = {}) => {
       {
         id: 'sec_knowledge',
         code: 'B_KNOWLEDGE',
-        title: 'B. KNOWLEDGE OF LANGUAGE',
-        instruction: 'Read the cloze passages and choose the best option for each blank.',
+        title: 'Section 2: Knowledge of Language (2.5 điểm • 10 chỗ trống)',
+        instruction: 'Read the text passages below and choose the best answer A, B, C, or D for blanks 11 to 20.',
         points: 2.5,
         tasks: [
           {
             id: 'k_task_1',
             task_type: 'CLOZE_PASSAGE',
-            title: 'Task 1: Cloze Passage 1',
-            instruction: 'Read the passage and choose the best answer A, B, C, or D to fill in each blank.',
+            title: 'Part 1: Leaflet (5 chỗ trống 11–15 • 1.25đ)',
+            instruction: 'Read the leaflet and choose the best option A, B, C, or D for blanks 11 to 15.',
             passage: {
-              title: 'Life in a Modern Village',
-              content: 'Living in the countryside offers many advantages. People can enjoy (1)_____ air and quiet surroundings. In addition, villagers are very friendly and always willing to (2)_____ their neighbors. Teenagers often spend their free time (3)_____ traditional games or helping parents with farm work. However, life here is changing fast as modern technology becomes (4)_____ available. Many young people now have smartphones to access (5)_____ information for their studies.',
-              word_count: 75
+              title: 'JOIN OUR GREEN COMMUNITY CLUB!',
+              content: 'Are you interested in protecting the environment? Join our Green Community Club! We organize weekly activities such as (11)_____ trash in local parks and planting trees. Members will also learn how to (12)_____ household waste effectively. This is a great opportunity to make new friends who share a (13)_____ for nature. If you want to become a member, please (14)_____ the application form online before Friday. Let\'s work together for a (15)_____ future!',
+              word_count: 85
             },
             questions: [
-              { id: 'k1_q1', num: 1, blank_num: 1, question: 'Blank (1)', options: ['A. fresh', 'B. dirty', 'C. noisy', 'D. crowded'], correct: 'A. fresh', explanation: 'fresh air: không khí trong lành', points: 0.25 },
-              { id: 'k1_q2', num: 2, blank_num: 2, question: 'Blank (2)', options: ['A. help', 'B. hurt', 'C. ignore', 'D. avoid'], correct: 'A. help', points: 0.25 },
-              { id: 'k1_q3', num: 3, blank_num: 3, question: 'Blank (3)', options: ['A. playing', 'B. play', 'C. played', 'D. to play'], correct: 'A. playing', explanation: 'spend time + V-ing', points: 0.25 },
-              { id: 'k1_q4', num: 4, blank_num: 4, question: 'Blank (4)', options: ['A. widely', 'B. wide', 'C. widen', 'D. width'], correct: 'A. widely', explanation: 'Trạng từ bổ nghĩa cho tính từ available', points: 0.25 },
-              { id: 'k1_q5', num: 5, blank_num: 5, question: 'Blank (5)', options: ['A. useful', 'B. useless', 'C. bad', 'D. dark'], correct: 'A. useful', points: 0.25 }
+              { id: 'k1_q11', num: 11, blank_num: 11, question: 'Blank (11)', options: ['A. collecting', 'B. collection', 'C. collector', 'D. collect'], correct: 'A. collecting', explanation: 'Sau như such as + V-ing -> collecting', points: 0.25 },
+              { id: 'k1_q12', num: 12, blank_num: 12, question: 'Blank (12)', options: ['A. recycle', 'B. repeat', 'C. rewrite', 'D. rebuild'], correct: 'A. recycle', explanation: 'recycle household waste: tái chế rác thải gia đình', points: 0.25 },
+              { id: 'k1_q13', num: 13, blank_num: 13, question: 'Blank (13)', options: ['A. passion', 'B. stress', 'C. pressure', 'D. trouble'], correct: 'A. passion', explanation: 'share a passion for nature: chia sẻ niềm đam mê thiên nhiên', points: 0.25 },
+              { id: 'k1_q14', num: 14, blank_num: 14, question: 'Blank (14)', options: ['A. fill in', 'B. turn off', 'C. look for', 'D. give up'], correct: 'A. fill in', explanation: 'fill in the application form: điền đơn đăng ký', points: 0.25 },
+              { id: 'k1_q15', num: 15, blank_num: 15, question: 'Blank (15)', options: ['A. greener', 'B. darker', 'C. dirtier', 'D. higher'], correct: 'A. greener', explanation: 'a greener future: tương lai xanh hơn', points: 0.25 }
             ]
           },
           {
             id: 'k_task_2',
             task_type: 'CLOZE_PASSAGE',
-            title: 'Task 2: Cloze Passage 2',
-            instruction: 'Read the passage and choose the best answer A, B, C, or D to fill in each blank.',
+            title: 'Part 2: Announcement (5 chỗ trống 16–20 • 1.25đ)',
+            instruction: 'Read the announcement and choose the best option A, B, C, or D for blanks 16 to 20.',
             passage: {
-              title: 'Preserving Local Crafts',
-              content: 'Bat Trang Pottery Village is famous for its handmade ceramics. Artisans have passed down traditional techniques from (1)_____ to generation. Today, tourists come to buy beautiful vases and (2)_____ their own pottery products. The local authorities are trying to (3)_____ traditional crafts to promote tourism. It is important to support local craftsmen so that these cultural values will not (4)_____ away. School students are encouraged to visit workshops and (5)_____ about Vietnamese heritage.',
-              word_count: 80
+              title: 'SCHOOL MIDTERM ENGLISH CONTEST ANNOUNCEMENT',
+              content: 'We are pleased to (16)_____ the Annual English Speaking Contest for Grade 8 students. The contest will take place (17)_____ November 15th in the main hall. Candidates are required to prepare a 3-minute presentation about (18)_____ pressure and coping strategies. Valuable prizes will be (19)_____ to the top three winners. For more information, please contact your English teacher (20)_____ visit the school website.',
+              word_count: 82
             },
             questions: [
-              { id: 'k2_q1', num: 1, blank_num: 1, question: 'Blank (1)', options: ['A. generation', 'B. year', 'C. century', 'D. age'], correct: 'A. generation', points: 0.25 },
-              { id: 'k2_q2', num: 2, blank_num: 2, question: 'Blank (2)', options: ['A. make', 'B. take', 'C. buy', 'D. break'], correct: 'A. make', points: 0.25 },
-              { id: 'k2_q3', num: 3, blank_num: 3, question: 'Blank (3)', options: ['A. preserve', 'B. destroy', 'C. forget', 'D. hide'], correct: 'A. preserve', points: 0.25 },
-              { id: 'k2_q4', num: 4, blank_num: 4, question: 'Blank (4)', options: ['A. fade', 'B. run', 'C. walk', 'D. fly'], correct: 'A. fade', points: 0.25 },
-              { id: 'k2_q5', num: 5, blank_num: 5, question: 'Blank (5)', options: ['A. learn', 'B. teach', 'C. speak', 'D. write'], correct: 'A. learn', points: 0.25 }
+              { id: 'k2_q16', num: 16, blank_num: 16, question: 'Blank (16)', options: ['A. announce', 'B. hide', 'C. deny', 'D. cancel'], correct: 'A. announce', explanation: 'announce the contest: thông báo cuộc thi', points: 0.25 },
+              { id: 'k2_q17', num: 17, blank_num: 17, question: 'Blank (17)', options: ['A. on', 'B. in', 'C. at', 'D. for'], correct: 'A. on', explanation: 'Dùng giới từ ON trước ngày tháng', points: 0.25 },
+              { id: 'k2_q18', num: 18, blank_num: 18, question: 'Blank (18)', options: ['A. teenage', 'B. adult', 'C. elderly', 'D. infant'], correct: 'A. teenage', explanation: 'teenage pressure: áp lực lứa tuổi thiếu niên', points: 0.25 },
+              { id: 'k2_q19', num: 19, blank_num: 19, question: 'Blank (19)', options: ['A. awarded', 'B. stolen', 'C. thrown', 'D. forgotten'], correct: 'A. awarded', explanation: 'prizes awarded to winners: giải thưởng được trao', points: 0.25 },
+              { id: 'k2_q20', num: 20, blank_num: 20, question: 'Blank (20)', options: ['A. or', 'B. so', 'C. but', 'D. because'], correct: 'A. or', explanation: 'Liên từ lựa chọn OR (hoặc)', points: 0.25 }
             ]
           }
         ]
@@ -86,27 +115,45 @@ export const createEmptyExam = (overrides = {}) => {
       {
         id: 'sec_reading',
         code: 'C_READING',
-        title: 'C. READING',
-        instruction: 'Read the passages carefully and answer the questions below.',
+        title: 'Section 3: Reading (2.5 điểm • 10 câu)',
+        instruction: 'Read the reading passages and answer questions 21 to 30.',
         points: 2.5,
         tasks: [
           {
             id: 'r_task_1',
             task_type: 'READING_COMPOSITE',
-            title: 'Task 1: Reading Comprehension',
-            instruction: 'Read the text and answer the questions below.',
+            title: 'Task 1: True / False (5 câu 21–25 • 1.25đ)',
+            instruction: 'Read the passage "Nam and Smartphone Addiction" and decide whether statements 21 to 25 are True or False.',
             passage: {
-              title: 'Teen Stress and Mental Well-being',
-              content: 'Teenagers today face various pressures from schoolwork, examinations, and social expectations. Many students feel overwhelmed when balancing academic deadlines with extracurricular activities. Experts recommend managing time effectively by creating daily study schedules and setting realistic goals. Getting enough sleep, eating nutritious meals, and doing regular exercise are also essential for reducing stress levels. Talking to teachers, school counselors, or parents can help teens find suitable solutions when experiencing anxiety.',
-              word_count: 78,
+              title: 'Nam and Smartphone Addiction',
+              content: 'Nam is an 8th-grade student who used to be an active member of his school\'s basketball team. However, since his parents bought him a smartphone three months ago, his daily habits have changed completely. Nam spends up to 6 hours every day playing online games and checking social media notifications. He often stays up past midnight, which makes him feel exhausted during morning classes. As a result, his academic performance has dropped significantly. His parents and teachers are deeply concerned about his smartphone addiction and are encouraging him to set strict time limits and rejoin sports activities.',
+              word_count: 105,
               source: 'Global Success Grade 8 Unit 3'
             },
             questions: [
-              { id: 'r1_q1', num: 1, qType: 'main_idea', question: 'What is the main topic of the passage?', options: ['A. How teenagers cope with school stress', 'B. The history of school examinations', 'C. How to become a top student', 'D. Physical sports for teenagers'], correct: 'A. How teenagers cope with school stress', points: 0.5 },
-              { id: 'r1_q2', num: 2, qType: 'detail', question: 'According to the text, what helps teenagers manage time effectively?', options: ['A. Creating daily study schedules', 'B. Playing video games late at night', 'C. Skipping homework', 'D. Avoiding exams'], correct: 'A. Creating daily study schedules', points: 0.5 },
-              { id: 'r1_q3', num: 3, qType: 'detail', question: 'Which habit is mentioned as essential for reducing stress levels?', options: ['A. Getting enough sleep and regular exercise', 'B. Drinking coffee constantly', 'C. Studying all night without resting', 'D. Staying indoors all weekend'], correct: 'A. Getting enough sleep and regular exercise', points: 0.5 },
-              { id: 'r1_q4', num: 4, qType: 'vocabulary', question: 'The word "anxiety" in the last sentence is closest in meaning to:', options: ['A. worry/stress', 'B. happiness', 'C. excitement', 'D. energy'], correct: 'A. worry/stress', points: 0.5 },
-              { id: 'r1_q5', num: 5, qType: 'true_false', question: 'Teenagers are advised NOT to talk to counselors or parents when stressed.', options: ['Đúng (True)', 'Sai (False)'], correct: 'Sai (False)', points: 0.5 }
+              { id: 'r1_q21', num: 21, qType: 'true_false', question: 'Question 21: Nam used to be an active basketball player before getting a smartphone.', options: ['A. True', 'B. False'], correct: 'A. True', points: 0.25 },
+              { id: 'r1_q22', num: 22, qType: 'true_false', question: 'Question 22: Nam spends only 2 hours a day on online games and social media.', options: ['A. True', 'B. False'], correct: 'B. False', points: 0.25 },
+              { id: 'r1_q23', num: 23, qType: 'true_false', question: 'Question 23: Staying up past midnight makes Nam feel exhausted in morning classes.', options: ['A. True', 'B. False'], correct: 'A. True', points: 0.25 },
+              { id: 'r1_q24', num: 24, qType: 'true_false', question: 'Question 24: Nam\'s school grades have improved since he started using the phone.', options: ['A. True', 'B. False'], correct: 'B. False', points: 0.25 },
+              { id: 'r1_q25', num: 25, qType: 'true_false', question: 'Question 25: Teachers and parents encourage Nam to set screen limits and return to sports.', options: ['A. True', 'B. False'], correct: 'A. True', points: 0.25 }
+            ]
+          },
+          {
+            id: 'r_task_2',
+            task_type: 'READING_COMPOSITE',
+            title: 'Task 2: Multiple Choice (5 câu 26–30 • 1.25đ)',
+            instruction: 'Read the passage "Managing Stress in Teens’ Life" and choose the correct answer A, B, C, or D for questions 26 to 30.',
+            passage: {
+              title: 'Managing Stress in Teens’ Life',
+              content: 'Teenage years can be a turbulent period filled with physical, emotional, and academic changes. Schoolwork, parental expectations, and peer pressure are the main sources of stress for secondary students. When stress is not managed properly, it can lead to anxiety, insomnia, and poor concentration. Psychological experts suggest several effective coping strategies. First, teens should balance study time with relaxation and physical exercise. Second, maintaining open communication with parents and trusted friends helps alleviate emotional burdens. Finally, learning time management skills prevents last-minute cramming before major exams.',
+              word_count: 110
+            },
+            questions: [
+              { id: 'r2_q26', num: 26, qType: 'main_idea', question: 'Question 26: What is the main idea of the reading passage?', options: ['A. Causes and solutions for teenage stress', 'B. The history of secondary education', 'C. Physical exercise routines for teenagers', 'D. How to pass exams without studying'], correct: 'A. Causes and solutions for teenage stress', points: 0.25 },
+              { id: 'r2_q27', num: 27, qType: 'detail', question: 'Question 27: According to the text, unmanaged stress can lead to:', options: ['A. anxiety and insomnia', 'B. high exam scores', 'C. better sleeping habits', 'D. physical strength'], correct: 'A. anxiety and insomnia', points: 0.25 },
+              { id: 'r2_q28', num: 28, qType: 'detail', question: 'Question 28: Which coping strategy is NOT mentioned in the passage?', options: ['A. Skipping classes regularly', 'B. Balancing study with relaxation', 'C. Communicating with parents', 'D. Managing time effectively'], correct: 'A. Skipping classes regularly', points: 0.25 },
+              { id: 'r2_q29', num: 29, qType: 'vocabulary', question: 'Question 29: The word "alleviate" in the passage is closest in meaning to:', options: ['A. reduce / relieve', 'B. increase', 'C. destroy', 'D. ignore'], correct: 'A. reduce / relieve', points: 0.25 },
+              { id: 'r2_q30', num: 30, qType: 'detail', question: 'Question 30: Why are time management skills important for students?', options: ['A. They prevent last-minute exam cramming', 'B. They allow more video gaming time', 'C. They make exams unnecessary', 'D. They replace physical exercise'], correct: 'A. They prevent last-minute exam cramming', points: 0.25 }
             ]
           }
         ]
@@ -114,78 +161,112 @@ export const createEmptyExam = (overrides = {}) => {
       {
         id: 'sec_writing',
         code: 'D_WRITING',
-        title: 'D. WRITING',
-        instruction: 'Complete the writing parts below.',
+        title: 'Section 4: Writing (2.5 điểm • 7 câu)',
+        instruction: 'Complete the writing parts below (questions 31 to 37).',
         points: 2.5,
         parts: [
           {
             part_num: 1,
-            title: 'Part 1: Dialogue / Sentence Ordering',
-            instruction: 'Choose the correct order of sentences to form a meaningful conversation/paragraph.',
+            title: 'Part 1: Utterances & Dialogue Ordering (2 câu • 0.5đ)',
+            instruction: 'Circle the letter A, B, C or D to indicate the best arrangement of utterances or sentences to make a meaningful exchange in each of the following questions (questions 31 to 32).',
             questions: [
               {
-                id: 'w1_q1',
-                num: 1,
-                question: 'Reorder the following sentences to complete the conversation:\na. I prefer playing badminton with my friends.\nb. What do you like doing in your free time, Nam?\nc. That sounds fun! How often do you play it?\nd. We usually play twice a week on weekends.',
-                options: ['A. b - a - c - d', 'B. a - b - c - d', 'C. c - d - b - a', 'D. b - c - a - d'],
-                correct: 'A. b - a - c - d',
-                points: 0.5
+                id: 'w1_q31',
+                num: 31,
+                question: 'Question 31 (0.25đ): Arrange the following utterances between a City Visitor and a Farmer about countryside life:\na. That sounds relaxing, but isn\'t it hard work every day?\nb. Yes, but working outdoors keeps us healthy and connected with nature.\nc. Good morning! Life here in the countryside seems so peaceful compared to the city.\nd. I can see that. Maybe I should spend my summer holiday in a village like this!\ne. Good morning! Indeed, we enjoy fresh air and a quiet environment.',
+                options: ['A. a - c - b - e - d', 'B. e - d - c - b - a', 'C. e - c - b - d - a', 'D. a - e - b - c - d'],
+                correct: 'B. e - d - c - b - a',
+                explanation: 'Thứ tự logic: e (Chào & xác nhận không khí) -> d (Người xem khen) -> c (Mở đầu) -> b (Nông dân trả lời) -> a (Thắc mắc vất vả).',
+                points: 0.25
+              },
+              {
+                id: 'w1_q32',
+                num: 32,
+                question: 'Question 32 (0.25đ): Arrange the following sentences between Mai and Lan about study pressure:\na. Hey Lan, you look quite tired today. Is everything alright?\nb. My parents expect me to get top grades in all subjects, so I feel under a lot of pressure.\nc. Not really. I\'ve been studying for exams non-stop and couldn\'t sleep well.\nd. You should talk to your parents openly about how you feel. I\'m sure they will understand.',
+                options: ['A. a - c - d - b', 'B. a - c - b - d', 'C. c - a - b - d', 'D. a - d - c - b'],
+                correct: 'A. a - c - d - b',
+                explanation: 'Thứ tự hội thoại chuẩn: a (Mai hỏi) -> c (Lan bộc bạch mệt) -> d (Mai khuyên) -> b (Lan chia sẻ nguyên nhân).',
+                points: 0.25
               }
             ]
           },
           {
             part_num: 2,
-            title: 'Part 2: Sentence Transformation',
-            instruction: 'Finish each sentence so that it means exactly the same as the original sentence printed before it.',
+            title: 'Part 2: Sentence Transformation (4 câu • 1.0đ)',
+            instruction: 'Finish each of the sentences in such a way that it means exactly the same as the one printed before it (questions 33 to 36).',
             questions: [
               {
-                id: 'w2_q1',
-                num: 1,
-                original_sentence: 'Nam is a better swimmer than Phong.',
-                prompt_keyword: 'Phong swims...',
-                suggested_answer: 'Phong swims worse than Nam.',
-                accepted_answers: ['Phong swims worse than Nam.', 'Phong does not swim as well as Nam.'],
-                explanation: 'So sánh kém hơn của động từ: swim worse than',
+                id: 'w2_q33',
+                num: 33,
+                original_sentence: 'Minh joined the arts and crafts club because he wanted to be more creative. (so)',
+                prompt_keyword: 'Minh wanted to be more creative, so...',
+                suggested_answer: 'Minh wanted to be more creative, so he joined the arts and crafts club.',
+                accepted_answers: [
+                  'Minh wanted to be more creative, so he joined the arts and crafts club.',
+                  'minh wanted to be more creative, so he joined the arts and crafts club',
+                  'he joined the arts and crafts club'
+                ],
+                explanation: 'Chuyển mệnh đề chỉ nguyên nhân (because) sang mệnh đề chỉ kết quả (so).',
                 points: 0.25
               },
               {
-                id: 'w2_q2',
-                num: 2,
-                original_sentence: 'She started learning English 3 years ago.',
-                prompt_keyword: 'She has...',
-                suggested_answer: 'She has learned English for 3 years.',
-                accepted_answers: ['She has learned English for 3 years.', 'She has been learning English for 3 years.'],
-                explanation: 'Quá khứ đơn sang Hiện tại hoàn thành với FOR',
+                id: 'w2_q34',
+                num: 34,
+                original_sentence: 'I fancy making origami in my free time. (crazy)',
+                prompt_keyword: 'I am crazy...',
+                suggested_answer: 'I am crazy about making origami in my free time.',
+                accepted_answers: [
+                  'I am crazy about making origami in my free time.',
+                  'i am crazy about making origami in my free time',
+                  'about making origami in my free time'
+                ],
+                explanation: 'fancy + V-ing = be crazy about + V-ing (thích làm gì).',
                 points: 0.25
               },
               {
-                id: 'w2_q3',
-                num: 3,
-                original_sentence: 'It is essential for students to do homework regularly.',
-                prompt_keyword: 'Students must...',
-                suggested_answer: 'Students must do homework regularly.',
-                accepted_answers: ['Students must do homework regularly.', 'Students should do homework regularly.'],
+                id: 'w2_q35',
+                num: 35,
+                original_sentence: 'His car can run 120km/h while my car can run only 110 km/h. (fast)',
+                prompt_keyword: 'His car can run...',
+                suggested_answer: 'His car can run faster than my car.',
+                accepted_answers: [
+                  'His car can run faster than my car.',
+                  'His car can run faster than mine.',
+                  'His car can run faster than my car can.',
+                  'His car can run faster than my car can run.',
+                  'faster than my car',
+                  'faster than mine'
+                ],
+                explanation: 'So sánh hơn của trạng từ nhanh: faster than.',
                 points: 0.25
               },
               {
-                id: 'w2_q4',
-                num: 4,
-                original_sentence: 'Why don\'t we go to the museum this Sunday?',
-                prompt_keyword: 'How about...',
-                suggested_answer: 'How about going to the museum this Sunday?',
-                accepted_answers: ['How about going to the museum this Sunday?'],
+                id: 'w2_q36',
+                num: 36,
+                original_sentence: 'Julia is a better cook than I am. (cooks)',
+                prompt_keyword: 'Julia cooks...',
+                suggested_answer: 'Julia cooks better than I do.',
+                accepted_answers: [
+                  'Julia cooks better than I do.',
+                  'Julia cooks better than me.',
+                  'julia cooks better than i do',
+                  'julia cooks better than me',
+                  'better than I do',
+                  'better than me'
+                ],
+                explanation: 'Chuyển từ so sánh danh từ/tính từ sang so sánh động từ thường: cooks better than I do / me.',
                 points: 0.25
               }
             ]
           },
           {
             part_num: 3,
-            title: 'Part 3: Paragraph Writing',
-            instruction: 'Write a paragraph (80-100 words) on the topic given below.',
-            prompt: 'Write a paragraph (about 80 to 100 words) about your favorite leisure activity. You should mention: what the activity is, when/where you do it, who you do it with, and why you enjoy it.',
+            title: 'Part 3: Paragraph Writing (1 câu • 1.0đ)',
+            instruction: 'Write a paragraph (about 80 to 100 words) on the topic "What kind of pressure do you face as a teenager?" (Question 37).',
+            prompt: 'Question 37 (1.0đ): Write a paragraph (about 80 to 100 words) about what kind of pressure you face as a teenager. You should use the following cues:\n- What pressure do you have (schoolwork, parents, peers...)?\n- How does this pressure make you feel (stressed, lonely...)?\n- What do you do to deal with it (talk to friends, join a club...)?',
             min_words: 80,
             max_words: 120,
-            suggested_words: ['in my free time', 'hobby', 'relaxing', 'beneficial', 'enjoy'],
+            suggested_words: ['schoolwork', 'parental expectations', 'peer pressure', 'stressed', 'talk to friends', 'manage time'],
             rubric: {
               content: 0.3,
               organization: 0.2,
@@ -399,7 +480,7 @@ export const flattenExamQuestions = (exam) => {
         if (p.part_num === 3) {
           flat.push({
             id: 'writing_p3',
-            num: flat.length + 1,
+            num: 37,
             type: 'essay',
             qText: p.prompt || 'Writing Paragraph Task',
             points: p.points || 1.0,
@@ -409,7 +490,7 @@ export const flattenExamQuestions = (exam) => {
           (p.questions || []).forEach(q => {
             flat.push({
               ...q,
-              num: flat.length + 1,
+              num: q.num || flat.length + 1,
               type: q.prompt_keyword ? 'sentence_rewrite' : 'ordering',
               qText: q.question || q.original_sentence || '',
               sectionCode: sec.code
@@ -422,7 +503,7 @@ export const flattenExamQuestions = (exam) => {
         (t.questions || []).forEach(q => {
           flat.push({
             ...q,
-            num: flat.length + 1,
+            num: q.num || flat.length + 1,
             type: q.options ? 'single_choice' : 'fill_blank',
             qText: q.question || '',
             sectionCode: sec.code
