@@ -179,5 +179,304 @@ export const cmsStorage = {
     const filtered = all.filter(a => a.id !== articleId);
     localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(filtered));
     return filtered;
+  },
+
+  // --------------------------------------------------
+  // LMS COURSES & UNITS & LESSONS
+  // --------------------------------------------------
+  getCourses: () => {
+    try {
+      const stored = localStorage.getItem('lms_courses_v1');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    const defaultCourses = [
+      { id: 'course-6', title: 'Tiếng Anh 6 Global Success', grade: 6, subject: 'Tiếng Anh', order: 1 },
+      { id: 'course-7', title: 'Tiếng Anh 7 Global Success', grade: 7, subject: 'Tiếng Anh', order: 2 },
+      { id: 'course-8', title: 'Tiếng Anh 8 Global Success', grade: 8, subject: 'Tiếng Anh', order: 3 },
+      { id: 'course-9', title: 'Tiếng Anh 9 Global Success', grade: 9, subject: 'Tiếng Anh', order: 4 }
+    ];
+    localStorage.setItem('lms_courses_v1', JSON.stringify(defaultCourses));
+    return defaultCourses;
+  },
+
+  saveCourse: (courseData) => {
+    const courses = cmsStorage.getCourses();
+    const idx = courses.findIndex(c => c.id === courseData.id);
+    if (idx >= 0) {
+      courses[idx] = { ...courses[idx], ...courseData };
+    } else {
+      courses.push({ ...courseData, id: courseData.id || `course-${Date.now()}` });
+    }
+    localStorage.setItem('lms_courses_v1', JSON.stringify(courses));
+    return courses;
+  },
+
+  getUnits: (gradeLevel = null) => {
+    try {
+      const stored = localStorage.getItem('lms_units_v1');
+      let units = stored ? JSON.parse(stored) : [];
+      if (!units || units.length === 0) {
+        units = [
+          { id: 'u1-g8', courseId: 'course-8', grade: 8, title: 'Unit 1: Leisure Time', description: 'Từ vựng & Ngữ pháp chủ đề hoạt động rảnh rỗi', order: 1, status: 'PUBLISHED' },
+          { id: 'u2-g8', courseId: 'course-8', grade: 8, title: 'Unit 2: Life in the Countryside', description: 'Từ vựng & Ngữ pháp cuộc sống nông thôn', order: 2, status: 'PUBLISHED' },
+          { id: 'u3-g8', courseId: 'course-8', grade: 8, title: 'Unit 3: Teenagers', description: 'Đời sống & Thách thức lứa tuổi teen', order: 3, status: 'PUBLISHED' },
+          { id: 'u1-g9', courseId: 'course-9', grade: 9, title: 'Unit 1: Local Community', description: 'Cộng đồng địa phương & Làng nghề truyền thống', order: 1, status: 'PUBLISHED' }
+        ];
+        localStorage.setItem('lms_units_v1', JSON.stringify(units));
+      }
+      if (gradeLevel) return units.filter(u => Number(u.grade) === Number(gradeLevel));
+      return units;
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveUnit: (unitData) => {
+    const units = cmsStorage.getUnits();
+    const idx = units.findIndex(u => u.id === unitData.id);
+    if (idx >= 0) {
+      units[idx] = { ...units[idx], ...unitData };
+    } else {
+      units.push({ ...unitData, id: unitData.id || `unit-${Date.now()}` });
+    }
+    localStorage.setItem('lms_units_v1', JSON.stringify(units));
+    return units;
+  },
+
+  getLessons: (unitId = null) => {
+    try {
+      const stored = localStorage.getItem('lms_lessons_v1');
+      let lessons = stored ? JSON.parse(stored) : [];
+      if (!lessons || lessons.length === 0) {
+        lessons = [
+          {
+            id: 'les-1',
+            unitId: 'u1-g8',
+            title: 'Getting Started: My Favourite Leisure Activity',
+            grade: 8,
+            objectives: 'Học sinh nhận biết từ vựng craft kit, DIY, origami và làm quen cấu trúc Verbs of liking + V-ing.',
+            content: 'Đoạn hội thoại mở đầu bài học Unit 1 giữa Trang, Phúc và Nick về sở thích cá nhân.',
+            vocabulary: 'craft kit, DIY, origami, leisure activity, hang out',
+            grammar: 'Verbs of liking + V-ing (enjoy, fancy, prefer)',
+            teacherNotes: 'Cho học sinh đóng vai hội thoại theo cặp và thực hành Flashcard.',
+            order: 1,
+            status: 'PUBLISHED',
+            created_at: new Date().toLocaleDateString('vi-VN')
+          },
+          {
+            id: 'les-2',
+            unitId: 'u1-g8',
+            title: 'A Closer Look 1: Vocabulary & Pronunciation',
+            grade: 8,
+            objectives: 'Phát âm chuẩn âm /u:/ và /ʊ/ trong từ vựng Unit 1.',
+            content: 'Bài luyện phát âm chuẩn audio theo ma trận sách giáo khoa.',
+            vocabulary: 'book, cook, foot, group, soup, fruit',
+            grammar: 'Phát âm /u:/ vs /ʊ/',
+            teacherNotes: 'Bật audio mẫu cho học sinh nghe lại 2 lần.',
+            order: 2,
+            status: 'PUBLISHED',
+            created_at: new Date().toLocaleDateString('vi-VN')
+          }
+        ];
+        localStorage.setItem('lms_lessons_v1', JSON.stringify(lessons));
+      }
+      if (unitId) return lessons.filter(l => l.unitId === unitId);
+      return lessons;
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveLesson: (lessonData) => {
+    const lessons = cmsStorage.getLessons();
+    const idx = lessons.findIndex(l => l.id === lessonData.id);
+    let updated = [];
+    if (idx >= 0) {
+      lessons[idx] = { ...lessons[idx], ...lessonData, updated_at: new Date().toLocaleDateString('vi-VN') };
+      updated = [...lessons];
+    } else {
+      const newLes = {
+        ...lessonData,
+        id: lessonData.id || `les-${Date.now()}`,
+        status: lessonData.status || 'PUBLISHED',
+        created_at: new Date().toLocaleDateString('vi-VN')
+      };
+      updated = [newLes, ...lessons];
+    }
+    localStorage.setItem('lms_lessons_v1', JSON.stringify(updated));
+    return updated;
+  },
+
+  deleteLesson: (lessonId) => {
+    const lessons = cmsStorage.getLessons();
+    const filtered = lessons.filter(l => l.id !== lessonId);
+    localStorage.setItem('lms_lessons_v1', JSON.stringify(filtered));
+    return filtered;
+  },
+
+  // --------------------------------------------------
+  // LMS ASSIGNMENTS & EXAMS & SUBMISSIONS
+  // --------------------------------------------------
+  getAssignments: () => {
+    try {
+      const stored = localStorage.getItem('lms_assignments_v1');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    const defaultAssignments = [
+      {
+        id: 'asg-1',
+        title: 'Bài Tập Ôn Tập Unit 1: Verbs of Liking & Vocabulary',
+        description: 'Bài tập 10 câu trắc nghiệm và điền từ kiểm tra kiến thức Unit 1.',
+        grade: 8,
+        unitId: 'u1-g8',
+        assignmentType: 'HOMEWORK', // HOMEWORK vs EXAM
+        totalPoints: 10,
+        timeLimitMinutes: 20,
+        dueDate: '2026-10-15',
+        targetClass: '8A1',
+        status: 'PUBLISHED',
+        questions: [
+          { id: 'q1', num: 1, type: 'MCQ', question: 'Minh enjoys _____ model cars in his free time.', options: ['A. building', 'B. to build', 'C. build', 'D. built'], correct: 'A. building', points: 2 },
+          { id: 'q2', num: 2, type: 'MCQ', question: 'She is hooked _____ playing volleyball.', options: ['A. on', 'B. in', 'C. at', 'D. with'], correct: 'A. on', points: 2 },
+          { id: 'q3', num: 3, type: 'TF', question: 'Gấp giấy origami là một hoạt động rảnh rỗi bổ ích.', options: ['A. True', 'B. False'], correct: 'A. True', points: 2 },
+          { id: 'q4', num: 4, type: 'GAPFILL', question: 'Điền 1 từ: You need a craft _____ to make handmade gifts.', options: ['A. kit', 'B. box', 'C. set', 'D. bag'], correct: 'A. kit', points: 2 },
+          { id: 'q5', num: 5, type: 'ESSAY', question: 'Viết 3-5 câu mô tả hoạt động giải trí yêu thích của em.', options: [], correct: 'Giáo viên tự chấm', points: 2 }
+        ],
+        created_at: new Date().toLocaleDateString('vi-VN')
+      }
+    ];
+    localStorage.setItem('lms_assignments_v1', JSON.stringify(defaultAssignments));
+    return defaultAssignments;
+  },
+
+  saveAssignment: (asgData) => {
+    const list = cmsStorage.getAssignments();
+    const idx = list.findIndex(a => a.id === asgData.id);
+    let updated = [];
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...asgData };
+      updated = [...list];
+    } else {
+      const newAsg = {
+        ...asgData,
+        id: asgData.id || `asg-${Date.now()}`,
+        status: asgData.status || 'PUBLISHED',
+        created_at: new Date().toLocaleDateString('vi-VN')
+      };
+      updated = [newAsg, ...list];
+    }
+    localStorage.setItem('lms_assignments_v1', JSON.stringify(updated));
+    return updated;
+  },
+
+  deleteAssignment: (asgId) => {
+    const list = cmsStorage.getAssignments();
+    const filtered = list.filter(a => a.id !== asgId);
+    localStorage.setItem('lms_assignments_v1', JSON.stringify(filtered));
+    return filtered;
+  },
+
+  getSubmissions: () => {
+    try {
+      const stored = localStorage.getItem('lms_submissions_v1');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    const defaultSubmissions = [
+      {
+        id: 'sub-1',
+        assignmentId: 'asg-1',
+        studentId: 'stu-1',
+        studentName: 'Trần Văn An',
+        studentCode: 'HS801',
+        targetClass: '8A1',
+        submittedAt: '08/10/2026 19:30',
+        autoScore: 8.0,
+        essayScore: 2.0,
+        totalScore: 10.0,
+        status: 'GRADED', // SUBMITTED vs GRADED
+        teacherFeedback: 'Bài làm rất xuất sắc! Viết câu lưu thoát, đúng ngữ pháp.',
+        answers: { q1: 'A. building', q2: 'A. on', q3: 'A. True', q4: 'A. kit', q5: 'My favourite leisure activity is playing football with my classmates after school.' }
+      },
+      {
+        id: 'sub-2',
+        assignmentId: 'asg-1',
+        studentId: 'stu-2',
+        studentName: 'Lê Thị Mai',
+        studentCode: 'HS802',
+        targetClass: '8A1',
+        submittedAt: '08/10/2026 20:15',
+        autoScore: 6.0,
+        essayScore: null,
+        totalScore: 6.0,
+        status: 'SUBMITTED',
+        teacherFeedback: '',
+        answers: { q1: 'A. building', q2: 'B. in', q3: 'A. True', q4: 'A. kit', q5: 'I love reading books in the evening.' }
+      }
+    ];
+    localStorage.setItem('lms_submissions_v1', JSON.stringify(defaultSubmissions));
+    return defaultSubmissions;
+  },
+
+  saveSubmission: (subData) => {
+    const list = cmsStorage.getSubmissions();
+    const idx = list.findIndex(s => s.id === subData.id || (s.assignmentId === subData.assignmentId && s.studentId === subData.studentId));
+    let updated = [];
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...subData };
+      updated = [...list];
+    } else {
+      const newSub = {
+        ...subData,
+        id: subData.id || `sub-${Date.now()}`,
+        submittedAt: new Date().toLocaleString('vi-VN')
+      };
+      updated = [newSub, ...list];
+    }
+    localStorage.setItem('lms_submissions_v1', JSON.stringify(updated));
+    return updated;
+  },
+
+  gradeSubmission: (subId, essayScore, teacherFeedback) => {
+    const list = cmsStorage.getSubmissions();
+    const idx = list.findIndex(s => s.id === subId);
+    if (idx >= 0) {
+      const autoS = Number(list[idx].autoScore || 0);
+      const essayS = Number(essayScore || 0);
+      list[idx] = {
+        ...list[idx],
+        essayScore: essayS,
+        totalScore: autoS + essayS,
+        status: 'GRADED',
+        teacherFeedback: teacherFeedback || 'Đã hoàn thành chấm bài.'
+      };
+      localStorage.setItem('lms_submissions_v1', JSON.stringify(list));
+    }
+    return list;
+  },
+
+  // --------------------------------------------------
+  // AUDIT LOGS STORAGE
+  // --------------------------------------------------
+  getAuditLogs: () => {
+    try {
+      const stored = localStorage.getItem('lms_audit_logs_v1');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  },
+
+  logAction: (userRole, userName, action, details) => {
+    const logs = cmsStorage.getAuditLogs();
+    const newEntry = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString('vi-VN'),
+      role: userRole || 'TEACHER',
+      user: userName || 'Giáo Viên VIP',
+      action,
+      details
+    };
+    const updated = [newEntry, ...logs.slice(0, 99)];
+    localStorage.setItem('lms_audit_logs_v1', JSON.stringify(updated));
+    return updated;
   }
 };

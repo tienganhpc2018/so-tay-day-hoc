@@ -46,17 +46,12 @@ export const Navbar = () => {
   const navItems = [
     { 
       path: '/', 
-      label: 'Trang chủ', 
+      label: 'TRANG CHỦ', 
       icon: Home 
     },
     { 
-      path: '/games', 
-      label: 'Sân trường', 
-      icon: Gamepad2
-    },
-    { 
       path: '/materials', 
-      label: 'Thư Mục Học Liệu', 
+      label: 'BÀI GIẢNG', 
       icon: BookOpen,
       subMenus: [
         { label: '1. Grammar (Ngữ pháp)', path: '/materials?type=grammar' },
@@ -70,29 +65,34 @@ export const Navbar = () => {
     },
     { 
       path: '/quizzes', 
-      label: 'Ngân Hàng Đề Thi', 
+      label: 'BÀI TẬP', 
       icon: HelpCircle,
       subMenus: [
-        { label: 'Đề Thi Khối 6', path: '/quizzes?grade=6' },
-        { label: 'Đề Thi Khối 7', path: '/quizzes?grade=7' },
-        { label: 'Đề Thi Khối 8', path: '/quizzes?grade=8' },
-        { label: 'Đề Thi Khối 9', path: '/quizzes?grade=9' }
+        { label: 'Bài Tập Khối 6', path: '/quizzes?grade=6' },
+        { label: 'Bài Tập Khối 7', path: '/quizzes?grade=7' },
+        { label: 'Bài Tập Khối 8', path: '/quizzes?grade=8' },
+        { label: 'Bài Tập Khối 9', path: '/quizzes?grade=9' }
       ]
     },
     { 
       path: '/exam-testing', 
-      label: 'Thi Thử', 
+      label: 'ĐỀ KIỂM TRA', 
       icon: Zap
     },
     { 
-      path: '/leaderboard', 
-      label: 'Bảng Xếp Hạng', 
-      icon: Star 
+      path: '/games', 
+      label: 'KHU VUI CHƠI', 
+      icon: Gamepad2
     },
+    { 
+      path: '/leaderboard', 
+      label: 'BẢNG XẾP HẠNG', 
+      icon: Star 
+    }
   ];
 
   if (isTeacher || isAdmin) {
-    navItems.push({ path: '/admin', label: 'Quản Lý Lớp & SV', icon: Users });
+    navItems.push({ path: '/admin', label: 'CHẤM BÀI & QUẢN LÝ', icon: Users });
   }
 
   return (
