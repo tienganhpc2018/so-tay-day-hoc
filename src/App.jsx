@@ -91,37 +91,10 @@ export const AppContent = () => {
           />
 
           <Route
-            path="/behavior"
-            element={
-              <ProtectedRoute>
-                <BehaviorPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/leaderboard"
             element={
               <ProtectedRoute>
                 <LeaderboardPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/lop-dao-tao"
-            element={
-              <ProtectedRoute>
-                <ClassTrainingPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/worksheet"
-            element={
-              <ProtectedRoute>
-                <ClassTrainingPage />
               </ProtectedRoute>
             }
           />

@@ -85,16 +85,6 @@ export const Navbar = () => {
       icon: Zap
     },
     { 
-      path: '/lop-dao-tao', 
-      label: 'Lớp Đào Tạo', 
-      icon: GraduationCap
-    },
-    { 
-      path: '/behavior', 
-      label: 'Sổ Nề Nếp', 
-      icon: Users
-    },
-    { 
       path: '/leaderboard', 
       label: 'Bảng Xếp Hạng', 
       icon: Star 

@@ -96,7 +96,7 @@ export const HomePage = () => {
       date: currentDateStr,
       description: 'File âm thanh chuẩn mono tích hợp icon cái loa cho từng phần nghe chuẩn thời lượng.',
       author: authorName,
-      link: '/worksheet?sec=listening'
+      link: '/materials?type=audio'
     },
     {
       id: 4,
@@ -126,7 +126,7 @@ export const HomePage = () => {
       date: currentDateStr,
       description: 'Phiếu làm bài 4 kỹ năng Listening, Speaking, Reading, Writing có đáp án cho GV.',
       author: authorName,
-      link: '/worksheet'
+      link: '/materials?type=utilities'
     }
   ];
 
