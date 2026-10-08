@@ -72,7 +72,7 @@ export const HomePage = () => {
       id: 1,
       title: 'Mẹo & Từ Vựng Cốt Lõi Khối 6 • 7 • 8 • 9 Global Success',
       category: 'VOCABULARY',
-      badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
       date: currentDateStr,
       description: 'Tổng hợp trọn bộ Từ vựng Word Bank kèm phát âm audio bám sát sách giáo khoa.',
       author: authorName,
@@ -82,7 +82,7 @@ export const HomePage = () => {
       id: 2,
       title: 'Chủ Điểm Ngữ Pháp Trọng Tâm 12 Units Tiếng Anh THCS',
       category: 'GRAMMAR',
-      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
       date: currentDateStr,
       description: 'Tổng hợp công thức, ví dụ loại trừ đáp án sai và ma trận ngữ pháp kiểm tra định kỳ.',
       author: authorName,
@@ -92,7 +92,7 @@ export const HomePage = () => {
       id: 3,
       title: 'Trọn Bộ Tapescript & File Audio Luyện Nghe Tiếng Anh THCS',
       category: 'AUDIO',
-      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
       date: currentDateStr,
       description: 'File âm thanh chuẩn mono tích hợp icon cái loa cho từng phần nghe chuẩn thời lượng.',
       author: authorName,
@@ -102,7 +102,7 @@ export const HomePage = () => {
       id: 4,
       title: 'Tuyển Tập Infographic Kiến Thức Tiếng Anh THCS Trực Quan',
       category: 'INFOGRAPHIC',
-      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      badgeColor: 'bg-teal-100 text-teal-800 border-teal-300',
       date: currentDateStr,
       description: 'Hình ảnh Infographic tóm tắt ngữ pháp giúp học sinh dễ nhớ bài học trực quan.',
       author: authorName,
@@ -112,7 +112,7 @@ export const HomePage = () => {
       id: 5,
       title: 'Hướng Dẫn Thiết Kế iFrame Game & Project Tương Tác',
       category: 'PROJECT',
-      badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
       date: currentDateStr,
       description: 'Tích hợp các trò chơi ghép cặp, trắc nghiệm và flashcards vào tiết dạy trên lớp.',
       author: authorName,
@@ -122,7 +122,7 @@ export const HomePage = () => {
       id: 6,
       title: 'Bộ Phiếu Bài Tập 4 Kỹ Năng Tích Hợp AI Chấm Điểm & Nhắc Lỗi',
       category: 'WORKSHEET',
-      badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+      badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
       date: currentDateStr,
       description: 'Phiếu làm bài 4 kỹ năng Listening, Speaking, Reading, Writing có đáp án cho GV.',
       author: authorName,
@@ -147,94 +147,94 @@ export const HomePage = () => {
             <Link
               to="/materials"
               onClick={() => soundFX.playClick()}
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-lg flex items-center gap-2"
             >
               <BookOpen className="w-4 h-4" /> Khám Phá Học Liệu
             </Link>
             <Link
               to="/quizzes"
               onClick={() => soundFX.playClick()}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs border border-slate-700 flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs border border-slate-300 flex items-center gap-2 shadow"
             >
-              <HelpCircle className="w-4 h-4 text-amber-400" /> Soạn Đề AI ⚡
+              <HelpCircle className="w-4 h-4 text-amber-600" /> Soạn Đề AI ⚡
             </Link>
           </div>
         }
       />
 
-      {/* 2. VIP BẢNG VÀNG CARDS */}
+      {/* 2. VIP BẢNG VÀNG CARDS - TRONG SUỐT NỀN TRẮNG 0% OPACITY, CHỮ ĐEN */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* CARD 1: BẢNG VÀNG 01 - ĐỐI TÁC VÀNG GIÁO DỤC */}
-        <div className="rounded-[28px] bg-slate-900/90 border-2 border-amber-400 p-6 space-y-6 shadow-xl relative flex flex-col justify-between">
+        <div className="rounded-[28px] bg-transparent border-2 border-amber-500 p-6 space-y-6 shadow-md relative flex flex-col justify-between">
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-300 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300 font-black text-lg">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-400 flex items-center justify-center text-amber-700 font-black text-lg">
                   👑
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-extrabold text-white">{authorName}</h3>
-                    <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[10px]">VIP</span>
+                    <h3 className="text-base font-extrabold text-slate-900">{authorName}</h3>
+                    <span className="px-2 py-0.5 rounded bg-amber-500 text-white font-black text-[10px]">VIP</span>
                   </div>
-                  <p className="text-xs text-amber-400 font-bold uppercase tracking-wider">ĐỐI TÁC VÀNG GIÁO DỤC</p>
+                  <p className="text-xs text-amber-800 font-bold uppercase tracking-wider">ĐỐI TÁC VÀNG GIÁO DỤC</p>
                 </div>
               </div>
 
-              <span className="px-3 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 text-xs font-black">
+              <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black">
                 BẢNG VÀNG 01
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { title: 'Bộ 100 TRÒ CHƠI PowerPoint MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-400' },
-                { title: 'BỘ 155 SLIDE PPT CÁC LOẠI MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-400' },
-                { title: 'Bộ 65 slide PowerPoint nhiều chủ đề cực hay...', tag: 'Miễn phí', color: 'text-emerald-400' },
-                { title: 'BỘ 30 SLIDE POWERPOINT ĐẸP - Nhiều mẫu đ...', tag: 'Miễn phí', color: 'text-emerald-400' }
+                { title: 'Bộ 100 TRÒ CHƠI PowerPoint MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-700' },
+                { title: 'BỘ 155 SLIDE PPT CÁC LOẠI MIỄN PHÍ', tag: 'Miễn phí', color: 'text-emerald-700' },
+                { title: 'Bộ 65 slide PowerPoint nhiều chủ đề cực hay...', tag: 'Miễn phí', color: 'text-emerald-700' },
+                { title: 'BỘ 30 SLIDE POWERPOINT ĐẸP - Nhiều mẫu đ...', tag: 'Miễn phí', color: 'text-emerald-700' }
               ].map((sub, sIdx) => (
-                <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3 hover:border-amber-400/50 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-amber-400">
+                <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-white/60 hover:bg-white border border-slate-300 flex items-center gap-3 hover:border-amber-500 transition-all shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 text-amber-600">
                     <Gamepad2 className="w-5 h-5" />
                   </div>
                   <div className="overflow-hidden">
-                    <h4 className="text-xs font-extrabold text-slate-200 truncate">{sub.title}</h4>
-                    <span className={`text-[10px] font-bold ${sub.color}`}>{sub.tag}</span>
+                    <h4 className="text-xs font-extrabold text-slate-900 truncate">{sub.title}</h4>
+                    <span className={`text-[10px] font-extrabold ${sub.color}`}>{sub.tag}</span>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs">
+          <div className="pt-4 border-t border-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-900 font-bold text-xs">
               ✨ Hiển thị thương hiệu của bạn tại đây!
             </span>
-            <Link to="/materials" className="px-4 py-2 rounded-xl bg-slate-950 text-white font-extrabold text-xs border border-slate-700 hover:bg-slate-800">
+            <Link to="/materials" className="px-4 py-2 rounded-xl bg-slate-900 text-white font-extrabold text-xs border border-slate-800 hover:bg-slate-800 shadow">
               🎥 Đăng ký vị trí VIP
             </Link>
           </div>
         </div>
 
         {/* CARD 2: BẢNG VÀNG 02 - HỌC LIỆU INFOGRAPHIC */}
-        <div className="rounded-[28px] bg-slate-900/90 border-2 border-amber-400 p-6 space-y-6 shadow-xl relative flex flex-col justify-between">
+        <div className="rounded-[28px] bg-transparent border-2 border-amber-500 p-6 space-y-6 shadow-md relative flex flex-col justify-between">
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-300 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-300 font-black text-lg">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-black text-lg">
                   <BookOpen className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-extrabold text-white">Học Liệu Infographic</h3>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-black text-[10px]">HOT</span>
+                    <h3 className="text-base font-extrabold text-slate-900">Học Liệu Infographic</h3>
+                    <span className="px-2 py-0.5 rounded bg-emerald-600 text-white font-black text-[10px]">HOT</span>
                   </div>
-                  <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">GIÁO TRÌNH STEM & INFOGRAPHIC VIP</p>
+                  <p className="text-xs text-emerald-800 font-bold uppercase tracking-wider">GIÁO TRÌNH STEM & INFOGRAPHIC VIP</p>
                 </div>
               </div>
 
-              <span className="px-3 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 text-xs font-black">
+              <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black">
                 BẢNG VÀNG 02
               </span>
             </div>
@@ -246,24 +246,24 @@ export const HomePage = () => {
                 { title: 'INFOGRAPHIC TIẾNG ANH 7 - BÀI 2', price: '50.000đ' },
                 { title: 'INFOGRAPHIC TIẾNG ANH 7 - BÀI 1', price: '50.000đ' }
               ].map((sub, sIdx) => (
-                <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3 hover:border-emerald-400/50 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-emerald-400">
+                <Link key={sIdx} to="/materials" className="p-3.5 rounded-2xl bg-white/60 hover:bg-white border border-slate-300 flex items-center gap-3 hover:border-emerald-500 transition-all shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div className="overflow-hidden">
-                    <h4 className="text-xs font-extrabold text-slate-200 truncate">{sub.title}</h4>
-                    <span className="text-[11px] font-extrabold text-rose-400">{sub.price}</span>
+                    <h4 className="text-xs font-extrabold text-slate-900 truncate">{sub.title}</h4>
+                    <span className="text-[11px] font-extrabold text-rose-700">{sub.price}</span>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-xs">
+          <div className="pt-4 border-t border-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold text-xs">
               ✨ Hiển thị sản phẩm của bạn tại đây!
             </span>
-            <Link to="/materials" className="px-4 py-2 rounded-xl bg-slate-950 text-white font-extrabold text-xs border border-slate-700 hover:bg-slate-800">
+            <Link to="/materials" className="px-4 py-2 rounded-xl bg-slate-900 text-white font-extrabold text-xs border border-slate-800 hover:bg-slate-800 shadow">
               🎥 Đăng ký vị trí VIP
             </Link>
           </div>
@@ -273,28 +273,28 @@ export const HomePage = () => {
 
       {/* 3. HỌC LIỆU GLOBAL SUCCESS (ĐỦ 6 BOXES CHO 6 CHỦ ĐỀ KHÁC NHAU) 📰 */}
       <div className="space-y-6 pt-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h2 className="text-xl font-black text-white flex items-center gap-2 border-l-4 border-indigo-500 pl-3">
-            <Newspaper className="w-6 h-6 text-indigo-400" />
+        <div className="flex items-center justify-between border-b border-slate-300 pb-3">
+          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 border-l-4 border-emerald-600 pl-3">
+            <Newspaper className="w-6 h-6 text-emerald-600" />
             Học Liệu Global Success 📰
           </h2>
 
-          <Link to="/materials" className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+          <Link to="/materials" className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1">
             Xem tất cả (Menu Thư Mục Học Liệu) →
           </Link>
         </div>
 
-        {/* EXACTLY 6 BOXES WITH THUMBNAIL BANNER IMAGES (MATCHING SCREENSHOT 2) */}
+        {/* EXACTLY 6 BOXES WITH THUMBNAIL BANNER IMAGES */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayArticles.map((art, aIdx) => (
             <Link 
               key={aIdx} 
               to={art.link || '/materials'} 
-              className="rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 overflow-hidden transition-all group shadow-xl backdrop-blur-sm block flex flex-col justify-between"
+              className="rounded-3xl bg-transparent border border-slate-300 hover:border-emerald-500 hover:bg-white/70 overflow-hidden transition-all group shadow-md block flex flex-col justify-between"
             >
               <div>
-                {/* THUMBNAIL IMAGE BANNER MATCHING SCREENSHOT 2 */}
-                <div className="h-44 w-full overflow-hidden bg-slate-950 relative">
+                {/* THUMBNAIL IMAGE BANNER */}
+                <div className="h-44 w-full overflow-hidden bg-slate-100 relative">
                   <img 
                     src={art.thumbnail || 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop'} 
                     alt={art.title} 
@@ -305,26 +305,26 @@ export const HomePage = () => {
                 <div className="p-5 space-y-3">
                   <div className="flex items-center justify-between text-xs">
                     <span className={`px-3 py-1 rounded-full font-black text-[11px] border uppercase ${
-                      art.badgeColor || 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                      art.badgeColor || 'bg-emerald-100 text-emerald-800 border-emerald-300'
                     }`}>
                       {art.category || 'VOCABULARY'}
                     </span>
-                    <span className="text-slate-400 font-semibold">{art.date || currentDateStr}</span>
+                    <span className="text-slate-600 font-semibold">{art.date || currentDateStr}</span>
                   </div>
 
-                  <h3 className="text-base font-extrabold text-white group-hover:text-brand-300 line-clamp-2 leading-snug">
+                  <h3 className="text-base font-extrabold text-slate-900 group-hover:text-emerald-700 line-clamp-2 leading-snug">
                     {art.title}
                   </h3>
 
-                  <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                  <p className="text-xs text-slate-700 line-clamp-3 leading-relaxed">
                     {art.description || (art.content ? art.content.replace(/<[^>]*>?/gm, '').slice(0, 110) : 'Bài viết hướng dẫn học liệu bám sát chương trình Tiếng Anh THCS Global Success.')}
                   </p>
                 </div>
               </div>
 
-              <div className="p-5 pt-0 flex items-center justify-between text-xs font-bold text-slate-400 mt-auto border-t border-slate-800/80">
+              <div className="p-5 pt-0 flex items-center justify-between text-xs font-bold text-slate-600 mt-auto border-t border-slate-200">
                 <span>Tác giả: {art.author || authorName}</span>
-                <span className="text-indigo-400 group-hover:underline flex items-center gap-1">
+                <span className="text-emerald-700 font-bold group-hover:underline flex items-center gap-1">
                   Đọc tiếp →
                 </span>
               </div>
@@ -333,17 +333,17 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* 4. THƯ VIỆN HỌC LIỆU MỚI NHẤT (LINK TO LUYỆN THI VÀO 10 GIA LAI) & HỘI CHỢ PROJECT NỔI BẬT (LINK TO ẢNH HOẠT ĐỘNG SÂN TRƯỜNG) */}
+      {/* 4. THƯ VIỆN HỌC LIỆU MỚI NHẤT & HỘI CHỢ PROJECT NỔI BẬT */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
         
         {/* COLUMN 1: THƯ VIỆN HỌC LIỆU MỚI NHẤT -> LINK TO LUYỆN THI VÀO 10 GIA LAI 🏆 */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-brand-500 pl-3">
-              <BookOpen className="w-5 h-5 text-brand-400" />
+          <div className="flex items-center justify-between border-b border-slate-300 pb-3">
+            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 border-l-4 border-emerald-600 pl-3">
+              <BookOpen className="w-5 h-5 text-emerald-600" />
               Thư viện Học liệu mới nhất (Luyện thi vào 10 Gia Lai)
             </h3>
-            <Link to="/lop-dao-tao?module=gialai_10" className="text-xs font-bold text-brand-400 hover:underline">
+            <Link to="/lop-dao-tao?module=gialai_10" className="text-xs font-bold text-emerald-700 hover:underline">
               Xem tất cả (Luyện Thi Vào 10 Gia Lai) →
             </Link>
           </div>
@@ -354,20 +354,20 @@ export const HomePage = () => {
               { title: 'ĐỀ THI THỬ VÀO 10 TỈNH GIA LAI MÃ 801', sub: 'Tiếng Anh • Lớp 9 • Tệp Audio Nghe', price: 'Bảo mật Drive', downloads: '158 lượt xem' },
               { title: 'ĐỀ THI TUYỂN SINH VÔ 10 TỈNH GIA LAI 2025 - 2026', sub: 'Tiếng Anh • Lớp 9 • Ma Trận Đề Thi', price: 'Bảo mật Drive', downloads: '240 lượt xem' }
             ].map((item, idx) => (
-              <Link key={idx} to="/lop-dao-tao?module=gialai_10" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4 hover:border-brand-500/50 transition-all block">
+              <Link key={idx} to="/lop-dao-tao?module=gialai_10" className="p-4 rounded-2xl bg-transparent border border-slate-300 flex items-center justify-between gap-4 hover:border-emerald-500 hover:bg-white/80 transition-all block shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-brand-400 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-extrabold text-white">{item.title}</h4>
-                    <span className="text-[11px] text-slate-400">{item.sub}</span>
+                    <h4 className="text-xs font-extrabold text-slate-900">{item.title}</h4>
+                    <span className="text-[11px] text-slate-600">{item.sub}</span>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-emerald-400 block">{item.price}</span>
-                  <span className="text-[10px] text-slate-400 font-medium">👁️ {item.downloads}</span>
+                  <span className="text-xs font-black text-emerald-800 block">{item.price}</span>
+                  <span className="text-[10px] text-slate-500 font-medium">👁️ {item.downloads}</span>
                 </div>
               </Link>
             ))}
@@ -376,12 +376,12 @@ export const HomePage = () => {
 
         {/* COLUMN 2: HỘI CHỢ PROJECT NỔI BẬT -> LINK TO SÂN TRƯỜNG - ẢNH HOẠT ĐỘNG 🖼️ */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-lg font-black text-white flex items-center gap-2 border-l-4 border-rose-500 pl-3">
-              <Rocket className="w-5 h-5 text-rose-400" />
+          <div className="flex items-center justify-between border-b border-slate-300 pb-3">
+            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 border-l-4 border-rose-600 pl-3">
+              <Rocket className="w-5 h-5 text-rose-600" />
               Hội chợ Project nổi bật (Ảnh hoạt động Sân trường) 🚀
             </h3>
-            <Link to="/games?tab=photos" className="text-xs font-bold text-rose-400 hover:underline">
+            <Link to="/games?tab=photos" className="text-xs font-bold text-rose-700 hover:underline">
               Xem tất cả (Ảnh Hoạt Động Sân Trường) →
             </Link>
           </div>
@@ -392,19 +392,19 @@ export const HomePage = () => {
               { title: 'LƯU BÚT CHIA TAY RA TRƯỜNG THÂN THƯƠNG KHỐI 9', sub: 'Ảnh Hoạt Động • Bởi ' + authorName, price: 'Ảnh Hoạt Động' },
               { title: 'ALBUM HOẠT ĐỘNG NGOẠI KHÓA TIẾNG ANH GLOBAL SUCCESS', sub: 'Ảnh Hoạt Động • Bởi ' + authorName, price: 'Ảnh Hoạt Động' }
             ].map((item, idx) => (
-              <Link key={idx} to="/games?tab=photos" className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4 hover:border-rose-500/50 transition-all block">
+              <Link key={idx} to="/games?tab=photos" className="p-4 rounded-2xl bg-transparent border border-slate-300 flex items-center justify-between gap-4 hover:border-rose-500 hover:bg-white/80 transition-all block shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-rose-400 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-700 shrink-0">
                     <Rocket className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-extrabold text-white">{item.title}</h4>
-                    <span className="text-[11px] text-slate-400">{item.sub}</span>
+                    <h4 className="text-xs font-extrabold text-slate-900">{item.title}</h4>
+                    <span className="text-[11px] text-slate-600">{item.sub}</span>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-amber-400 block">{item.price}</span>
+                  <span className="text-xs font-black text-amber-800 block">{item.price}</span>
                 </div>
               </Link>
             ))}
