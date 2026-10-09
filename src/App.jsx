@@ -16,16 +16,76 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { AiTeachingAssistantWidget } from './components/common/AiTeachingAssistantWidget';
 import { AlertTriangle, GraduationCap, MessageCircle } from 'lucide-react';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("LMS Error Boundary caught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-[80vh] flex items-center justify-center p-6 bg-slate-50 text-slate-900 font-sans">
+          <div className="bg-white p-8 rounded-3xl max-w-lg w-full text-center border border-slate-200 shadow-2xl space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h2 className="text-lg font-black text-slate-900">Đã Xảy Ra Lỗi Khởi Tạo Giao Diện</h2>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Hệ thống đã tự động bảo vệ dữ liệu. Thầy/Cô vui lòng nhấp vào nút bên dưới để tải lại trang hoặc reset bộ nhớ tạm.
+            </p>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow hover:bg-emerald-700"
+              >
+                🔄 Tải Lại Trang
+              </button>
+              <button
+                onClick={() => { localStorage.clear(); window.location.href = '/admin'; }}
+                className="px-5 py-2.5 rounded-xl bg-slate-200 text-slate-800 font-extrabold text-xs hover:bg-slate-300"
+              >
+                🧹 Xóa Cache & Thử Lại
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const ProtectedRoute = ({ children, teacherOnly = false, adminOnly = false }) => {
-  const { isLocked } = useAuth();
+  const { isLocked, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs font-bold text-slate-600">Đang khởi tạo hệ thống...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLocked) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center p-4">
         <div className="glass-panel p-8 max-w-md text-center border-rose-500/40 space-y-4">
           <AlertTriangle className="w-16 h-16 text-rose-400 mx-auto animate-bounce" />
-          <h2 className="text-xl font-bold text-white">Tài Khoản Đang Bị Tạm Khóa</h2>
-          <p className="text-xs text-slate-300">
+          <h2 className="text-xl font-bold text-slate-900">Tài Khoản Đang Bị Tạm Khóa</h2>
+          <p className="text-xs text-slate-600">
             Tài khoản học sinh của em hiện đang bị Tạm khóa bởi Giáo viên/Admin. Vui lòng liên hệ Giáo viên bộ môn Tiếng Anh để được mở khóa lại.
           </p>
         </div>
@@ -38,7 +98,8 @@ const ProtectedRoute = ({ children, teacherOnly = false, adminOnly = false }) =>
 
 export const AppContent = () => {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans relative">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans relative">
       <Navbar />
       
       <main className="flex-1 pb-16">
@@ -143,6 +204,7 @@ export const AppContent = () => {
       <AiTeachingAssistantWidget />
 
     </div>
+    </ErrorBoundary>
   );
 };
 
