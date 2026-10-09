@@ -187,7 +187,10 @@ export const cmsStorage = {
   getCourses: () => {
     try {
       const stored = localStorage.getItem('lms_courses_v1');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {}
     const defaultCourses = [
       { id: 'course-6', title: 'Tiếng Anh 6 Global Success', grade: 6, subject: 'Tiếng Anh', order: 1 },
@@ -215,7 +218,7 @@ export const cmsStorage = {
     try {
       const stored = localStorage.getItem('lms_units_v1');
       let units = stored ? JSON.parse(stored) : [];
-      if (!units || units.length === 0) {
+      if (!Array.isArray(units) || units.length === 0) {
         units = [
           { id: 'u1-g8', courseId: 'course-8', grade: 8, title: 'Unit 1: Leisure Time', description: 'Từ vựng & Ngữ pháp chủ đề hoạt động rảnh rỗi', order: 1, status: 'PUBLISHED' },
           { id: 'u2-g8', courseId: 'course-8', grade: 8, title: 'Unit 2: Life in the Countryside', description: 'Từ vựng & Ngữ pháp cuộc sống nông thôn', order: 2, status: 'PUBLISHED' },
@@ -224,7 +227,7 @@ export const cmsStorage = {
         ];
         localStorage.setItem('lms_units_v1', JSON.stringify(units));
       }
-      if (gradeLevel) return units.filter(u => Number(u.grade) === Number(gradeLevel));
+      if (gradeLevel) return units.filter(u => u && Number(u.grade) === Number(gradeLevel));
       return units;
     } catch (e) {
       return [];
@@ -247,7 +250,7 @@ export const cmsStorage = {
     try {
       const stored = localStorage.getItem('lms_lessons_v1');
       let lessons = stored ? JSON.parse(stored) : [];
-      if (!lessons || lessons.length === 0) {
+      if (!Array.isArray(lessons) || lessons.length === 0) {
         lessons = [
           {
             id: 'les-1',
@@ -280,7 +283,7 @@ export const cmsStorage = {
         ];
         localStorage.setItem('lms_lessons_v1', JSON.stringify(lessons));
       }
-      if (unitId) return lessons.filter(l => l.unitId === unitId);
+      if (unitId) return lessons.filter(l => l && l.unitId === unitId);
       return lessons;
     } catch (e) {
       return [];
@@ -309,7 +312,7 @@ export const cmsStorage = {
 
   deleteLesson: (lessonId) => {
     const lessons = cmsStorage.getLessons();
-    const filtered = lessons.filter(l => l.id !== lessonId);
+    const filtered = lessons.filter(l => l && l.id !== lessonId);
     localStorage.setItem('lms_lessons_v1', JSON.stringify(filtered));
     return filtered;
   },
@@ -320,7 +323,10 @@ export const cmsStorage = {
   getAssignments: () => {
     try {
       const stored = localStorage.getItem('lms_assignments_v1');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {}
     const defaultAssignments = [
       {
@@ -351,7 +357,7 @@ export const cmsStorage = {
 
   saveAssignment: (asgData) => {
     const list = cmsStorage.getAssignments();
-    const idx = list.findIndex(a => a.id === asgData.id);
+    const idx = list.findIndex(a => a && a.id === asgData.id);
     let updated = [];
     if (idx >= 0) {
       list[idx] = { ...list[idx], ...asgData };
@@ -371,7 +377,7 @@ export const cmsStorage = {
 
   deleteAssignment: (asgId) => {
     const list = cmsStorage.getAssignments();
-    const filtered = list.filter(a => a.id !== asgId);
+    const filtered = list.filter(a => a && a.id !== asgId);
     localStorage.setItem('lms_assignments_v1', JSON.stringify(filtered));
     return filtered;
   },
@@ -379,7 +385,10 @@ export const cmsStorage = {
   getSubmissions: () => {
     try {
       const stored = localStorage.getItem('lms_submissions_v1');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {}
     const defaultSubmissions = [
       {
@@ -419,7 +428,7 @@ export const cmsStorage = {
 
   saveSubmission: (subData) => {
     const list = cmsStorage.getSubmissions();
-    const idx = list.findIndex(s => s.id === subData.id || (s.assignmentId === subData.assignmentId && s.studentId === subData.studentId));
+    const idx = list.findIndex(s => s && (s.id === subData.id || (s.assignmentId === subData.assignmentId && s.studentId === subData.studentId)));
     let updated = [];
     if (idx >= 0) {
       list[idx] = { ...list[idx], ...subData };
@@ -438,7 +447,7 @@ export const cmsStorage = {
 
   gradeSubmission: (subId, essayScore, teacherFeedback) => {
     const list = cmsStorage.getSubmissions();
-    const idx = list.findIndex(s => s.id === subId);
+    const idx = list.findIndex(s => s && s.id === subId);
     if (idx >= 0) {
       const autoS = Number(list[idx].autoScore || 0);
       const essayS = Number(essayScore || 0);
@@ -460,7 +469,10 @@ export const cmsStorage = {
   getAuditLogs: () => {
     try {
       const stored = localStorage.getItem('lms_audit_logs_v1');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch (e) {}
     return [];
   },
@@ -478,5 +490,71 @@ export const cmsStorage = {
     const updated = [newEntry, ...logs.slice(0, 99)];
     localStorage.setItem('lms_audit_logs_v1', JSON.stringify(updated));
     return updated;
+  },
+
+  // --------------------------------------------------
+  // CLASS MANAGEMENT & STUDENT ENROLLMENT
+  // --------------------------------------------------
+  getClasses: () => {
+    try {
+      const stored = localStorage.getItem('lms_classes_v1');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    const defaultClasses = [
+      { id: 'cls-8a1', name: 'Lớp 8A1', code: '8A1', grade: 8, schoolYear: '2025 - 2026', studentCount: 32, created_at: new Date().toLocaleDateString('vi-VN') },
+      { id: 'cls-8a2', name: 'Lớp 8A2', code: '8A2', grade: 8, schoolYear: '2025 - 2026', studentCount: 28, created_at: new Date().toLocaleDateString('vi-VN') },
+      { id: 'cls-9a1', name: 'Lớp 9A1', code: '9A1', grade: 9, schoolYear: '2025 - 2026', studentCount: 30, created_at: new Date().toLocaleDateString('vi-VN') }
+    ];
+    localStorage.setItem('lms_classes_v1', JSON.stringify(defaultClasses));
+    return defaultClasses;
+  },
+
+  saveClass: (classData) => {
+    const list = cmsStorage.getClasses();
+    const idx = list.findIndex(c => c && (c.id === classData.id || c.code === classData.code));
+    let updated = [];
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...classData };
+      updated = [...list];
+    } else {
+      const newCls = {
+        ...classData,
+        id: classData.id || `cls-${Date.now()}`,
+        studentCount: classData.studentCount || 0,
+        created_at: new Date().toLocaleDateString('vi-VN')
+      };
+      updated = [newCls, ...list];
+    }
+    localStorage.setItem('lms_classes_v1', JSON.stringify(updated));
+    return updated;
+  },
+
+  deleteClass: (classId) => {
+    const list = cmsStorage.getClasses();
+    const filtered = list.filter(c => c && c.id !== classId);
+    localStorage.setItem('lms_classes_v1', JSON.stringify(filtered));
+    return filtered;
+  },
+
+  assignWorkToClass: (assignmentId, classId, dueDate) => {
+    const assignments = cmsStorage.getAssignments();
+    const classes = cmsStorage.getClasses();
+    const targetCls = classes.find(c => c && (c.id === classId || c.code === classId));
+    const className = targetCls ? targetCls.name : classId;
+
+    const idx = assignments.findIndex(a => a && a.id === assignmentId);
+    if (idx >= 0) {
+      assignments[idx] = {
+        ...assignments[idx],
+        targetClass: className,
+        dueDate: dueDate || assignments[idx].dueDate,
+        status: 'PUBLISHED'
+      };
+      localStorage.setItem('lms_assignments_v1', JSON.stringify(assignments));
+    }
+    return assignments;
   }
 };

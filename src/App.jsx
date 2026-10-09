@@ -42,18 +42,29 @@ class ErrorBoundary extends React.Component {
             <p className="text-xs text-slate-600 leading-relaxed">
               Hệ thống đã tự động bảo vệ dữ liệu. Thầy/Cô vui lòng nhấp vào nút bên dưới để tải lại trang hoặc reset bộ nhớ tạm.
             </p>
-            <div className="flex justify-center gap-3 pt-2">
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('lms_classes_v1');
+                    localStorage.removeItem('lms_assignments_v1');
+                    localStorage.removeItem('lms_lessons_v1');
+                    localStorage.removeItem('lms_submissions_v1');
+                  } catch (e) {}
+                  window.location.reload();
+                }}
                 className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow hover:bg-emerald-700"
               >
-                🔄 Tải Lại Trang
+                🔄 Tự Động Khôi Phục & Tải Lại Trang
               </button>
               <button
-                onClick={() => { localStorage.clear(); window.location.href = '/admin'; }}
+                onClick={() => {
+                  try { localStorage.clear(); } catch (e) {}
+                  window.location.href = '/admin';
+                }}
                 className="px-5 py-2.5 rounded-xl bg-slate-200 text-slate-800 font-extrabold text-xs hover:bg-slate-300"
               >
-                🧹 Xóa Cache & Thử Lại
+                🧹 Xóa Toàn Bộ Cache & Thử Lại
               </button>
             </div>
           </div>
