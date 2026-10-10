@@ -36,6 +36,7 @@ import { IFrameGameViewer } from '../games/iFrameGameViewer';
 import { TugOfWarGameCanvas } from '../games/TugOfWarGameCanvas';
 import { HeadTiltGameCanvas } from '../games/HeadTiltGameCanvas';
 import { LuckyWheelGameCanvas } from '../games/LuckyWheelGameCanvas';
+import { MarbleRaceGameCanvas } from '../games/MarbleRaceGameCanvas';
 
 import { XpShopModal } from '../gamification/XpShopModal';
 
@@ -145,6 +146,16 @@ export const TeachingUtilitiesMarket = () => {
       description: 'Trò chơi trắc nghiệm camera độc đáo. Nghiêng đầu trái/phải để lựa chọn đáp án đúng.',
       img: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop',
       type: 'head_tilt'
+    },
+    {
+      id: 'g4',
+      title: 'Đua Bi – Gọi Tên Học Sinh Pro 2D',
+      tag: 'MARBLE RACE 2D',
+      plays: '312 lượt',
+      badge: 'HOT 🔥',
+      description: 'Trò chơi đua bi 2D gọi tên học sinh với vật lý 7 chướng ngại vật (nấm nhảy, pinball, phễu cổ chai...) & cắt ảnh chân dung tập thể!',
+      img: 'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=600&auto=format&fit=crop',
+      type: 'marble_race'
     }
   ]);
 
@@ -558,6 +569,7 @@ export const TeachingUtilitiesMarket = () => {
               {activePlayGame.type === 'lucky_wheel' && <LuckyWheelGameCanvas onClose={() => setActivePlayGame(null)} />}
               {activePlayGame.type === 'tug_of_war' && <TugOfWarGameCanvas onClose={() => setActivePlayGame(null)} />}
               {activePlayGame.type === 'head_tilt' && <HeadTiltGameCanvas onClose={() => setActivePlayGame(null)} />}
+              {activePlayGame.type === 'marble_race' && <MarbleRaceGameCanvas onClose={() => setActivePlayGame(null)} />}
               {activePlayGame.embedUrl && (
                 <iframe
                   src={activePlayGame.embedUrl}
